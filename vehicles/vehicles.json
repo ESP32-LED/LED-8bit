@@ -229,6 +229,7 @@
             "vehicles/HB-E220(2)/icons/icon1.png"
         ],
         "site": "vehicles/HB-E220(2)/site.json"
+    },
     {
         "id": "HB-E300",
         "name": "HB-E300系「リゾートしらかみ」",
