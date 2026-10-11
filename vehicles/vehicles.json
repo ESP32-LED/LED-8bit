@@ -221,6 +221,15 @@
         "site": "vehicles/HB-E220/site.json"
     },
     {
+        "id": "HB-E220(2)",
+        "name": "HB-E220（高崎車）",
+        "config": "vehicles/HB-E220(2)/config.json",
+        "led": "vehicles/HB-E220(2)/led.json",
+        "icons": [
+            "vehicles/HB-E220(2)/icons/icon1.png"
+        ],
+        "site": "vehicles/HB-E220(2)/site.json"
+    {
         "id": "HB-E300",
         "name": "HB-E300系「リゾートしらかみ」",
         "config": "vehicles/HB-E300/config.json",
