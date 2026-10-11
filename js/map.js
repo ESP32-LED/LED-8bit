@@ -37,7 +37,7 @@ function createMap() {
     railwayLines.forEach(line => {
         const railwayLine = L.polyline(line.coordinates, {
             color: line.color || "black",
-            weight: 5
+            weight: 2
         }).addTo(railwayMap);
 
         railwayLine.bindTooltip(line.name);
@@ -57,7 +57,22 @@ function createMap() {
                 }
 
                 const button = document.createElement("button");
-                button.textContent = vehicle.name;
+
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+
+                const span = document.createElement("span");
+                span.textContent = vehicle.name;
+
+                button.append(iconContainer, span);
 
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
@@ -70,6 +85,7 @@ function createMap() {
         });
     });
 }
+
 
 
 // 車両選択方法を変更
