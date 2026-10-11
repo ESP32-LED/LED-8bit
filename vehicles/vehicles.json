@@ -296,7 +296,7 @@
         "id": "GV-E400",
         "name": "GV-E400系",
         "config": "vehicles/GV-E400/config.json",
-        "led": "vehiclesGV-E400/led.json",
+        "led": "vehicles/GV-E400/led.json",
         "icons": [
             "vehicles/GV-E400/icons/icon1.png",
             "vehicles/GV-E400/icons/icon2.png"
