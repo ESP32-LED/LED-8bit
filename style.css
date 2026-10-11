@@ -583,6 +583,29 @@ input[type="number"]::-webkit-outer-spin-button {
     display: none;
 }
 
+#esp32Setting {
+    margin-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    background-color: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+}
+
+#esp32Ip {
+    width: 200px;
+    padding: 6px;
+    background-color: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+    text-align: center;
+    font-size: 16px;
+    font-family: var(--ui-font);
+}
+
 @keyframes loadingDots {
     0%   { content: ""; }
 
