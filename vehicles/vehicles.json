@@ -283,6 +283,17 @@
         "site": "vehicles/HB-E300_furusato/site.json"
     },
     {
+        "id": "GV-E400",
+        "name": "GV-E400系",
+        "config": "vehicles/GV-E400/config.json",
+        "led": "vehiclesGV-E400/led.json",
+        "icons": [
+            "vehicles/GV-E400/icons/icon1.png",
+            "vehicles/GV-E400/icons/icon2.png"
+        ],
+        "site": "vehicles/GV-E400/site.json"
+    },
+    {
         "id": "hybari",
         "name": "FV-E991系　HYBARI",
         "config": "vehicles/hybari/config.json",
