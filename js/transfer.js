@@ -656,20 +656,21 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// ============================================================
-// 爆速Bluetooth分割送信関数（Chunk: 240byte, Interval: 1.5ms）
-// ============================================================
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
+// 応答あり送信（writeValue）によるパケットこぼれのない確実・即時送信関数
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 200) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
-        await characteristic.writeValueWithoutResponse(chunk);
+        
+        // 応答あり書き込みで100%パケット抜けを防止
+        if (characteristic.writeValue) {
+            await characteristic.writeValue(chunk);
+        } else {
+            await characteristic.writeValueWithResponse(chunk);
+        }
         
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
-        
-        // わずか1.5msの超短いウェイトでWi-Fi並みの送信速度を実現
-        await new Promise(resolve => setTimeout(resolve, 2));
     }
 }
 
@@ -679,6 +680,12 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 24
 async function transferToESP32() {
     if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt.connected) {
         updateTransferStatus("未接続：「Bluetooth接続」ボタンを押してください");
+        return;
+    }
+
+    // 車両選択（config）が未ロードの場合は正常メッセージを表示して終了（エラーを防止）
+    if (typeof config === "undefined" || !config) {
+        updateTransferStatus("Bluetooth接続完了！車両を選択してください");
         return;
     }
 
@@ -693,7 +700,8 @@ async function transferToESP32() {
 
         const packet = createESP32Packet();
         if (!packet || packet.length === 0) {
-            throw new Error("表示シーンがありません");
+            updateTransferStatus("表示シーンが選択されていません");
+            return;
         }
 
         await sendChunkedData(bleRxCharacteristic, packet, "メイン表示");
