@@ -1,4 +1,4 @@
-let transferController = null; // script.js等からの参照エラー回避用
+let transferController = null;
 let bleDevice = null;
 let bleRxCharacteristic = null;
 let isBleTransferring = false;
@@ -7,16 +7,13 @@ let autoTransferTimeout = null;
 const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_CHARACTERISTIC_RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
-// ============================================================
-// ESP32設定
-// ============================================================
 const ESP32_MAX_SCENES = 6;
 const ESP32_MAX_WIDTH = 256;
 const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
 const ESP32_HEADER_SIZE = 20;
 
-const ESP32_TYPE_DESTINATION_SCROLL_MAGIC = [0x54, 0x53, 0x43, 0x52]; // TSCR
+const ESP32_TYPE_DESTINATION_SCROLL_MAGIC = [0x54, 0x53, 0x43, 0x52];
 const ESP32_TYPE_DESTINATION_SCROLL_VERSION = 1;
 const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
@@ -25,6 +22,45 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
+function ensureBluetoothUI() {
+    const vehicleSelector = document.getElementById("vehicleSelector");
+    if (vehicleSelector && !vehicleSelector.querySelector(".esp32Setting")) {
+        const btDiv = document.createElement("div");
+        btDiv.className = "esp32Setting";
+        btDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;";
+        btDiv.innerHTML = `
+            <h2 style="margin-top: 0; color: #007bff; font-size: 16px;">Bluetooth (ESP32) 接続設定</h2>
+            <button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Bluetooth接続</button>
+            <p class="transferStatus" style="margin-top: 10px; margin-bottom: 0; font-size: 13px; font-weight: bold; color: #333;"></p>
+        `;
+        vehicleSelector.insertBefore(btDiv, vehicleSelector.firstChild);
+    }
+
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar && !sidebar.querySelector(".esp32Setting")) {
+        const btDivSide = document.createElement("div");
+        btDivSide.className = "esp32Setting";
+        btDivSide.style.cssText = "margin-top: 15px; margin-bottom: 15px; padding: 12px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;";
+        btDivSide.innerHTML = `
+            <h2 style="margin-top: 0; font-size: 14px; color: #007bff;">Bluetooth設定</h2>
+            <button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
+            <p class="transferStatus" style="margin-top: 8px; margin-bottom: 0; font-size: 12px; font-weight: bold; color: #333;"></p>
+        `;
+        const returnBtn = document.getElementById("vehicleSelectButton");
+        if (returnBtn) {
+            sidebar.insertBefore(btDivSide, returnBtn);
+        } else {
+            sidebar.appendChild(btDivSide);
+        }
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureBluetoothUI);
+} else {
+    ensureBluetoothUI();
+}
+
 function updateTransferStatus(text) {
     const elements = document.querySelectorAll(".transferStatus, #transferStatus");
     elements.forEach(el => {
@@ -32,13 +68,10 @@ function updateTransferStatus(text) {
     });
 }
 
-// ============================================================
-// Bluetooth 接続処理
-// ============================================================
 async function connectBluetooth() {
     if (!navigator.bluetooth) {
         updateTransferStatus("エラー: ブラウザがWeb Bluetooth非対応です (Chromeをご使用ください)");
-        alert("Web Bluetooth非対応のブラウザです。Google Chromeをご使用ください。また、http://localhost 等で開く必要があります。");
+        alert("Web Bluetooth非対応のブラウザです。Google Chromeをご使用ください。");
         return false;
     }
 
@@ -53,7 +86,6 @@ async function connectBluetooth() {
         bleDevice.addEventListener('gattserverdisconnected', () => {
             bleRxCharacteristic = null;
             updateTransferStatus("Bluetoothが切断されました");
-            console.warn("BLE Disconnected");
         });
 
         updateTransferStatus("GATTサーバー接続中...");
@@ -79,9 +111,6 @@ async function connectBluetooth() {
     }
 }
 
-// ============================================================
-// 自動転送（操作イベント検知）
-// ============================================================
 function triggerAutoTransfer() {
     if (autoTransferTimeout) {
         clearTimeout(autoTransferTimeout);
@@ -659,8 +688,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 超高速Bluetooth分割送信関数（Chunk: 240byte, 2msウェイトで爆速かつ安定転送）
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
+// 爆速＆パケット落としゼロ（Chunk: 180byte, Wait: 4ms）
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 180) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
@@ -670,13 +699,11 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 24
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
         
-        await new Promise(resolve => setTimeout(resolve, 2));
+        // 4msのウェイトでESP32側のBLE受信用キュー消化を安定化
+        await new Promise(resolve => setTimeout(resolve, 4));
     }
 }
 
-// ============================================================
-// Bluetooth 転送実行メイン
-// ============================================================
 async function transferToESP32() {
     if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt.connected) {
         updateTransferStatus("未接続：「Bluetooth接続」ボタンを押してください");
