@@ -22,9 +22,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// ============================================================
-// JavaScript版 高速 LZ4 エンコーダー
-// ============================================================
+// メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
     const srcLen = input.length;
     if (srcLen === 0) return new Uint8Array(0);
@@ -113,7 +111,6 @@ function compressLZ4(input) {
     }
 
     const compLen = compressed.length;
-    // LZ4用ヘッダー: [0xC4 (1B)] + [解凍後サイズ (4B)] + [圧縮後サイズ (4B)]
     const header = new Uint8Array(9);
     header[0] = 0xc4;
     header[1] = srcLen & 0xff;
@@ -129,6 +126,34 @@ function compressLZ4(input) {
     result.set(header, 0);
     result.set(compressed, 9);
     return result;
+}
+
+// 種別・行先スクロール用：超軽量 RLE 圧縮（メモリ不使用）
+function compressTypeDestRLE(uint8Array) {
+    if (!uint8Array || uint8Array.length === 0) return new Uint8Array(0);
+
+    const output = [0xcf]; // 識別用マジックバイト
+    let i = 0;
+    const len = uint8Array.length;
+
+    while (i < len) {
+        const byteVal = uint8Array[i];
+        let runLen = 1;
+
+        while (i + runLen < len && uint8Array[i + runLen] === byteVal && runLen < 255) {
+            runLen++;
+        }
+
+        if (runLen >= 3 || byteVal === 0xfe) {
+            output.push(0xfe, runLen, byteVal);
+            i += runLen;
+        } else {
+            output.push(byteVal);
+            i++;
+        }
+    }
+
+    return new Uint8Array(output);
 }
 
 function ensureBluetoothUI() {
@@ -790,7 +815,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// LZ4圧縮データの高速分割送信（240byte, 10msウェイト）
+// 分割送信（240byte, 10msウェイト）
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
@@ -831,7 +856,7 @@ async function transferToESP32() {
             return;
         }
 
-        // LZ4 圧縮の実行
+        // メイン表示：LZ4 圧縮
         const lz4Packet = compressLZ4(rawPacket);
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
@@ -840,8 +865,9 @@ async function transferToESP32() {
         const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
         if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-            const lz4TypeDestPacket = compressLZ4(rawTypeDestinationPacket);
-            await sendChunkedData(bleRxCharacteristic, lz4TypeDestPacket, "種別・行先スクロール(LZ4)");
+            // 種別・行先スクロール：軽量 RLE 圧縮（メモリ不使用）
+            const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
+            await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
         }
 
         updateTransferStatus("転送完了！");
