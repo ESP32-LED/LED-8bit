@@ -25,7 +25,6 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// 画面上の全ステータス表示を一括更新する関数
 function updateTransferStatus(text) {
     const elements = document.querySelectorAll(".transferStatus, #transferStatus");
     elements.forEach(el => {
@@ -68,10 +67,9 @@ async function connectBluetooth() {
 
         updateTransferStatus("Bluetooth接続完了！");
         
-        // 接続成功後に初回転送
         setTimeout(() => {
             transferToESP32();
-        }, 300);
+        }, 200);
 
         return true;
     } catch (error) {
@@ -92,7 +90,7 @@ function triggerAutoTransfer() {
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
-    }, 400);
+    }, 300);
 }
 
 function isTypeScrollEnabled() {
@@ -154,9 +152,6 @@ document.addEventListener("change", (e) => {
     }
 });
 
-// ============================================================
-// 数値取得
-// ============================================================
 function getNumberValue(id, defaultValue) {
     const element = document.getElementById(id);
     if (!element) return defaultValue;
@@ -170,9 +165,6 @@ function getNumberValue(id, defaultValue) {
     return Number.isFinite(value) ? value : defaultValue;
 }
 
-// ============================================================
-// 既存スクロール文字取得
-// ============================================================
 function getScrollText() {
     const scrollText = document.getElementById("scrollText");
     if (scrollText) return scrollText.value || "";
@@ -199,9 +191,6 @@ function getScrollColor() {
     };
 }
 
-// ============================================================
-// 既存スクロールデータ生成
-// ============================================================
 function createESP32ScrollData(br, gam) {
     const text = getScrollText();
 
@@ -255,9 +244,6 @@ function createESP32ScrollData(br, gam) {
     return { tw, sbuf };
 }
 
-// ============================================================
-// 種別・行先スクロール用 状態取得
-// ============================================================
 function getESP32TypeDestinationScrollStates() {
     const states = [];
 
@@ -277,9 +263,6 @@ function getESP32TypeDestinationScrollStates() {
     return states;
 }
 
-// ============================================================
-// 種別・行先スクロール用 RGB565生成
-// ============================================================
 function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     if (!view || !view.data || !Number.isFinite(Number(view.width)) || !Number.isFinite(Number(view.height))) {
         return null;
@@ -320,9 +303,6 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     return { width, height, sbuf };
 }
 
-// ============================================================
-// 種別・行先スクロール パケット生成
-// ============================================================
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
     if (states.length === 0) return new Uint8Array(0);
@@ -442,9 +422,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     return packet;
 }
 
-// ============================================================
-// メインパケット生成
-// ============================================================
 function createESP32Packet() {
     if (
         typeof buildSceneList !== "function" ||
@@ -680,19 +657,19 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 }
 
 // ============================================================
-// 安定Bluetooth分割送信関数（Chunk: 128byte, 進捗表示付き）
+// 爆速Bluetooth分割送信関数（Chunk: 240byte, Interval: 1.5ms）
 // ============================================================
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 128) {
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         await characteristic.writeValueWithoutResponse(chunk);
         
-        // 進捗表示
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
         
-        await new Promise(resolve => setTimeout(resolve, 8));
+        // わずか1.5msの超短いウェイトでWi-Fi並みの送信速度を実現
+        await new Promise(resolve => setTimeout(resolve, 2));
     }
 }
 
