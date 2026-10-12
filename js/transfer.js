@@ -1,3 +1,4 @@
+let transferController = null; // script.js等からの参照エラー回避用
 let bleDevice = null;
 let bleRxCharacteristic = null;
 let isBleTransferring = false;
@@ -29,6 +30,13 @@ const transferTypeDestinationScrollSpeed = 13;
 // ============================================================
 async function connectBluetooth() {
     const status = document.getElementById("transferStatus");
+
+    if (!navigator.bluetooth) {
+        if (status) status.textContent = "エラー: お使いのブラウザはWeb Bluetooth非対応です (Chromeをご使用ください)";
+        alert("Web Bluetooth非対応のブラウザです。Google Chromeをご使用ください。また、http://localhost 等で開く必要があります。");
+        return false;
+    }
+
     try {
         if (status) status.textContent = "Bluetooth機器を検索中...";
 
@@ -39,21 +47,30 @@ async function connectBluetooth() {
 
         bleDevice.addEventListener('gattserverdisconnected', () => {
             bleRxCharacteristic = null;
-            if (status) status.textContent = "Bluetooth切断されました";
+            if (status) status.textContent = "Bluetoothが切断されました";
+            console.warn("BLE Disconnected");
         });
 
+        if (status) status.textContent = "GATTサーバー接続中...";
         const server = await bleDevice.gatt.connect();
+
+        if (status) status.textContent = "サービス取得中...";
         const service = await server.getPrimaryService(BLE_SERVICE_UUID);
+
+        if (status) status.textContent = "キャラクタリスティック取得中...";
         bleRxCharacteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_RX_UUID);
 
         if (status) status.textContent = "Bluetooth接続完了！";
         
-        // 接続直後に初回転送を実行
-        transferToESP32();
+        // 接続成功後に初回転送
+        setTimeout(() => {
+            transferToESP32();
+        }, 300);
+
         return true;
     } catch (error) {
         console.error("Bluetooth接続エラー:", error);
-        if (status) status.textContent = "接続失敗: " + error.message;
+        if (status) status.textContent = "接続失敗: " + (error?.message || error);
         return false;
     }
 }
@@ -66,7 +83,6 @@ function triggerAutoTransfer() {
         clearTimeout(autoTransferTimeout);
     }
     autoTransferTimeout = setTimeout(() => {
-        // Bluetooth接続済みの場合のみ自動転送を実行
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
@@ -658,13 +674,13 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 }
 
 // ============================================================
-// Bluetooth 分割送信関数
+// Bluetooth 安全分割送信関数（Chunk: 128byte, Interval: 15ms）
 // ============================================================
-async function sendChunkedData(characteristic, uint8Array, chunkSize = 256) {
+async function sendChunkedData(characteristic, uint8Array, chunkSize = 128) {
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         await characteristic.writeValueWithoutResponse(chunk);
-        await new Promise(resolve => setTimeout(resolve, 8));
+        await new Promise(resolve => setTimeout(resolve, 15));
     }
 }
 
@@ -675,12 +691,12 @@ async function transferToESP32() {
     const status = document.getElementById("transferStatus");
 
     if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt.connected) {
-        if (status) status.textContent = "Bluetooth未接続です。「Bluetooth接続」を押してください";
+        if (status) status.textContent = "未接続：「Bluetooth接続」ボタンを押してください";
         return;
     }
 
     if (isBleTransferring) {
-        return; // 連打・二重送信用ブロック
+        return;
     }
 
     isBleTransferring = true;
@@ -709,7 +725,7 @@ async function transferToESP32() {
 
     } catch (error) {
         console.error("BLE転送エラー:", error);
-        if (status) status.textContent = "転送失敗: " + (error?.message || "エラー発生");
+        if (status) status.textContent = "転送失敗: " + (error?.message || error);
     } finally {
         isBleTransferring = false;
     }
