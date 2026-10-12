@@ -1,5 +1,10 @@
-let transferController = null;
+let bleDevice = null;
+let bleRxCharacteristic = null;
+let isBleTransferring = false;
 let autoTransferTimeout = null;
+
+const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const BLE_CHARACTERISTIC_RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
 // ============================================================
 // ESP32設定
@@ -10,28 +15,59 @@ const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
 const ESP32_HEADER_SIZE = 20;
 
-// 新しい種別・行先スクロール用
 const ESP32_TYPE_DESTINATION_SCROLL_MAGIC = [0x54, 0x53, 0x43, 0x52]; // TSCR
 const ESP32_TYPE_DESTINATION_SCROLL_VERSION = 1;
 const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
-const ESP32_TYPE_DESTINATION_SCROLL_PATH = "/update-type-destination-scroll";
 
-// スクロール速度設定
-const transferScrollSpeed = 17; // 既存文字スクロール用
-const transferTypeDestinationScrollSpeed = 13; // 種別・行先スクロール専用速度 (13)
+const transferScrollSpeed = 17;
+const transferTypeDestinationScrollSpeed = 13;
 
 // ============================================================
-// 自動転送
+// Bluetooth 接続処理
+// ============================================================
+async function connectBluetooth() {
+    const status = document.getElementById("transferStatus");
+    try {
+        if (status) status.textContent = "Bluetooth機器を検索中...";
+
+        bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [{ name: "ESP32_LED_Matrix" }],
+            optionalServices: [BLE_SERVICE_UUID]
+        });
+
+        bleDevice.addEventListener('gattserverdisconnected', () => {
+            bleRxCharacteristic = null;
+            if (status) status.textContent = "Bluetooth切断されました";
+        });
+
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService(BLE_SERVICE_UUID);
+        bleRxCharacteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_RX_UUID);
+
+        if (status) status.textContent = "Bluetooth接続完了！";
+        
+        // 接続直後に初回転送を実行
+        transferToESP32();
+        return true;
+    } catch (error) {
+        console.error("Bluetooth接続エラー:", error);
+        if (status) status.textContent = "接続失敗: " + error.message;
+        return false;
+    }
+}
+
+// ============================================================
+// 自動転送（操作イベント検知）
 // ============================================================
 function triggerAutoTransfer() {
     if (autoTransferTimeout) {
         clearTimeout(autoTransferTimeout);
     }
     autoTransferTimeout = setTimeout(() => {
-        const ipInput = document.getElementById("esp32Ip");
-        if (ipInput && ipInput.value.trim() !== "") {
+        // Bluetooth接続済みの場合のみ自動転送を実行
+        if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
     }, 500);
@@ -46,12 +82,8 @@ function isDestinationScrollEnabled() {
 }
 
 function isTypeDestinationScrollCategoryEnabled(category) {
-    if (category === "type") {
-        return isTypeScrollEnabled();
-    }
-    if (category === "destination") {
-        return isDestinationScrollEnabled();
-    }
+    if (category === "type") return isTypeScrollEnabled();
+    if (category === "destination") return isDestinationScrollEnabled();
     return true;
 }
 
@@ -105,19 +137,13 @@ document.addEventListener("change", (e) => {
 // ============================================================
 function getNumberValue(id, defaultValue) {
     const element = document.getElementById(id);
-    if (!element) {
-        return defaultValue;
-    }
+    if (!element) return defaultValue;
     if (element.matches && element.matches("input")) {
         const value = Number(element.value);
         return Number.isFinite(value) ? value : defaultValue;
     }
-    const input = element.querySelector
-        ? element.querySelector("input")
-        : null;
-    if (!input) {
-        return defaultValue;
-    }
+    const input = element.querySelector ? element.querySelector("input") : null;
+    if (!input) return defaultValue;
     const value = Number(input.value);
     return Number.isFinite(value) ? value : defaultValue;
 }
@@ -127,41 +153,23 @@ function getNumberValue(id, defaultValue) {
 // ============================================================
 function getScrollText() {
     const scrollText = document.getElementById("scrollText");
-    if (scrollText) {
-        return scrollText.value || "";
-    }
+    if (scrollText) return scrollText.value || "";
     const oldScrollText = document.getElementById("scroll-text-input");
-    if (oldScrollText) {
-        return oldScrollText.value || "";
-    }
+    if (oldScrollText) return oldScrollText.value || "";
     return "";
 }
 
-// ============================================================
-// 既存スクロールが有効か
-// ============================================================
 function isScrollEnabled() {
     return typeof clickStartScrollBtn !== "undefined" ? clickStartScrollBtn : false;
 }
 
-// ============================================================
-// 既存スクロール色
-// ============================================================
 function getScrollColor() {
     const colorInput = document.getElementById("scroll-color");
-    const defaultColor = {
-        r: 255,
-        g: 242,
-        b: 0
-    };
-    if (!colorInput || !colorInput.value) {
-        return defaultColor;
-    }
+    const defaultColor = { r: 255, g: 242, b: 0 };
+    if (!colorInput || !colorInput.value) return defaultColor;
     const value = colorInput.value.trim();
     const match = value.match(/^#([0-9a-fA-F]{6})$/);
-    if (!match) {
-        return defaultColor;
-    }
+    if (!match) return defaultColor;
     return {
         r: parseInt(match[1].slice(0, 2), 16),
         g: parseInt(match[1].slice(2, 4), 16),
@@ -176,17 +184,11 @@ function createESP32ScrollData(br, gam) {
     const text = getScrollText();
 
     if (!isScrollEnabled() || !text) {
-        return {
-            tw: 0,
-            sbuf: new Uint8Array(0)
-        };
+        return { tw: 0, sbuf: new Uint8Array(0) };
     }
 
     if (typeof config !== "undefined" && config && config.hasScroll === false) {
-        return {
-            tw: 0,
-            sbuf: new Uint8Array(0)
-        };
+        return { tw: 0, sbuf: new Uint8Array(0) };
     }
 
     if (typeof fontData === "undefined" || !fontData) {
@@ -232,7 +234,7 @@ function createESP32ScrollData(br, gam) {
 }
 
 // ============================================================
-// 新しい種別・行先スクロール用 状態取得
+// 種別・行先スクロール用 状態取得
 // ============================================================
 function getESP32TypeDestinationScrollStates() {
     const states = [];
@@ -254,7 +256,7 @@ function getESP32TypeDestinationScrollStates() {
 }
 
 // ============================================================
-// 新しい種別・行先スクロール用 RGB565生成
+// 種別・行先スクロール用 RGB565生成
 // ============================================================
 function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     if (!view || !view.data || !Number.isFinite(Number(view.width)) || !Number.isFinite(Number(view.height))) {
@@ -264,9 +266,7 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     const width = Number(view.width);
     const height = Number(view.height);
 
-    if (width <= 0 || height <= 0) {
-        return null;
-    }
+    if (width <= 0 || height <= 0) return null;
 
     if (width > ESP32_MAX_SCROLL_WIDTH) {
         throw new Error(`種別・行先スクロール幅が長すぎます（最大${ESP32_MAX_SCROLL_WIDTH}px）`);
@@ -299,14 +299,11 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 }
 
 // ============================================================
-// 新しい種別・行先スクロール パケット生成
+// 種別・行先スクロール パケット生成
 // ============================================================
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
-
-    if (states.length === 0) {
-        return new Uint8Array(0);
-    }
+    if (states.length === 0) return new Uint8Array(0);
 
     const hw = Math.round(getNumberValue("hardwareWidth", 192));
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
@@ -357,8 +354,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.active = 1;
                 descriptor.width = created.width;
                 descriptor.height = created.height;
-                
-                // 表示領域が hardwareWidth を超えないようにクリッピング
                 descriptor.areaLeft = Math.min(hw, Math.max(0, Math.round(info.state.areaLeft) + margin));
                 descriptor.areaRight = Math.min(hw, Math.max(0, Math.round(info.state.areaRight) + margin));
                 descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop));
@@ -374,9 +369,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         totalDataLength += bitmap.length;
     }
 
-    if (activeCount === 0) {
-        return new Uint8Array(0);
-    }
+    if (activeCount === 0) return new Uint8Array(0);
 
     const packetLength =
         ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE +
@@ -424,13 +417,11 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         offset += bitmap.length;
     }
 
-    console.log("ESP32 type/destination scroll packet:", packet.length, "bytes, active:", activeCount);
-
     return packet;
 }
 
 // ============================================================
-// ESP32パケット生成
+// メインパケット生成
 // ============================================================
 function createESP32Packet() {
     if (
@@ -448,25 +439,16 @@ function createESP32Packet() {
     }
 
     const scrollText = getScrollText();
-
-    const scrollActive =
-        config.hasScroll === true &&
-        isScrollEnabled() &&
-        scrollText.length > 0;
-
+    const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
-    if (scrollActive) {
-        scrollId = true;
-    }
+    if (scrollActive) scrollId = true;
 
     try {
         buildSceneList();
         buildTypeSceneList();
 
-        if (sceneList.length === 0) {
-            return new Uint8Array();
-        }
+        if (sceneList.length === 0) return new Uint8Array();
 
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
         const calculatedSceneCount = lcm(sceneList.length, typeCount);
@@ -483,7 +465,6 @@ function createESP32Packet() {
         }
 
         const pw = Number(config.ledWidth);
-
         if (!Number.isFinite(pw) || pw <= 0) {
             throw new Error("config.ledWidth が正しくありません");
         }
@@ -525,20 +506,13 @@ function createESP32Packet() {
         packet.set(scrollData.sbuf, header.length);
         packet.set(sceneData, header.length + scrollData.sbuf.length);
 
-        console.log("ESP32 packet size:", packet.length, "bytes");
-
         return packet;
 
     } finally {
-        if (typeof scrollId !== "undefined") {
-            scrollId = oldScrollId;
-        }
+        if (typeof scrollId !== "undefined") scrollId = oldScrollId;
     }
 }
 
-// ============================================================
-// ESP32用フレーム生成
-// ============================================================
 function createESP32Frame(matrix, hw, margin) {
     const frame = Array.from({ length: 8 }, () =>
         Array.from({ length: 16 }, () => new Uint8Array(hw))
@@ -548,7 +522,6 @@ function createESP32Frame(matrix, hw, margin) {
     const gam = getNumberValue("gammaCorrection", 2.5);
     const ledHeight = Number(config.ledHeight);
     const ledWidth = Number(config.ledWidth);
-
     const yOffset = ledHeight < 32 ? Math.floor((32 - ledHeight) / 2) : 0;
 
     for (let y = 0; y < ledHeight; y++) {
@@ -577,9 +550,6 @@ function createESP32Frame(matrix, hw, margin) {
     return frame;
 }
 
-// ============================================================
-// フレーム → Uint8Array
-// ============================================================
 function frameToUint8Array(frame, hw) {
     const sceneBuf = new Uint8Array(8 * 16 * hw);
     let p = 0;
@@ -595,9 +565,6 @@ function frameToUint8Array(frame, hw) {
     return sceneBuf;
 }
 
-// ============================================================
-// 全シーン生成
-// ============================================================
 function createAllESP32Scenes(sceneCount, hw, margin) {
     const sceneSize = 8 * 16 * hw;
     const allData = new Uint8Array(sceneCount * sceneSize);
@@ -637,9 +604,6 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
     return allData;
 }
 
-// ============================================================
-// ESP32ヘッダー
-// ============================================================
 function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     let times;
@@ -694,139 +658,75 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 }
 
 // ============================================================
-// ESP32へ転送
+// Bluetooth 分割送信関数
 // ============================================================
-async function transferToESP32() {
-    const status = document.getElementById("transferStatus");
-    const ipInput = document.getElementById("esp32Ip");
-
-    // IP入力欄に入力があればそれを最優先で使用する
-    let ip = ipInput ? ipInput.value.trim() : "";
-    if (!ip) {
-        if (location.hostname && location.hostname !== "localhost" && location.hostname !== "127.0.0.1" && location.hostname !== "") {
-            ip = location.hostname;
-        } else {
-            ip = "192.168.4.1";
-        }
-    }
-
-    if (transferController) {
-        transferController.abort();
-    }
-
-    transferController = new AbortController();
-
-    try {
-        if (status) {
-            status.textContent = "データ作成中...";
-        }
-
-        const packet = createESP32Packet();
-
-        if (!packet || packet.length === 0) {
-            throw new Error("表示シーンがありません");
-        }
-
-        if (status) {
-            status.textContent = `Wi-Fi転送中... (${packet.length} bytes)`;
-        }
-
-        console.log("ESP32 target IP:", ip);
-        console.log("ESP32 packet:", packet.length, "bytes");
-
-        // メインデータ転送
-        const formData = new FormData();
-        formData.append("file", new Blob([packet], { type: "application/octet-stream" }), "led.bin");
-
-        const response = await fetch(`http://${ip}/update`, {
-            method: "POST",
-            body: formData,
-            signal: transferController.signal
-        });
-
-        if (!response.ok) {
-            throw new Error(`転送失敗: HTTP ${response.status}`);
-        }
-
-        console.log("ESP32 response OK");
-
-        // 新しい種別・行先スクロール転送
-        const br = getNumberValue("softBrightness", 1.0);
-        const gam = getNumberValue("gammaCorrection", 2.5);
-
-        const typeDestinationScrollPacket = createESP32TypeDestinationScrollPacket(br, gam);
-
-        if (typeDestinationScrollPacket && typeDestinationScrollPacket.length > 0) {
-            if (status) {
-                status.textContent = `種別・行先スクロール転送中... (${typeDestinationScrollPacket.length} bytes)`;
-            }
-
-            console.log("ESP32 type/destination scroll packet:", typeDestinationScrollPacket.length, "bytes");
-
-            const scrollFormData = new FormData();
-            scrollFormData.append(
-                "file",
-                new Blob([typeDestinationScrollPacket], { type: "application/octet-stream" }),
-                "type_destination_scroll.bin"
-            );
-
-            const scrollResponse = await fetch(`http://${ip}${ESP32_TYPE_DESTINATION_SCROLL_PATH}`, {
-                method: "POST",
-                body: scrollFormData,
-                signal: transferController.signal
-            });
-
-            if (!scrollResponse.ok) {
-                throw new Error(`種別・行先スクロール転送失敗: HTTP ${scrollResponse.status}`);
-            }
-
-            console.log("ESP32 type/destination scroll response OK");
-        }
-
-        if (status) {
-            status.textContent = "転送完了";
-        }
-
-    } catch (error) {
-        if (error && error.name === "AbortError") {
-            console.log("ESP32転送を中断しました");
-            return;
-        }
-
-        console.error("ESP32転送エラー:", error);
-
-        if (status) {
-            status.textContent = "転送失敗: " + (error?.message || "不明なエラー");
-        }
-
-    } finally {
-        transferController = null;
+async function sendChunkedData(characteristic, uint8Array, chunkSize = 256) {
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, i + chunkSize);
+        await characteristic.writeValueWithoutResponse(chunk);
+        await new Promise(resolve => setTimeout(resolve, 8));
     }
 }
 
 // ============================================================
-// GCD
+// Bluetooth 転送実行メイン
 // ============================================================
+async function transferToESP32() {
+    const status = document.getElementById("transferStatus");
+
+    if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt.connected) {
+        if (status) status.textContent = "Bluetooth未接続です。「Bluetooth接続」を押してください";
+        return;
+    }
+
+    if (isBleTransferring) {
+        return; // 連打・二重送信用ブロック
+    }
+
+    isBleTransferring = true;
+
+    try {
+        if (status) status.textContent = "データ作成中...";
+
+        const packet = createESP32Packet();
+        if (!packet || packet.length === 0) {
+            throw new Error("表示シーンがありません");
+        }
+
+        if (status) status.textContent = `メイン転送中... (${packet.length} bytes)`;
+        await sendChunkedData(bleRxCharacteristic, packet);
+
+        const br = getNumberValue("softBrightness", 1.0);
+        const gam = getNumberValue("gammaCorrection", 2.5);
+        const typeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
+
+        if (typeDestinationPacket && typeDestinationPacket.length > 0) {
+            if (status) status.textContent = `種別・行先転送中... (${typeDestinationPacket.length} bytes)`;
+            await sendChunkedData(bleRxCharacteristic, typeDestinationPacket);
+        }
+
+        if (status) status.textContent = "転送完了！";
+
+    } catch (error) {
+        console.error("BLE転送エラー:", error);
+        if (status) status.textContent = "転送失敗: " + (error?.message || "エラー発生");
+    } finally {
+        isBleTransferring = false;
+    }
+}
+
 function gcd(a, b) {
     a = Math.abs(a);
     b = Math.abs(b);
-
     while (b !== 0) {
         const temp = a % b;
         a = b;
         b = temp;
     }
-
     return a;
 }
 
-// ============================================================
-// LCM
-// ============================================================
 function lcm(a, b) {
-    if (a === 0 || b === 0) {
-        return 0;
-    }
-
+    if (a === 0 || b === 0) return 0;
     return Math.abs((a / gcd(a, b)) * b);
 }
