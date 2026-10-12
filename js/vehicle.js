@@ -1,9 +1,17 @@
-// ============================================================
-// 車両選択処理 (vehicle.js)
-// ============================================================
+let vehicles = [];
+let selectedVehicle = null;
+let config = null;
 
-// 車両リストの描画処理
-function renderVehicleList(vehicles) {
+async function loadVehicles() {
+    try {
+        const response = await fetch("vehicles/vehicles.json");
+        vehicles = await response.json();
+    } catch (e) {
+        console.error("車両一覧の読み込み失敗:", e);
+    }
+}
+
+function createVehicleButtons() {
     const container = document.getElementById("vehicleSelect");
     if (!container) return;
 
@@ -13,67 +21,81 @@ function renderVehicleList(vehicles) {
 
     vehicles.forEach(vehicle => {
         const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "vehicleBtn";
-        btn.textContent = vehicle.name || vehicle.id || "車両";
-        
-        btn.addEventListener("click", () => {
-            selectVehicle(vehicle);
-        });
+        const iconContainer = document.createElement("div");
+        iconContainer.className = "vehicleIcons";
 
+        if (Array.isArray(vehicle.icons)) {
+            vehicle.icons.forEach(icon => {
+                const img = document.createElement("img");
+                img.src = icon;
+                img.className = "vehicleIcon";
+                iconContainer.appendChild(img);
+            });
+        }
+
+        const span = document.createElement("span");
+        span.textContent = vehicle.name || vehicle.id || "車両";
+
+        btn.append(iconContainer, span);
+
+        btn.addEventListener("click", async () => {
+            await selectVehicle(vehicle);
+        });
         container.appendChild(btn);
     });
 }
 
-// 設定ファイル (JSON) の非同期読み込み関数
-async function loadConfig(pathOrId) {
-    if (!pathOrId) throw new Error("設定パスまたはIDが指定されていません");
-
-    // もし既設の loadJson 関数が存在すればそちらを優先使用
-    if (typeof loadJson === "function") {
-        return await loadJson(pathOrId);
-    }
-
-    let fetchPath = pathOrId;
-    if (typeof pathOrId === "string" && !pathOrId.endsWith(".json")) {
-        fetchPath = `json/vehicle/${pathOrId}.json`;
-    }
-
-    const response = await fetch(fetchPath);
-    if (!response.ok) {
-        throw new Error(`設定ファイルの取得に失敗しました (${response.status})`);
-    }
-
-    return await response.json();
+// 単一車両設定ファイルの読み込み関数
+async function loadConfig() {
+    if (!selectedVehicle || !selectedVehicle.config) return;
+    const response = await fetch(selectedVehicle.config);
+    config = await response.json();
 }
 
-// 車両選択時のメイン処理 (47行目のエラー修正箇所)
-async function selectVehicle(vehicleTarget) {
+// 車両選択時のメイン処理
+async function selectVehicle(vehicle) {
     try {
-        let vehicleData = null;
+        document.body.classList.add("simulatorMode");
 
-        if (typeof vehicleTarget === "string") {
-            // 文字列（IDまたはパス）が渡された場合
-            vehicleData = await loadConfig(vehicleTarget);
-        } else if (vehicleTarget && typeof vehicleTarget === "object") {
-            if (vehicleTarget.json || vehicleTarget.path || vehicleTarget.id) {
-                const target = vehicleTarget.json || vehicleTarget.path || vehicleTarget.id;
-                vehicleData = await loadConfig(target);
-            } else {
-                // オブジェクト自体がすでに config データである場合
-                vehicleData = vehicleTarget;
-            }
+        selectedVehicle = vehicle;
+        const vehicleSelector = document.getElementById("vehicleSelector");
+        const simulator = document.getElementById("simulator");
+        
+        if (vehicleSelector) vehicleSelector.hidden = true;
+        if (simulator) simulator.hidden = false;
+
+        await loadConfig();
+
+        if (config && config.hasScroll) {
+            await loadFont();
         }
 
-        if (!vehicleData) {
-            throw new Error("車両設定データが空です");
+        await startVehicle();
+        
+        if (typeof setExplanation === "function") setExplanation();
+
+        if (config && config.setSwitchingTime) {
+            const jaInput = document.querySelector("#jaTime input");
+            const enInput = document.querySelector("#enTime input");
+            const infoInput = document.querySelector("#infoTime input");
+            const carInput = document.querySelector("#carNumberTime input");
+
+            if (jaInput && config.jaTime !== undefined) jaInput.value = config.jaTime;
+            if (enInput && config.enTime !== undefined) enInput.value = config.enTime;
+            if (infoInput && config.infoTime !== undefined) infoInput.value = config.infoTime;
+            if (carInput && config.carNumberTime !== undefined) carInput.value = config.carNumberTime;
         }
 
-        // シミュレーターの初期化
-        if (typeof initSimulator === "function") {
-            initSimulator(vehicleData);
+        if (config && config.hasReferenceSite) {
+            if (typeof setReferenceSite === "function") setReferenceSite();
         } else {
-            console.error("initSimulator 関数が見つかりません。script.js の読み込みを確認してください。");
+            const refEl = document.getElementById("referenceSite");
+            if (refEl) refEl.hidden = true;
+        }
+
+        // 車両読み込み完了後にBLE自動転送を実行
+        if (typeof triggerAutoTransfer === "function") {
+            triggerAutoTransfer();
         }
 
     } catch (error) {
@@ -82,7 +104,14 @@ async function selectVehicle(vehicleTarget) {
     }
 }
 
-// 他ファイルからの参照用グローバル定義
+async function initVehicles() {
+    await loadVehicles();
+    createVehicleButtons();
+}
+
+// 他ファイルからの参照用にグローバル展開
 window.loadConfig = loadConfig;
 window.selectVehicle = selectVehicle;
-window.renderVehicleList = renderVehicleList;
+window.initVehicles = initVehicles;
+
+window.vehiclesReady = initVehicles();
