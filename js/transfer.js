@@ -18,15 +18,9 @@ const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const ESP32_TYPE_DESTINATION_SCROLL_PATH = "/update-type-destination-scroll";
 
-// ============================================================
-// スクロール速度
-// ============================================================
-
-// 既存の停車駅スクロール速度
-const transferScrollSpeed = 17;
-
-// 種別・行先スクロール速度
-const transferTypeDestinationScrollSpeed = 12;
+// スクロール速度設定
+const transferScrollSpeed = 17; // 既存文字スクロール用
+const transferTypeDestinationScrollSpeed = 13; // 種別・行先スクロール専用速度 (13)
 
 // ============================================================
 // 自動転送
@@ -36,31 +30,8 @@ function triggerAutoTransfer() {
         clearTimeout(autoTransferTimeout);
     }
     autoTransferTimeout = setTimeout(() => {
-        const ip = document.getElementById("esp32Ip");
-        if (ip && ip.value.trim() !== "") {
-            transferToESP32();
-        }
+        transferToESP32();
     }, 500);
-}
-
-function isTypeScrollEnabled() {
-    return typeScroll;
-}
-
-function isDestinationScrollEnabled() {
-    return destinationScroll;
-}
-
-function isTypeDestinationScrollCategoryEnabled(category) {
-    if (category === "type") {
-        return typeScroll;
-    }
-
-    if (category === "destination") {
-        return destinationScroll;
-    }
-
-    return false;
 }
 
 document.addEventListener("click", (e) => {
@@ -448,32 +419,16 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 // ============================================================
 // 新しい種別・行先スクロール パケット生成
 // ============================================================
-// パケット:
-// [8byte header]
-// [4系統 × 16byte descriptor]
-// [type JA RGB565]
-// [type EN RGB565]
-// [destination JA RGB565]
-// [destination EN RGB565]
-//
-// descriptor:
-// 0 active
-// 1 kind       0=type / 1=destination
-// 2 lang       0=ja / 1=en
-// 3-4 width
-// 5 height
-// 6-7 areaLeft
-// 8-9 areaRight
-// 10 areaTop
-// 11 areaBottom
-// 12-15 dataLength
-// ============================================================
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
 
     if (states.length === 0) {
         return new Uint8Array(0);
     }
+
+    const hw = Math.round(getNumberValue("hardwareWidth", 192));
+    const pw = config && Number.isFinite(Number(config.ledWidth)) ? Number(config.ledWidth) : 160;
+    const margin = Math.max(0, hw - pw);
 
     const descriptors = [];
     const bitmaps = [];
@@ -500,8 +455,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         if (
             info &&
             info.state &&
-            info.state.active &&
-            isTypeDestinationScrollCategoryEnabled(info.category)
+            info.state.active
         ) {
             let item = null;
 
@@ -522,13 +476,14 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.active = 1;
                 descriptor.width = created.width;
                 descriptor.height = created.height;
+                
                 descriptor.areaLeft = Math.max(
                     0,
-                    Math.round(info.state.areaLeft)
+                    Math.round(info.state.areaLeft) + margin
                 );
                 descriptor.areaRight = Math.max(
                     0,
-                    Math.round(info.state.areaRight)
+                    Math.round(info.state.areaRight) + margin
                 );
                 descriptor.areaTop = Math.max(
                     0,
@@ -542,22 +497,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 bitmap = created.sbuf;
             }
         }
-        console.log(
-            `ESP32 TD[${i}]`,
-            {
-                active: descriptor.active,
-                kind: descriptor.kind,
-                lang: descriptor.lang,
-                width: descriptor.width,
-                height: descriptor.height,
-                areaLeft: descriptor.areaLeft,
-                areaRight: descriptor.areaRight,
-                areaTop: descriptor.areaTop,
-                areaBottom: descriptor.areaBottom,
-                dataLength: descriptor.dataLength,
-                bitmapLength: bitmap.length
-            }
-        );
 
         descriptors.push(descriptor);
         bitmaps.push(bitmap);
@@ -570,10 +509,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         if (descriptor.active) {
             activeCount++;
         }
-    }
-
-    if (activeCount === 0) {
-        return new Uint8Array(0);
     }
 
     const packetLength =
@@ -699,7 +634,6 @@ function createESP32Packet() {
             ? scrollId
             : null;
 
-    // これは既存スクロール用だけ
     if (scrollActive) {
         scrollId = true;
     }
@@ -739,7 +673,7 @@ function createESP32Packet() {
             Math.round(
                 getNumberValue(
                     "hardwareWidth",
-                    160
+                    192
                 )
             );
 
@@ -779,10 +713,9 @@ function createESP32Packet() {
         const gam =
             getNumberValue(
                 "gammaCorrection",
-                1.5
+                2.5
             );
 
-        // 既存スクロール
         const scrollData =
             createESP32ScrollData(
                 br,
@@ -912,7 +845,6 @@ function createESP32Packet() {
         return packet;
 
     } finally {
-        // 既存スクロールの状態だけ元に戻す
         if (
             typeof scrollId !== "undefined"
         ) {
@@ -950,7 +882,7 @@ function createESP32Frame(
     const gam =
         getNumberValue(
             "gammaCorrection",
-            1.5
+            2.5
         );
 
     const ledHeight =
@@ -1378,7 +1310,7 @@ function createESP32Header(
                 Math.round(
                     getNumberValue(
                         "hwBrightness",
-                        12
+                        8
                     )
                 )
             )
@@ -1410,17 +1342,15 @@ async function transferToESP32() {
             "esp32Ip"
         );
 
-    const ip =
-        ipInput
-            ? ipInput.value.trim()
-            : "192.168.4.1";
+    let rawIp = ipInput ? ipInput.value.trim() : "";
+    let ip = rawIp;
 
-    if (!ip) {
-        if (status) {
-            status.textContent =
-                "ESP32のIPアドレスを入力してください";
+    if (!ip || ip === "192.168.4.1") {
+        if (location.hostname && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+            ip = location.hostname;
+        } else {
+            ip = "192.168.4.1";
         }
-        return;
     }
 
     if (transferController) {
@@ -1460,7 +1390,7 @@ async function transferToESP32() {
         );
 
         // ====================================================
-        // 既存の転送
+        // メインデータ転送
         // ====================================================
         const formData =
             new FormData();
@@ -1519,7 +1449,7 @@ async function transferToESP32() {
         const gam =
             getNumberValue(
                 "gammaCorrection",
-                1.5
+                2.5
             );
 
         const typeDestinationScrollPacket =
