@@ -688,22 +688,19 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 爆速転送（490byteチャンク、8パケットに1回のみ1msウェイト）
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 490) {
+// 通信速度に完全同期したパケット送信（240byte, 12msウェイト）
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
-    let packetCount = 0;
-    
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         
         await characteristic.writeValueWithoutResponse(chunk);
         
-        packetCount++;
-        if (packetCount % 8 === 0) {
-            const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
-            updateTransferStatus(`${label} 転送中... ${progress}%`);
-            await new Promise(resolve => setTimeout(resolve, 1));
-        }
+        const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
+        updateTransferStatus(`${label} 転送中... ${progress}%`);
+        
+        // BLE物理層の送信ペースに合わせた12msの同期ウェイト
+        await new Promise(resolve => setTimeout(resolve, 12));
     }
 }
 
