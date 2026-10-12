@@ -49,4 +49,7 @@ let areaBottom = 32;
 
 let scrollSpeed = 450;
 
+let typeScroll = false;
+let destinationScroll = false;
+
 const langs = ["ja", "en"];
