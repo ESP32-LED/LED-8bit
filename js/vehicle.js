@@ -1,76 +1,88 @@
-let vehicles = [];
-let selectedVehicle = null;
-let config = null;
+// ============================================================
+// 車両選択処理 (vehicle.js)
+// ============================================================
 
-async function loadVehicles() {
-    const response = await fetch("vehicles/vehicles.json");
-    vehicles = await response.json();
-}
-
-function createVehicleButtons() {
-
+// 車両リストの描画処理
+function renderVehicleList(vehicles) {
     const container = document.getElementById("vehicleSelect");
+    if (!container) return;
 
     container.innerHTML = "";
 
+    if (!Array.isArray(vehicles)) return;
+
     vehicles.forEach(vehicle => {
         const btn = document.createElement("button");
-        const iconContainer = document.createElement("div");
-        iconContainer.className = "vehicleIcons";
-
-        vehicle.icons.forEach(icon => {
-            const img = document.createElement("img");
-            img.src = icon;
-            img.className = "vehicleIcon";
-            iconContainer.appendChild(img);
+        btn.type = "button";
+        btn.className = "vehicleBtn";
+        btn.textContent = vehicle.name || vehicle.id || "車両";
+        
+        btn.addEventListener("click", () => {
+            selectVehicle(vehicle);
         });
 
-        const span = document.createElement("span");
-        span.textContent = vehicle.name;
-
-        btn.append(iconContainer, span);
-
-        btn.addEventListener("click", async () => {
-            await selectVehicle(vehicle);
-        });
         container.appendChild(btn);
     });
 }
 
-async function selectVehicle(vehicle) {
-    document.body.classList.add("simulatorMode");
+// 設定ファイル (JSON) の非同期読み込み関数
+async function loadConfig(pathOrId) {
+    if (!pathOrId) throw new Error("設定パスまたはIDが指定されていません");
 
-    selectedVehicle = vehicle;
-    document.getElementById("vehicleSelector").hidden = true;
-    document.getElementById("simulator").hidden = false;
-
-    await loadConfig();
-
-    if (config.hasScroll) {
-        await loadFont();
+    // もし既設の loadJson 関数が存在すればそちらを優先使用
+    if (typeof loadJson === "function") {
+        return await loadJson(pathOrId);
     }
 
-    await startVehicle();
-    initVehicles();
-    setExplanation();
-
-    if (config.setSwitchingTime) {
-        document.querySelector("#jaTime input").value = config.jaTime;
-        document.querySelector("#enTime input").value = config.enTime;
-        document.querySelector("#infoTime input").value = config.infoTime;
-        document.querySelector("#carNumberTime input").value = config.carNumberTime;
+    let fetchPath = pathOrId;
+    if (typeof pathOrId === "string" && !pathOrId.endsWith(".json")) {
+        fetchPath = `json/vehicle/${pathOrId}.json`;
     }
 
-    if (config.hasReferenceSite) {
-        setReferenceSite();
-    } else {
-        document.getElementById("referenceSite").hidden = true;
+    const response = await fetch(fetchPath);
+    if (!response.ok) {
+        throw new Error(`設定ファイルの取得に失敗しました (${response.status})`);
+    }
+
+    return await response.json();
+}
+
+// 車両選択時のメイン処理 (47行目のエラー修正箇所)
+async function selectVehicle(vehicleTarget) {
+    try {
+        let vehicleData = null;
+
+        if (typeof vehicleTarget === "string") {
+            // 文字列（IDまたはパス）が渡された場合
+            vehicleData = await loadConfig(vehicleTarget);
+        } else if (vehicleTarget && typeof vehicleTarget === "object") {
+            if (vehicleTarget.json || vehicleTarget.path || vehicleTarget.id) {
+                const target = vehicleTarget.json || vehicleTarget.path || vehicleTarget.id;
+                vehicleData = await loadConfig(target);
+            } else {
+                // オブジェクト自体がすでに config データである場合
+                vehicleData = vehicleTarget;
+            }
+        }
+
+        if (!vehicleData) {
+            throw new Error("車両設定データが空です");
+        }
+
+        // シミュレーターの初期化
+        if (typeof initSimulator === "function") {
+            initSimulator(vehicleData);
+        } else {
+            console.error("initSimulator 関数が見つかりません。script.js の読み込みを確認してください。");
+        }
+
+    } catch (error) {
+        console.error("車両選択エラー:", error);
+        alert("車両データの読み込みに失敗しました: " + (error?.message || error));
     }
 }
 
-async function initVehicles() {
-    await loadVehicles();
-    createVehicleButtons();
-}
-
-window.vehiclesReady = initVehicles();
+// 他ファイルからの参照用グローバル定義
+window.loadConfig = loadConfig;
+window.selectVehicle = selectVehicle;
+window.renderVehicleList = renderVehicleList;
