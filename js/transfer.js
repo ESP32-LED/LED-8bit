@@ -22,6 +22,115 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
+// ============================================================
+// JavaScript版 高速 LZ4 エンコーダー
+// ============================================================
+function compressLZ4(input) {
+    const srcLen = input.length;
+    if (srcLen === 0) return new Uint8Array(0);
+
+    const hashtable = new Int32Array(4096).fill(-1);
+    const compressed = [];
+
+    let anchor = 0;
+    let ip = 0;
+
+    const hashFn = (p) => {
+        const val = (input[p] | (input[p + 1] << 8) | (input[p + 2] << 16) | (input[p + 3] << 24)) >>> 0;
+        return ((val * 2654435761) >>> 0) >> 20;
+    };
+
+    while (ip + 12 < srcLen) {
+        const h = hashFn(ip);
+        const ref = hashtable[h];
+        hashtable[h] = ip;
+
+        if (
+            ref >= 0 &&
+            ip - ref <= 65535 &&
+            input[ref] === input[ip] &&
+            input[ref + 1] === input[ip + 1] &&
+            input[ref + 2] === input[ip + 2] &&
+            input[ref + 3] === input[ip + 3]
+        ) {
+            const litLen = ip - anchor;
+            let matchLen = 4;
+            while (ip + matchLen < srcLen && input[ref + matchLen] === input[ip + matchLen]) {
+                matchLen++;
+            }
+
+            let tokenLit = litLen >= 15 ? 15 : litLen;
+            let tokenMatch = matchLen - 4 >= 15 ? 15 : matchLen - 4;
+            compressed.push((tokenLit << 4) | tokenMatch);
+
+            if (litLen >= 15) {
+                let len = litLen - 15;
+                while (len >= 255) {
+                    compressed.push(255);
+                    len -= 255;
+                }
+                compressed.push(len);
+            }
+
+            for (let i = 0; i < litLen; i++) {
+                compressed.push(input[anchor + i]);
+            }
+
+            const offset = ip - ref;
+            compressed.push(offset & 0xff, (offset >> 8) & 0xff);
+
+            if (matchLen - 4 >= 15) {
+                let len = matchLen - 4 - 15;
+                while (len >= 255) {
+                    compressed.push(255);
+                    len -= 255;
+                }
+                compressed.push(len);
+            }
+
+            ip += matchLen;
+            anchor = ip;
+        } else {
+            ip++;
+        }
+    }
+
+    const lastLit = srcLen - anchor;
+    let tokenLit = lastLit >= 15 ? 15 : lastLit;
+    compressed.push((tokenLit << 4) | 0);
+
+    if (lastLit >= 15) {
+        let len = lastLit - 15;
+        while (len >= 255) {
+            compressed.push(255);
+            len -= 255;
+        }
+        compressed.push(len);
+    }
+
+    for (let i = 0; i < lastLit; i++) {
+        compressed.push(input[anchor + i]);
+    }
+
+    const compLen = compressed.length;
+    // LZ4用ヘッダー: [0xC4 (1B)] + [解凍後サイズ (4B)] + [圧縮後サイズ (4B)]
+    const header = new Uint8Array(9);
+    header[0] = 0xc4;
+    header[1] = srcLen & 0xff;
+    header[2] = (srcLen >> 8) & 0xff;
+    header[3] = (srcLen >> 16) & 0xff;
+    header[4] = (srcLen >> 24) & 0xff;
+    header[5] = compLen & 0xff;
+    header[6] = (compLen >> 8) & 0xff;
+    header[7] = (compLen >> 16) & 0xff;
+    header[8] = (compLen >> 24) & 0xff;
+
+    const result = new Uint8Array(9 + compLen);
+    result.set(header, 0);
+    result.set(compressed, 9);
+    return result;
+}
+
 function ensureBluetoothUI() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     if (vehicleSelector && !vehicleSelector.querySelector(".esp32Setting")) {
@@ -63,7 +172,7 @@ if (document.readyState === "loading") {
 
 function updateTransferStatus(text) {
     const elements = document.querySelectorAll(".transferStatus, #transferStatus");
-    elements.forEach(el => {
+    elements.forEach((el) => {
         if (el) el.textContent = text;
     });
 }
@@ -83,7 +192,7 @@ async function connectBluetooth() {
             optionalServices: [BLE_SERVICE_UUID]
         });
 
-        bleDevice.addEventListener('gattserverdisconnected', () => {
+        bleDevice.addEventListener("gattserverdisconnected", () => {
             bleRxCharacteristic = null;
             updateTransferStatus("Bluetoothが切断されました");
         });
@@ -98,7 +207,7 @@ async function connectBluetooth() {
         bleRxCharacteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_RX_UUID);
 
         updateTransferStatus("Bluetooth接続完了！");
-        
+
         setTimeout(() => {
             transferToESP32();
         }, 200);
@@ -267,8 +376,8 @@ function createESP32ScrollData(br, gam) {
                 }
 
                 const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-                sbuf[sp++] = rgb565 & 0xFF;
-                sbuf[sp++] = (rgb565 >> 8) & 0xFF;
+                sbuf[sp++] = rgb565 & 0xff;
+                sbuf[sp++] = (rgb565 >> 8) & 0xff;
             }
         }
     }
@@ -327,8 +436,8 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 
             const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 
-            sbuf[sp++] = rgb565 & 0xFF;
-            sbuf[sp++] = (rgb565 >> 8) & 0xFF;
+            sbuf[sp++] = rgb565 & 0xff;
+            sbuf[sp++] = (rgb565 >> 8) & 0xff;
         }
     }
 
@@ -340,7 +449,10 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     if (states.length === 0) return new Uint8Array(0);
 
     const hw = Math.round(getNumberValue("hardwareWidth", 192));
-    const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
+    const pw =
+        typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))
+            ? Number(config.ledWidth)
+            : 160;
     const margin = Math.max(0, hw - pw);
 
     const descriptors = [];
@@ -366,12 +478,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
 
         let bitmap = new Uint8Array(0);
 
-        if (
-            info &&
-            info.state &&
-            info.state.active &&
-            isTypeDestinationScrollCategoryEnabled(info.category)
-        ) {
+        if (info && info.state && info.state.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
             let item = null;
             if (typeof getItem === "function") {
                 if (info.category === "type" && typeof typeId !== "undefined") {
@@ -418,32 +525,32 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
 
     packet[offset++] = ESP32_TYPE_DESTINATION_SCROLL_VERSION;
     packet[offset++] = ESP32_TYPE_DESTINATION_SCROLL_COUNT;
-    packet[offset++] = transferTypeDestinationScrollSpeed & 0xFF;
+    packet[offset++] = transferTypeDestinationScrollSpeed & 0xff;
     packet[offset++] = 0;
 
     for (const descriptor of descriptors) {
-        packet[offset++] = descriptor.active & 0xFF;
-        packet[offset++] = descriptor.kind & 0xFF;
-        packet[offset++] = descriptor.lang & 0xFF;
+        packet[offset++] = descriptor.active & 0xff;
+        packet[offset++] = descriptor.kind & 0xff;
+        packet[offset++] = descriptor.lang & 0xff;
 
-        packet[offset++] = descriptor.width & 0xFF;
-        packet[offset++] = (descriptor.width >> 8) & 0xFF;
+        packet[offset++] = descriptor.width & 0xff;
+        packet[offset++] = (descriptor.width >> 8) & 0xff;
 
-        packet[offset++] = descriptor.height & 0xFF;
+        packet[offset++] = descriptor.height & 0xff;
 
-        packet[offset++] = descriptor.areaLeft & 0xFF;
-        packet[offset++] = (descriptor.areaLeft >> 8) & 0xFF;
+        packet[offset++] = descriptor.areaLeft & 0xff;
+        packet[offset++] = (descriptor.areaLeft >> 8) & 0xff;
 
-        packet[offset++] = descriptor.areaRight & 0xFF;
-        packet[offset++] = (descriptor.areaRight >> 8) & 0xFF;
+        packet[offset++] = descriptor.areaRight & 0xff;
+        packet[offset++] = (descriptor.areaRight >> 8) & 0xff;
 
-        packet[offset++] = descriptor.areaTop & 0xFF;
-        packet[offset++] = descriptor.areaBottom & 0xFF;
+        packet[offset++] = descriptor.areaTop & 0xff;
+        packet[offset++] = descriptor.areaBottom & 0xff;
 
-        packet[offset++] = descriptor.dataLength & 0xFF;
-        packet[offset++] = (descriptor.dataLength >> 8) & 0xFF;
-        packet[offset++] = (descriptor.dataLength >> 16) & 0xFF;
-        packet[offset++] = (descriptor.dataLength >> 24) & 0xFF;
+        packet[offset++] = descriptor.dataLength & 0xff;
+        packet[offset++] = (descriptor.dataLength >> 8) & 0xff;
+        packet[offset++] = (descriptor.dataLength >> 16) & 0xff;
+        packet[offset++] = (descriptor.dataLength >> 24) & 0xff;
     }
 
     for (const bitmap of bitmaps) {
@@ -538,16 +645,13 @@ function createESP32Packet() {
         packet.set(sceneData, header.length + scrollData.sbuf.length);
 
         return packet;
-
     } finally {
         if (typeof scrollId !== "undefined") scrollId = oldScrollId;
     }
 }
 
 function createESP32Frame(matrix, hw, margin) {
-    const frame = Array.from({ length: 8 }, () =>
-        Array.from({ length: 16 }, () => new Uint8Array(hw))
-    );
+    const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
 
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
@@ -571,9 +675,9 @@ function createESP32Frame(matrix, hw, margin) {
             const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
 
             for (let bit = 0; bit < 8; bit++) {
-                if ((r >> bit) & 1) frame[bit][targetY % 16][targetX] |= (targetY < 16 ? 0x01 : 0x08);
-                if ((g >> bit) & 1) frame[bit][targetY % 16][targetX] |= (targetY < 16 ? 0x02 : 0x10);
-                if ((b >> bit) & 1) frame[bit][targetY % 16][targetX] |= (targetY < 16 ? 0x04 : 0x20);
+                if ((r >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x01 : 0x08;
+                if ((g >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x02 : 0x10;
+                if ((b >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x04 : 0x20;
             }
         }
     }
@@ -619,7 +723,6 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
             allData.set(sceneBuf, offset);
             offset += sceneSize;
         }
-
     } finally {
         scene = oldScene;
         typeScene = oldTypeScene;
@@ -645,7 +748,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
         const infoTime = getNumberValue("infoTime", 3) * 1000;
         const carNumberTime = getNumberValue("carNumberTime", 3) * 1000;
 
-        times = sceneList.slice(0, ESP32_MAX_SCENES).map(currentScene => {
+        times = sceneList.slice(0, ESP32_MAX_SCENES).map((currentScene) => {
             if (
                 currentScene.information === "carNumber" ||
                 currentScene.information === "carNumber_normal" ||
@@ -660,47 +763,45 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
             }
             return 3000;
         });
-
     } else {
         times = [3000, 3000, 3000, 3000, 3000];
     }
 
-    header[0] = 0xAA;
+    header[0] = 0xaa;
     header[1] = 0x56;
-    header[2] = sceneCount & 0xFF;
-    header[3] = transferScrollSpeed & 0xFF;
-    header[4] = scrollWidth & 0xFF;
-    header[5] = (scrollWidth >> 8) & 0xFF;
-    header[6] = xOff & 0xFF;
+    header[2] = sceneCount & 0xff;
+    header[3] = transferScrollSpeed & 0xff;
+    header[4] = scrollWidth & 0xff;
+    header[5] = (scrollWidth >> 8) & 0xff;
+    header[6] = xOff & 0xff;
 
     for (let i = 0; i < 5; i++) {
         const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? 3000)));
-        header[7 + i * 2] = time & 0xFF;
-        header[8 + i * 2] = (time >> 8) & 0xFF;
+        header[7 + i * 2] = time & 0xff;
+        header[8 + i * 2] = (time >> 8) & 0xff;
     }
 
     const hwBright = Math.max(0, Math.min(255, Math.round(getNumberValue("hwBrightness", 12))));
 
-    header[17] = hwBright & 0xFF;
-    header[18] = hw & 0xFF;
-    header[19] = (hw >> 8) & 0xFF;
+    header[17] = hwBright & 0xff;
+    header[18] = hw & 0xff;
+    header[19] = (hw >> 8) & 0xff;
 
     return header;
 }
 
-// 通信速度に完全同期したパケット送信（240byte, 12msウェイト）
+// LZ4圧縮データの高速分割送信（240byte, 10msウェイト）
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
-        
+
         await characteristic.writeValueWithoutResponse(chunk);
-        
+
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
-        
-        // BLE物理層の送信ペースに合わせた12msの同期ウェイト
-        await new Promise(resolve => setTimeout(resolve, 12));
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
     }
 }
 
@@ -722,26 +823,28 @@ async function transferToESP32() {
     isBleTransferring = true;
 
     try {
-        updateTransferStatus("データ作成中...");
+        updateTransferStatus("データ作成・圧縮中...");
 
-        const packet = createESP32Packet();
-        if (!packet || packet.length === 0) {
+        const rawPacket = createESP32Packet();
+        if (!rawPacket || rawPacket.length === 0) {
             updateTransferStatus("表示シーンが選択されていません");
             return;
         }
 
-        await sendChunkedData(bleRxCharacteristic, packet, "メイン表示");
+        // LZ4 圧縮の実行
+        const lz4Packet = compressLZ4(rawPacket);
+        await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
         const br = getNumberValue("softBrightness", 1.0);
         const gam = getNumberValue("gammaCorrection", 2.5);
-        const typeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
+        const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
-        if (typeDestinationPacket && typeDestinationPacket.length > 0) {
-            await sendChunkedData(bleRxCharacteristic, typeDestinationPacket, "種別・行先スクロール");
+        if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
+            const lz4TypeDestPacket = compressLZ4(rawTypeDestinationPacket);
+            await sendChunkedData(bleRxCharacteristic, lz4TypeDestPacket, "種別・行先スクロール(LZ4)");
         }
 
         updateTransferStatus("転送完了！");
-
     } catch (error) {
         console.error("BLE転送エラー:", error);
         updateTransferStatus("転送失敗: " + (error?.message || error));
