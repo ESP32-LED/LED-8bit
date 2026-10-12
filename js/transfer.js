@@ -119,7 +119,7 @@ function triggerAutoTransfer() {
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
-    }, 250);
+    }, 200);
 }
 
 function isTypeScrollEnabled() {
@@ -688,19 +688,22 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 爆速＆パケット落としゼロ（Chunk: 180byte, Wait: 4ms）
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 180) {
+// 爆速転送（490byteチャンク、8パケットに1回のみ1msウェイト）
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 490) {
     const total = uint8Array.length;
+    let packetCount = 0;
+    
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         
         await characteristic.writeValueWithoutResponse(chunk);
         
-        const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
-        updateTransferStatus(`${label} 転送中... ${progress}%`);
-        
-        // 4msのウェイトでESP32側のBLE受信用キュー消化を安定化
-        await new Promise(resolve => setTimeout(resolve, 4));
+        packetCount++;
+        if (packetCount % 8 === 0) {
+            const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
+            updateTransferStatus(`${label} 転送中... ${progress}%`);
+            await new Promise(resolve => setTimeout(resolve, 1));
+        }
     }
 }
 
