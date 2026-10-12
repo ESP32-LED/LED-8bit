@@ -1,43 +1,17 @@
-// ============================================================
-// JavaScript Main Controller
-// ============================================================
 async function startVehicle() {
     clearInterval(scrollTimer);
     scrollTimer = null;
 
-window.addEventListener("DOMContentLoaded", () => {
-    initApp();
-});
-
-function initApp() {
-    setupVehicleSelectMethod();
-    setupEventListeners();
-}
     clickStartScrollBtn = false;
     scrollId = null;
 
-function setupVehicleSelectMethod() {
-    const methodSelect = document.getElementById("vehicleSelectMethod");
-    if (!methodSelect) return;
     showLoading();
     
     try { 
         await loadLed();
 
-    methodSelect.addEventListener("change", (e) => {
-        const val = e.target.value;
-        const vehicleSelectDiv = document.getElementById("vehicleSelect");
-        const mapDiv = document.getElementById("map");
         if (!config) return;
 
-        if (val === "list") {
-            if (vehicleSelectDiv) vehicleSelectDiv.hidden = false;
-            if (mapDiv) mapDiv.hidden = true;
-        } else if (val === "grid") {
-            if (vehicleSelectDiv) vehicleSelectDiv.hidden = true;
-            if (mapDiv) mapDiv.hidden = false;
-            if (typeof initMap === "function") {
-                initMap();
         ledsize = config.ledSize;
         ledgap = config.ledGap;
         pitch = ledsize + ledgap;
@@ -55,9 +29,8 @@ function setupVehicleSelectMethod() {
             if (typeof cacheCanvas !== "undefined" && cacheCanvas) {
                 cacheCanvas.width = sizeLed.width;
                 cacheCanvas.height = sizeLed.height;
-}
-}
-    });
+            }
+        }
     
         resizeLed();
         setupVehicleUI();
@@ -67,28 +40,11 @@ function setupVehicleSelectMethod() {
     }
 }
 
-function setupEventListeners() {
-    // 車両選択に戻るボタンのイベント設定（安全ガード付き）
-    const returnBtn = document.getElementById("vehicleSelectButton");
-    if (returnBtn) {
-        returnBtn.addEventListener("click", () => {
-            returnToVehicleSelect();
-        });
-    }
 function resizeLed() {
     if (!config) return;
     const main = document.querySelector("main");
     if (!main || typeof sizeLed === "undefined" || !sizeLed) return;
 
-    // スクロールチェックボックス
-    const scrollCheck = document.getElementById("scrollCheck");
-    if (scrollCheck) {
-        scrollCheck.addEventListener("change", (e) => {
-            const scrollText = document.getElementById("scrollText");
-            const startScrollBtn = document.getElementById("startScrollBtn");
-            if (scrollText) scrollText.hidden = !e.target.checked;
-            if (startScrollBtn) startScrollBtn.hidden = !e.target.checked;
-        });
     const maxWidth = main.clientWidth - 40;
     const canvasWidth = sizeLed.width;
     const scale = Math.min(1, maxWidth / canvasWidth);
@@ -96,15 +52,9 @@ function resizeLed() {
     if (sizeLed.style) {
         sizeLed.style.width = sizeLed.width * scale + "px";
         sizeLed.style.height = sizeLed.height * scale + "px";
-}
+    }
 }
 
-// ============================================================
-// 車両選択に戻る処理（クラッシュ防止版）
-// ============================================================
-function returnToVehicleSelect() {
-    const simulatorDiv = document.getElementById("simulator");
-    const vehicleSelectorDiv = document.getElementById("vehicleSelector");
 async function loadConfig() {
     if (!selectedVehicle || !selectedVehicle.config) return;
     const response = await fetch(selectedVehicle.config);
@@ -117,29 +67,18 @@ async function loadLed() {
     let response = await fetch(selectedVehicle.config);
     config = await response.json();
 
-    if (simulatorDiv) simulatorDiv.hidden = true;
-    if (vehicleSelectorDiv) vehicleSelectorDiv.hidden = false;
     response = await fetch(selectedVehicle.led);
     jsonData = await response.json();
 
-    // グローバル状態の初期化
-    if (typeof config !== "undefined") {
-        window.config = null;
     if (selectedVehicle.site) {
         response = await fetch(selectedVehicle.site);
         siteData = await response.json();
-}
-    if (typeof typeId !== "undefined") window.typeId = null;
-    if (typeof destinationId !== "undefined") window.destinationId = null;
+    }
 
-    // ステータス表示の安全更新
-    const statusEl = document.getElementById("status");
-    if (statusEl) {
-        statusEl.textContent = "車両を選択してください";
     if (!jsonData?.categories) {
         console.error("JSONが壊れてる");
         return;
-}
+    }
 }
 
 async function loadFont() {
@@ -165,9 +104,6 @@ function setupVehicleUI() {
     safeSetGroupHidden("informationGroup", config.hasInformation);
     if (config.hasInformation && typeof createInformationButtons === "function") createInformationButtons();
 
-    // 転送ステータスの安全更新
-    if (typeof updateTransferStatus === "function") {
-        updateTransferStatus("車両を選択してください");
     safeSetGroupHidden("information2Group", config.hasInformation2);
     if (config.hasInformation2 && typeof createInformation2Buttons === "function") createInformation2Buttons();
 
@@ -185,55 +121,25 @@ function setupVehicleUI() {
     const scrollText = document.getElementById("scrollText");
     if (scrollText && config.scrollLabel !== undefined) {
         scrollText.value = config.scrollLabel;
-}
+    }
 
     if (typeof setVehicleSelectButton === "function") setVehicleSelectButton();
     if (typeof resizeButtonText === "function") resizeButtonText();
 }
 
-// ============================================================
-// シミュレーター初期化（813行目付近のnullクラッシュ保護済み）
-// ============================================================
-function initSimulator(vehicleData) {
-    if (!vehicleData) return;
-    window.config = vehicleData;
 let renderTimer = null;
 
-    const vehicleSelectorDiv = document.getElementById("vehicleSelector");
-    const simulatorDiv = document.getElementById("simulator");
 function nextScene() {
     if (typeof buildSceneList === "function") buildSceneList();
     if (typeof buildTypeSceneList === "function") buildTypeSceneList();
 
-    if (vehicleSelectorDiv) vehicleSelectorDiv.hidden = true;
-    if (simulatorDiv) simulatorDiv.hidden = false;
     if (sceneList.length > 0) scene = frame % sceneList.length;
     if (typeSceneList.length > 0) typeScene = frame % typeSceneList.length;
 
-    // 各要素の安全なセット（nullガード付き）
-    safeSetTextContent("selectedVehicleName", vehicleData.name || "名称未設定");
-    safeSetTextContent("explanationLabel", vehicleData.explanation || "");
     if (typeof applyScene === "function") applyScene();
     if (typeof applyTypeScene === "function") applyTypeScene();
     if (typeof render === "function") render();
 
-    // 参考サイトリンクのレンダリング
-    const refGroup = document.getElementById("referenceSite");
-    const refLinkGroup = document.getElementById("referenceSiteLink");
-    if (refGroup && refLinkGroup) {
-        if (vehicleData.referenceSite && vehicleData.referenceSite.length > 0) {
-            refGroup.hidden = false;
-            refLinkGroup.innerHTML = "";
-            vehicleData.referenceSite.forEach(site => {
-                const a = document.createElement("a");
-                a.href = site.url;
-                a.textContent = site.name;
-                a.target = "_blank";
-                a.style.display = "block";
-                refLinkGroup.appendChild(a);
-            });
-        } else {
-            refGroup.hidden = true;
     frame++;
     renderTimer = setTimeout(nextScene, getSceneInterval());
 }
@@ -263,15 +169,13 @@ function getSceneInterval() {
                 if (currentScene.lang === "ja") sceneInterval = jaTime * 1000;
                 if (currentScene.lang === "en") sceneInterval = enTime * 1000;
             }
-}
+        }
     } else {
         sceneInterval = config.sceneInterval || 3000;
-}
+    }
     return sceneInterval;
 }
 
-    // スイッチング時間設定エリアの初期化
-    setupTimeSettings(vehicleData);
 function startRenderLoop() {
     if (renderTimer !== null) {
         clearTimeout(renderTimer);
@@ -279,9 +183,6 @@ function startRenderLoop() {
     nextScene();
 }
 
-    // 種別・行先等ボタンのレンダリング
-    if (typeof renderButtons === "function") {
-        renderButtons();
 function buildSceneList() {
     sceneList = [];
     if (!config) return;
@@ -479,12 +380,9 @@ function buildSceneList() {
         if (typeof destinationId !== "undefined" && destinationId != null) {
             sceneList.push({ lang: "ja", information: "destination", next: false });
         }
-}
+    }
 }
 
-    // キャンバス初期描画
-    if (typeof render === "function") {
-        render();
 function applyScene() {
     if (sceneList.length === 0) return;
     const s = sceneList[scene % sceneList.length];
@@ -492,61 +390,37 @@ function applyScene() {
         lang = s.lang;
         informationMode = s.information;
         showNext = s.next;
-}
+    }
 }
 
 let typeTimer = null;
 
-    // 自動転送トリガー
-    if (typeof triggerAutoTransfer === "function") {
-        triggerAutoTransfer();
 function buildTypeSceneList() {
     typeSceneList = [{ typeInfo: null }];
     if (typeof hasTypeInformation === "function" && hasTypeInformation()) {
         typeSceneList.push({ typeInfo: "information" });
-}
+    }
 }
 
-// 安全な textContent セットヘルパー関数
-function safeSetTextContent(id, text) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.textContent = text;
 function applyTypeScene() {
     if (typeSceneList.length === 0) return;
     const ts = typeSceneList[typeScene % typeSceneList.length];
     if (ts) {
         typeMode = ts.typeInfo;
-}
+    }
 }
 
-// 時間設定パネルの初期化
-function setupTimeSettings(vehicleData) {
-    const setTimeDiv = document.getElementById("setTime");
-    if (!setTimeDiv) return;
 function initSimulator() {
     if (renderTimer !== null) {
         clearInterval(renderTimer);
         renderTimer = null;
     }
 
-    const jaTime = document.getElementById("jaTime");
-    const enTime = document.getElementById("enTime");
-    const infoTime = document.getElementById("infoTime");
-    const carNumberTime = document.getElementById("carNumberTime");
     if (typeTimer !== null) {
         clearInterval(typeTimer);
         typeTimer = null;
     }
 
-    if (vehicleData.setSwitchingTime) {
-        setTimeDiv.hidden = false;
-        if (jaTime) jaTime.hidden = false;
-        if (enTime) enTime.hidden = false;
-        if (infoTime) infoTime.hidden = false;
-        if (carNumberTime) carNumberTime.hidden = false;
-    } else {
-        setTimeDiv.hidden = true;
     if (config) {
         if (typeof clearMatrix === "function") clearMatrix();
         if (typeof drawMatrix === "function" && typeof createEmptyMatrix === "function") {
@@ -557,7 +431,7 @@ function initSimulator() {
     if (transferController) {
         transferController.abort();
         transferController = null;
-}
+    }
 
     const safeSetText = (id, text) => {
         const el = document.getElementById(id);
@@ -603,31 +477,12 @@ function initSimulator() {
     languageSwitching = null;
 }
 
-// ============================================================
-// イベントハンドラ（ボタン加減算など）
-// ============================================================
-document.addEventListener("click", (e) => {
-    const target = e.target;
-    if (!target) return;
 window.addEventListener("resize", () => {
     requestResizeRender();
 });
 
-    if (target.classList.contains("plus") || target.classList.contains("minus")) {
-        const input = target.parentElement?.querySelector("input[type='number']");
-        if (input) {
-            let val = parseFloat(input.value) || 0;
-            const step = parseFloat(input.step) || 0.1;
-            if (target.classList.contains("plus")) {
-                val += step;
-            } else {
-                val = Math.max(parseFloat(input.min) || 0.1, val - step);
-            }
-            input.value = val.toFixed(1);
 let resizeRequest = null;
 
-            if (typeof triggerAutoTransfer === "function") {
-                triggerAutoTransfer();
 function requestResizeRender() {
     if (resizeRequest) return;
 
@@ -638,7 +493,7 @@ function requestResizeRender() {
             if (typeof ctx !== "undefined" && ctx && typeof sizeLed !== "undefined" && sizeLed && typeof cacheCanvas !== "undefined") {
                 ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
                 ctx.drawImage(cacheCanvas, 0, 0);
-}
+            }
             lastRender = now;
         }
         resizeRequest = null;
@@ -679,7 +534,7 @@ document.addEventListener("mousemove", (e) => {
         if (typeof ctx !== "undefined" && ctx && typeof sizeLed !== "undefined" && sizeLed && typeof cacheCanvas !== "undefined") {
             ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
             ctx.drawImage(cacheCanvas, 0, 0);
-}
+        }
         lastRender = now;
     }
 });
@@ -721,7 +576,7 @@ document.querySelectorAll(".numberInput").forEach(container => {
         clearInterval(repeatTimer);
         startTimer = null;
         repeatTimer = null;
-}
+    }
 
     plus.addEventListener("pointerdown", () => {
         startChanging(() => input.stepUp());
