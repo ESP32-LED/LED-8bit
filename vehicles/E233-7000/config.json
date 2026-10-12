@@ -55,7 +55,7 @@
     "next_normal": false,
     "nextPosition": 16,
 
-    "hasReferenceSite": false,
+    "hasReferenceSite": true,
 
     "ledShape": "circle"
 }
