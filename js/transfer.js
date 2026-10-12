@@ -28,7 +28,7 @@ const transferTypeDestinationScrollSpeed = 13;
 function updateTransferStatus(text) {
     const elements = document.querySelectorAll(".transferStatus, #transferStatus");
     elements.forEach(el => {
-        el.textContent = text;
+        if (el) el.textContent = text;
     });
 }
 
@@ -90,7 +90,7 @@ function triggerAutoTransfer() {
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
-    }, 300);
+    }, 250);
 }
 
 function isTypeScrollEnabled() {
@@ -108,12 +108,13 @@ function isTypeDestinationScrollCategoryEnabled(category) {
 }
 
 document.addEventListener("click", (e) => {
+    if (!e.target) return;
     if (
         e.target.tagName === "BUTTON" ||
-        e.target.closest(".buttonGroup") ||
-        e.target.closest(".selectGroup") ||
-        e.target.closest(".numberInput") ||
-        e.target.closest("#scroll") ||
+        e.target.closest?.(".buttonGroup") ||
+        e.target.closest?.(".selectGroup") ||
+        e.target.closest?.(".numberInput") ||
+        e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
         e.target.id === "scrollCheck"
     ) {
@@ -122,6 +123,7 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("input", (e) => {
+    if (!e.target) return;
     if (
         e.target.id === "scrollText" ||
         e.target.id === "scroll-text-input" ||
@@ -137,6 +139,7 @@ document.addEventListener("input", (e) => {
 });
 
 document.addEventListener("change", (e) => {
+    if (!e.target) return;
     if (
         e.target.id === "scrollCheck" ||
         e.target.id === "scrollText" ||
@@ -656,21 +659,18 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 応答あり送信（writeValue）によるパケットこぼれのない確実・即時送信関数
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 200) {
+// 超高速Bluetooth分割送信関数（Chunk: 240byte, 2msウェイトで爆速かつ安定転送）
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         
-        // 応答あり書き込みで100%パケット抜けを防止
-        if (characteristic.writeValue) {
-            await characteristic.writeValue(chunk);
-        } else {
-            await characteristic.writeValueWithResponse(chunk);
-        }
+        await characteristic.writeValueWithoutResponse(chunk);
         
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
+        
+        await new Promise(resolve => setTimeout(resolve, 2));
     }
 }
 
@@ -683,7 +683,6 @@ async function transferToESP32() {
         return;
     }
 
-    // 車両選択（config）が未ロードの場合は正常メッセージを表示して終了（エラーを防止）
     if (typeof config === "undefined" || !config) {
         updateTransferStatus("Bluetooth接続完了！車両を選択してください");
         return;
