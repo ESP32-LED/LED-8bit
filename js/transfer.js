@@ -92,7 +92,7 @@ function triggerAutoTransfer() {
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
-    }, 300);
+    }, 400);
 }
 
 function isTypeScrollEnabled() {
@@ -680,14 +680,19 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 }
 
 // ============================================================
-// 超高速Bluetooth分割送信関数（Chunk: 480byte, Interval: 2ms）
+// 安定Bluetooth分割送信関数（Chunk: 128byte, 進捗表示付き）
 // ============================================================
-async function sendChunkedData(characteristic, uint8Array, chunkSize = 480) {
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 128) {
+    const total = uint8Array.length;
+    for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
         await characteristic.writeValueWithoutResponse(chunk);
-        // 送信間隔を2msに短縮して爆速化
-        await new Promise(resolve => setTimeout(resolve, 2));
+        
+        // 進捗表示
+        const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
+        updateTransferStatus(`${label} 転送中... ${progress}%`);
+        
+        await new Promise(resolve => setTimeout(resolve, 8));
     }
 }
 
@@ -714,16 +719,14 @@ async function transferToESP32() {
             throw new Error("表示シーンがありません");
         }
 
-        updateTransferStatus(`メイン転送中... (${packet.length} bytes)`);
-        await sendChunkedData(bleRxCharacteristic, packet);
+        await sendChunkedData(bleRxCharacteristic, packet, "メイン表示");
 
         const br = getNumberValue("softBrightness", 1.0);
         const gam = getNumberValue("gammaCorrection", 2.5);
         const typeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
         if (typeDestinationPacket && typeDestinationPacket.length > 0) {
-            updateTransferStatus(`種別・行先転送中... (${typeDestinationPacket.length} bytes)`);
-            await sendChunkedData(bleRxCharacteristic, typeDestinationPacket);
+            await sendChunkedData(bleRxCharacteristic, typeDestinationPacket, "種別・行先スクロール");
         }
 
         updateTransferStatus("転送完了！");
