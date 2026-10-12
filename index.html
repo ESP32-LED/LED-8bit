@@ -42,7 +42,7 @@
 					<div id="lineVehicleList"></div>
 				</div>
 			</div>
-			<!-- LED設定UI（デフォルト値変更版） -->
+			<!-- LED設定UI -->
 			<div id="ledSettings" style="margin-top: 20px; padding: 15px; background: #fcfcfc; border: 1px solid #000; border-radius: 8px;">
 				<h3 style="margin-top: 0;">LED設定</h3>
 				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -159,14 +159,12 @@
 						<div id="referenceSiteLink"></div>
 					</div>
 					
+					<!-- Bluetooth設定UI（Wi-Fiから変更） -->
 					<div id="esp32Setting">
-						<h2>Wi-Fi設定</h2>
-						<label>
-							ESP32 IPアドレス
-							<input type="text" id="esp32Ip" value="192.168.4.1">
-						</label>
+						<h2>Bluetooth設定</h2>
+						<button type="button" id="connectBleBtn" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
 
-						<p id="transferStatus"></p>
+						<p id="transferStatus" style="margin-top: 10px; font-size: 12px; font-weight: bold;"></p>
 					</div>
 
 					<button id="vehicleSelectButton">車両選択に戻る</button>
