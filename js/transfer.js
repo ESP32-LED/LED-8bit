@@ -471,7 +471,6 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
-    if (states.length === 0) return new Uint8Array(0);
 
     const hw = Math.round(getNumberValue("hardwareWidth", 192));
     const pw =
@@ -483,7 +482,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     const descriptors = [];
     const bitmaps = [];
     let totalDataLength = 0;
-    let activeCount = 0;
 
     for (let i = 0; i < ESP32_TYPE_DESTINATION_SCROLL_COUNT; i++) {
         const info = states[i];
@@ -526,7 +524,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom));
                 descriptor.dataLength = created.sbuf.length;
                 bitmap = created.sbuf;
-                activeCount++;
             }
         }
 
@@ -534,8 +531,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         bitmaps.push(bitmap);
         totalDataLength += bitmap.length;
     }
-
-    if (activeCount === 0) return new Uint8Array(0);
 
     const packetLength =
         ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE +
@@ -579,8 +574,10 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     }
 
     for (const bitmap of bitmaps) {
-        packet.set(bitmap, offset);
-        offset += bitmap.length;
+        if (bitmap.length > 0) {
+            packet.set(bitmap, offset);
+            offset += bitmap.length;
+        }
     }
 
     return packet;
@@ -865,7 +862,7 @@ async function transferToESP32() {
         const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
         if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-            // 種別・行先スクロール：軽量 RLE 圧縮
+            // 種別・行先スクロール：非表示信号含めて確実に全状態を送信
             const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
             await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
         }
