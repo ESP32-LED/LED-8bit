@@ -128,11 +128,11 @@ function compressLZ4(input) {
     return result;
 }
 
-// 種別・行先スクロール用：超軽量 RLE 圧縮（メモリ不使用）
+// 種別・行先スクロール用：軽量 RLE 圧縮
 function compressTypeDestRLE(uint8Array) {
     if (!uint8Array || uint8Array.length === 0) return new Uint8Array(0);
 
-    const output = [0xcf]; // 識別用マジックバイト
+    const output = [0xcf];
     let i = 0;
     const len = uint8Array.length;
 
@@ -865,7 +865,7 @@ async function transferToESP32() {
         const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
         if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-            // 種別・行先スクロール：軽量 RLE 圧縮（メモリ不使用）
+            // 種別・行先スクロール：軽量 RLE 圧縮
             const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
             await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
         }
