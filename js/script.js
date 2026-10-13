@@ -1,3 +1,57 @@
+// ===== エラー表示機能（デバッグ用）=====
+(function () {
+    const errorBox = document.createElement("pre");
+
+    Object.assign(errorBox.style, {
+        position: "fixed",
+        bottom: "10px",
+        left: "10px",
+        right: "10px",
+        maxHeight: "40vh",
+        overflowY: "auto",
+        padding: "12px",
+        background: "#300",
+        color: "#fff",
+        border: "2px solid #f44",
+        borderRadius: "8px",
+        zIndex: "999999",
+        whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+        fontSize: "12px",
+        display: "none"
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.body.appendChild(errorBox);
+    });
+
+    function showError(message) {
+        if (!errorBox.isConnected && document.body) {
+            document.body.appendChild(errorBox);
+        }
+
+        errorBox.style.display = "block";
+        errorBox.textContent += message + "\n\n";
+    }
+
+    // 通常のJavaScriptエラー
+    window.addEventListener("error", event => {
+        showError(
+            `エラー: ${event.message}\n` +
+            `ファイル: ${event.filename}\n` +
+            `行: ${event.lineno}, 列: ${event.colno}`
+        );
+    });
+
+    // async関数などで処理されなかったエラー
+    window.addEventListener("unhandledrejection", event => {
+        showError(
+            "未処理の非同期エラー:\n" +
+            String(event.reason?.stack || event.reason)
+        );
+    });
+})();
+
 async function startVehicle() {
     clearInterval(scrollTimer);
     scrollTimer = null;
