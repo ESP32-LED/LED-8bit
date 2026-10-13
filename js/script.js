@@ -815,12 +815,15 @@ if (vCheck && vCheck2) {
 
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("message", event => {
-        if (event.data?.type === "CACHE_COMPLETED") {
-            const notice = document.getElementById("cacheNotice");
+        if (event.data?.type !== "CACHE_COMPLETED") return;
 
-            if (notice) {
-                notice.hidden = false;
-            }
-        }
+        const notice = document.getElementById("cacheNotice");
+        if (!notice) return;
+
+        notice.hidden = false;
+
+        setTimeout(() => {
+            notice.hidden = true;
+        }, 3000);
     });
 }
