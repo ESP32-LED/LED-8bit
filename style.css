@@ -611,6 +611,7 @@ input[type="number"]::-webkit-outer-spin-button {
     color: var(--text);
     border: 2px solid var(--border);
     border-radius: 8px;
+    padding: 10px;
 }
 
 @keyframes loadingDots {
