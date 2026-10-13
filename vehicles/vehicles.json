@@ -222,7 +222,7 @@
     },
     {
         "id": "HB-E220(2)",
-        "name": "HB-E220（高崎車）",
+        "name": "HB-E220系（高崎車）",
         "config": "vehicles/HB-E220(2)/config.json",
         "led": "vehicles/HB-E220(2)/led.json",
         "icons": [
