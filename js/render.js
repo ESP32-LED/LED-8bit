@@ -89,7 +89,7 @@ function createDisplayMatrix() {
                     }
                     if (informationMode === "information2_next") {
                         if (destinationId != null) drawDestinationSmall(dest, matrix);
-                        if (informationId != null) drawInformation2(info2, matrix);
+                        if (information2Id != null) drawInformation2(info2, matrix);
                     }
                     if (informationMode === "carNumber_destination") {
                         if (carNumberId != null) drawCarNumber(carNumber, matrix);
@@ -205,7 +205,7 @@ function clearMatrix() {
     ctx.fillRect(0, 0, led.width, led.height);
 }
 
-// ===== 縦スライド演出実行関数 =====
+// ===== 縦スライド演出実行関数（上から下へスライド） =====
 function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
@@ -214,7 +214,7 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
 
     isVerticalSliding = true;
     const totalHeight = sizeLed.height;
-    const duration = 320; // 320msかけて下から上へスライド
+    const duration = 320; // 320msかけて上から下へスライド
     const startTime = performance.now();
 
     function animate(now) {
@@ -226,10 +226,10 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
 
         ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
 
-        // 前の画面を上へ押し出す
-        ctx.drawImage(fromCanvas, 0, -offsetY);
-        // 新しい画面を下から競り上がらせる
-        ctx.drawImage(toCanvas, 0, totalHeight - offsetY);
+        // 前の画面を下へ押し出す
+        ctx.drawImage(fromCanvas, 0, offsetY);
+        // 新しい画面を上から降りてこさせる
+        ctx.drawImage(toCanvas, 0, -totalHeight + offsetY);
 
         if (progress < 1) {
             verticalSlideAnimationId = requestAnimationFrame(animate);
