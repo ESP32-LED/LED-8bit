@@ -11,7 +11,7 @@ const ESP32_MAX_SCENES = 6;
 const ESP32_MAX_WIDTH = 256;
 const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
-const ESP32_HEADER_SIZE = 22; // 6画面対応のため22バイトへ拡張
+const ESP32_HEADER_SIZE = 22;
 
 const ESP32_TYPE_DESTINATION_SCROLL_MAGIC = [0x54, 0x53, 0x43, 0x52];
 const ESP32_TYPE_DESTINATION_SCROLL_VERSION = 1;
@@ -637,8 +637,20 @@ function createESP32Packet() {
 
         if (sceneList.length === 0) return new Uint8Array();
 
+        const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
+        let typeIsFull = false;
+        if (type && typeof isTypeFullScreen === "function") {
+            typeIsFull = isTypeFullScreen(type);
+        }
+
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
-        const rawSceneCount = lcm(sceneList.length, typeCount);
+        let rawSceneCount = lcm(sceneList.length, typeCount);
+
+        // FULL種別時は画面数を1に固定
+        if (typeIsFull) {
+            rawSceneCount = 1;
+        }
+
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
 
         const hw = getHardwareWidth();
@@ -655,12 +667,6 @@ function createESP32Packet() {
         const scrollData = createESP32ScrollData(br, gam);
 
         let areaLeft = 48;
-        const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
-
-        let typeIsFull = false;
-        if (type && typeof isTypeFullScreen === "function") {
-            typeIsFull = isTypeFullScreen(type);
-        }
 
         if (scrollActive && typeIsFull) {
             scrollData.tw = 0;
@@ -816,7 +822,6 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
 
-    // 最大6画面分の切替時間を設定
     for (let i = 0; i < 6; i++) {
         const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? 3000)));
         header[7 + i * 2] = time & 0xff;
