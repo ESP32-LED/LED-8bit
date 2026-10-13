@@ -219,6 +219,7 @@ function startRenderLoop() {
         renderTimer = null;
     }
 
+    // ボタン押下などの手動更新時：アニメーションを即座にリセットしてノイズを防止
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
@@ -226,6 +227,7 @@ function startRenderLoop() {
     }
 
     if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && cacheCanvas.width > 0) {
+        // 退避用キャンバスの複製
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
@@ -241,12 +243,24 @@ function startRenderLoop() {
 
         render();
 
-        startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
-            if (renderTimer === null) {
-                frame = 1;
-                renderTimer = setTimeout(nextScene, getSceneInterval());
-            }
-        });
+        const checkbox = document.getElementById("verticalSlideCheck");
+        const checkbox2 = document.getElementById("verticalSlideCheck2");
+
+        if (checkbox.checked) {
+            startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
+                if (renderTimer === null) {
+                    frame = 1;
+                    renderTimer = setTimeout(nextScene, getSceneInterval());
+                }
+            });
+        } else if (checkbox2.checked) {
+            startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
+                if (renderTimer === null) {
+                    frame = 1;
+                    renderTimer = setTimeout(nextScene, getSceneInterval());
+                }
+            });
+        }
     } else {
         frame = 0;
         nextScene();
