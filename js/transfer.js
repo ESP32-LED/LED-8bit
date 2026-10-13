@@ -7,7 +7,7 @@ let autoTransferTimeout = null;
 const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_CHARACTERISTIC_RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
-const ESP32_MAX_SCENES = 16;
+const ESP32_MAX_SCENES = 6;
 const ESP32_MAX_WIDTH = 256;
 const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
@@ -22,16 +22,25 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// 縦スライドモードの判定（"hasVerticalSlide": true かつ "verticalSlide": true の記述がある場合のみ判定）
+// 縦スライドモードの判定（"hasVerticalSlide": true かつ "verticalSlide": true かつ Full種別でない場合のみ判定）
 function isVerticalSlideEnabled() {
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
     }
 
-    const vCheck = document.getElementById("verticalSlideCheck");
-    if (vCheck) {
-        return vCheck.checked;
+    const checkbox = document.getElementById("verticalSlideCheck");
+    if (checkbox && !checkbox.checked) {
+        return false;
     }
+
+    // Full画面種別が選択されている場合は縦スライドを無効化
+    if (typeof typeId !== "undefined" && typeId !== null && typeof getItem === "function" && typeof isTypeFullScreen === "function") {
+        const type = getItem("type", typeId);
+        if (type && isTypeFullScreen(type)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -806,7 +815,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
             return 3000;
         });
     } else {
-        times = [3000, 3000, 3000, 3000, 3000];
+        times = [3000, 3000, 3000, 3000, 3000, 3000];
     }
 
     header[0] = 0xaa;
