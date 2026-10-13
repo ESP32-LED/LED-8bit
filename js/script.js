@@ -232,10 +232,12 @@ function nextScene() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox.checked) {
-            startVerticalSlideAnimation(fromCanvas, cacheCanvas);
-        } else if (checkbox2.checked) {
-            startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
+        if (checkbox && checkbox2) {
+            if (checkbox.checked) {
+                startVerticalSlideAnimation(fromCanvas, cacheCanvas);
+            } else if (checkbox2.checked) {
+                startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
+            }
         }
     } else {
         render();
