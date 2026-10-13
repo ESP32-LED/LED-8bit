@@ -812,3 +812,15 @@ if (vCheck && vCheck2) {
         }
     });
 }
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", event => {
+        if (event.data?.type === "CACHE_COMPLETED") {
+            const notice = document.getElementById("cacheNotice");
+
+            if (notice) {
+                notice.hidden = false;
+            }
+        }
+    });
+}
