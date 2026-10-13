@@ -178,9 +178,9 @@ function nextScene() {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas);
         } else if (checkbox2.checked) {
             startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
-        } else {
-            render();
         }
+    } else {
+        render();
     }
 
     frame++;
