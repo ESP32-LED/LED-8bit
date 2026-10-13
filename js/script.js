@@ -124,23 +124,39 @@ function setupVehicleUI() {
         document.getElementById("scroll").hidden = true;
     }
 
-    // ===== 縦スライド切り替えUI（チェックボックス）の動的追加 =====
-    const scrollContainer = document.getElementById("scroll");
-    if (scrollContainer && config.hasVerticalSlide) {
-        let verticalLabel = document.getElementById("verticalSlideLabel");
+    // ===== 縦スライド切り替えUI（チェックボックス）の動的表示制御 =====
+    const sidebar = document.getElementById("sidebar");
+    let verticalLabel = document.getElementById("verticalSlideLabel");
+
+    // hasVerticalSlide: true かつ verticalSlide: true が指定されている車両のみ表示
+    if (config.hasVerticalSlide === true && config.verticalSlide === true) {
         if (!verticalLabel) {
             verticalLabel = document.createElement("label");
             verticalLabel.id = "verticalSlideLabel";
-            verticalLabel.style.cssText = "margin-bottom: 8px; font-weight: 650; display: flex; align-items: center; gap: 8px;";
-            verticalLabel.innerHTML = `<input type="checkbox" id="verticalSlideCheck"> 画面切替時に縦スライドする`;
-            scrollContainer.insertBefore(verticalLabel, scrollContainer.firstChild);
+            verticalLabel.style.cssText = "margin-top: 10px; margin-bottom: 8px; font-weight: 650; display: flex; align-items: center; gap: 8px; font-size: 14px;";
+            verticalLabel.innerHTML = `<input type="checkbox" id="verticalSlideCheck" checked> 画面切替時に縦スライドする`;
+
+            const buttonGroup = document.getElementById("buttonGroup");
+            if (buttonGroup && buttonGroup.parentNode) {
+                buttonGroup.parentNode.insertBefore(verticalLabel, buttonGroup.nextSibling);
+            } else if (sidebar) {
+                sidebar.appendChild(verticalLabel);
+            }
 
             const vCheck = document.getElementById("verticalSlideCheck");
-            vCheck.checked = config.verticalSlide !== false;
             vCheck.addEventListener("change", () => {
-                config.verticalSlide = vCheck.checked;
-                triggerAutoTransfer();
+                if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
             });
+        } else {
+            verticalLabel.hidden = false;
+            const vCheck = document.getElementById("verticalSlideCheck");
+            if (vCheck) vCheck.checked = true;
+        }
+    } else {
+        if (verticalLabel) {
+            verticalLabel.hidden = true;
+            const vCheck = document.getElementById("verticalSlideCheck");
+            if (vCheck) vCheck.checked = false;
         }
     }
 
@@ -164,16 +180,13 @@ function nextScene() {
     applyScene();
     applyTypeScene();
 
-    // 縦スライドが有効かつ複数シーンが存在する場合の切替アニメーション
-    if (config.verticalSlide && sceneList.length > 1 && frame > 0 && oldScene !== scene) {
-        // 現在画面（切り替え前）をスライド元のCanvasに複製
+    // 縦スライド条件を満たしている場合のみスライド演出を実行
+    if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene) {
         slideTransitionCtx.clearRect(0, 0, slideTransitionCanvas.width, slideTransitionCanvas.height);
         slideTransitionCtx.drawImage(cacheCanvas, 0, 0);
 
-        // 新画面をレンダリング（cacheCanvasが最新化される）
         render();
 
-        // 複製用Canvas → 新画面Canvas への縦スライドを実行
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = slideTransitionCanvas.width;
         fromCanvas.height = slideTransitionCanvas.height;
@@ -219,8 +232,7 @@ function startRenderLoop() {
         clearTimeout(renderTimer);
     }
 
-    // 表示変更（ボタン押下等）があった際、前の画面から縦スライドさせる処理
-    if (config.verticalSlide && cacheCanvas.width > 0) {
+    if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && cacheCanvas.width > 0) {
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
