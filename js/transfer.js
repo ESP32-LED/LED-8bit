@@ -22,16 +22,17 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// 縦スライドモードの判定
+// 縦スライドモードの判定（"hasVerticalSlide": true かつ "verticalSlide": true の記述がある場合のみ判定）
 function isVerticalSlideEnabled() {
+    if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
+        return false;
+    }
+
     const vCheck = document.getElementById("verticalSlideCheck");
     if (vCheck) {
         return vCheck.checked;
     }
-    if (typeof config !== "undefined" && config && typeof config.verticalSlide !== "undefined") {
-        return !!config.verticalSlide;
-    }
-    return false;
+    return true;
 }
 
 // メイン表示用：高速 LZ4 エンコーダー
@@ -804,7 +805,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    // 縦スライドモード有効時は 0x57、無効時は 0x56 をヘッダーに設定
+    // 縦スライド判定関数を通じて 0x57 / 0x56 を動的設定
     header[1] = isVerticalSlideEnabled() ? 0x57 : 0x56;
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
