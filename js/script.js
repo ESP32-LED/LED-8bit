@@ -475,22 +475,27 @@ function initSimulator() {
         transferController.abort();
         transferController = null;
     }
-    document.getElementById("transferStatus").textContent = "";
-    document.getElementById("typeButtons").innerHTML = "";
-    document.getElementById("destinationButtons").innerHTML = "";
-    document.getElementById("informationButtons").innerHTML = "";
-    document.getElementById("information2Buttons").innerHTML = "";
-    document.getElementById("lineButtons").innerHTML = "";
-    document.getElementById("nextModeButtons").innerHTML = "";
-    document.getElementById("carNumberButtons").innerHTML = "";
 
-    document.getElementById("type").textContent = "種別:なし";
-    document.getElementById("destination").textContent = "行先:なし";
-    document.getElementById("information").textContent = "案内:なし";
-    document.getElementById("information2").textContent = "案内2:なし";
-    document.getElementById("line").textContent = "路線名:なし";
-    document.getElementById("nextMode").textContent = "次駅:なし";
-    document.getElementById("carNumber").textContent = "号車:なし";
+    // 要素が存在する場合のみ安全に処理（エラー防止策）
+    const transferStatusEl = document.getElementById("transferStatus");
+    if (transferStatusEl) transferStatusEl.textContent = "";
+
+    const elementsToClear = [
+        "typeButtons", "destinationButtons", "informationButtons", 
+        "information2Buttons", "lineButtons", "nextModeButtons", "carNumberButtons"
+    ];
+    elementsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = "";
+    });
+
+    if (document.getElementById("type")) document.getElementById("type").textContent = "種別:なし";
+    if (document.getElementById("destination")) document.getElementById("destination").textContent = "行先:なし";
+    if (document.getElementById("information")) document.getElementById("information").textContent = "案内:なし";
+    if (document.getElementById("information2")) document.getElementById("information2").textContent = "案内2:なし";
+    if (document.getElementById("line")) document.getElementById("line").textContent = "路線名:なし";
+    if (document.getElementById("nextMode")) document.getElementById("nextMode").textContent = "次駅:なし";
+    if (document.getElementById("carNumber")) document.getElementById("carNumber").textContent = "号車:なし";
 
     typeId = null;
     destinationId = null;
