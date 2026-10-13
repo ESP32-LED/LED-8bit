@@ -15,14 +15,6 @@ function isVerticalSlideEnabled() {
         return false;
     }
 
-    // Full画面種別が選択されている場合は縦スライドを無効化
-    if (typeof typeId !== "undefined" && typeId !== null && typeof getItem === "function" && typeof isTypeFullScreen === "function") {
-        const type = getItem("type", typeId);
-        if (type && isTypeFullScreen(type)) {
-            return false;
-        }
-    }
-
     return true;
 }
 
