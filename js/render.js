@@ -12,8 +12,10 @@ function isVerticalSlideEnabled() {
 
     const checkbox = document.getElementById("verticalSlideCheck");
     const checkbox2 = document.getElementById("verticalSlideCheck2");
-    if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
-        return false;
+    if (checkbox && checkbox2) {
+        if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
+            return false;
+        }
     }
 
     if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
