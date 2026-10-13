@@ -205,7 +205,7 @@ function clearMatrix() {
     ctx.fillRect(0, 0, led.width, led.height);
 }
 
-// ===== 縦スライド演出実行関数（上から下へスライド） =====
+// ===== 縦スライド演出実行関数（上から下へスライド・速度調整版） =====
 function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
@@ -213,8 +213,8 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     }
 
     isVerticalSliding = true;
-    const totalHeight = sizeLed.height;
-    const duration = 320; // 320msかけて上から下へスライド
+    const totalHeight = sizeLed.width ? sizeLed.height : 32;
+    const duration = 480; // 480msに延長して速度をゆっくりに調整
     const startTime = performance.now();
 
     function animate(now) {
