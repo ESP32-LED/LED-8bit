@@ -6,12 +6,10 @@ const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
 // ===== 縦スライド演出が有効か判定する関数 =====
 function isVerticalSlideEnabled() {
-    // configが存在しない、または hasVerticalSlide / verticalSlide が true でない場合は無効
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
     }
 
-    // UI側のチェックボックスが存在し、チェックが外れている場合は無効
     const checkbox = document.getElementById("verticalSlideCheck");
     if (checkbox && !checkbox.checked) {
         return false;
@@ -221,16 +219,17 @@ function clearMatrix() {
     ctx.fillRect(0, 0, led.width, led.height);
 }
 
-// ===== 縦スライド演出実行関数（上から下へスライド・低速版） =====
+// ===== 縦スライド演出実行関数（完全ノイズ排除仕様） =====
 function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
+    // 進行中のアニメーションを強制中断してフラグを初期化
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
     }
+    isVerticalSliding = false;
 
-    // 縦スライドが無効化されている場合はアニメーションをスキップ
-    if (!isVerticalSlideEnabled()) {
-        isVerticalSliding = false;
+    // 縦スライド無効化中、または不完全なキャンバス時は即座に描画を更新
+    if (!isVerticalSlideEnabled() || !fromCanvas || !toCanvas || fromCanvas.width === 0 || toCanvas.width === 0) {
         ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
         ctx.drawImage(toCanvas, 0, 0);
         if (typeof onComplete === "function") onComplete();
@@ -238,30 +237,34 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     }
 
     isVerticalSliding = true;
-    const totalHeight = sizeLed.width ? sizeLed.height : 32;
-    const duration = 640; // 640ms低速アニメーション
+    const width = sizeLed.width;
+    const height = sizeLed.height;
+    const duration = 640;
     const startTime = performance.now();
 
     function animate(now) {
         const elapsed = now - startTime;
         const progress = Math.min(1, elapsed / duration);
+        const offsetY = Math.round(progress * height);
 
-        const offsetY = Math.round(progress * totalHeight);
+        // 毎フレーム全体を完全消去して残像・ゴミドットを防止
+        ctx.clearRect(0, 0, width, height);
 
-        ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
-
-        // 前の画面を下へ押し出す
-        ctx.drawImage(fromCanvas, 0, offsetY);
-        // 新しい画面を上から降りてこさせる
-        ctx.drawImage(toCanvas, 0, -totalHeight + offsetY);
+        // 旧画面を押し出す
+        if (offsetY < height) {
+            ctx.drawImage(fromCanvas, 0, offsetY, width, height);
+        }
+        // 新画面を滑り込ませる
+        ctx.drawImage(toCanvas, 0, -height + offsetY, width, height);
 
         if (progress < 1) {
             verticalSlideAnimationId = requestAnimationFrame(animate);
         } else {
             isVerticalSliding = false;
             verticalSlideAnimationId = null;
-            ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
-            ctx.drawImage(toCanvas, 0, 0);
+            // 完了時に画面を確定描画
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(toCanvas, 0, 0, width, height);
             if (typeof onComplete === "function") onComplete();
         }
     }
