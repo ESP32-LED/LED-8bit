@@ -57,6 +57,7 @@ function createTypeButtons() {
 
                         typeId = item.id;
                         typeScrollId = null;
+                        clickTypeBtn = true;
 
                         if (config.hasTypeScroll) {
                             const typeData = getItem("type", typeId);
@@ -198,6 +199,7 @@ function createTypeButtons() {
 
                     typeId = item.id;
                     typeScrollId = null;
+                    clickTypeBtn = true;
 
                     if (config.hasTypeScroll) {
                         const typeData = getItem("type", typeId);
@@ -319,6 +321,7 @@ function createTypeButtons() {
 
                 typeId = item.id;
                 typeScrollId = null;
+                clickTypeBtn = true;
 
                 if (config.hasTypeScroll) {
                     const typeData = getItem("type", typeId);
@@ -437,6 +440,7 @@ function createCarNumberButtons() {
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
         carNumberId = null;
+        clickTypeBtn = false;
         const carNumberLabel = document.getElementById("carNumber");
         carNumberLabel.textContent = "号車:なし"
         frame = 0;
@@ -472,6 +476,7 @@ function createCarNumberButtons() {
                     btn.addEventListener("click", () => {
                         setSelected(container, btn);
                         carNumberId = item.id;
+                        clickTypeBtn = false;
                         const carNumberLabel = document.getElementById("carNumber");
                         const carNumberName = getName("carNumber", carNumberId)
                         carNumberLabel.textContent = "号車:" + carNumberName
@@ -527,6 +532,7 @@ function createCarNumberButtons() {
                 btn.addEventListener("click", () => {
                     setSelected(container, btn);
                     carNumberId = item.id;
+                    clickTypeBtn = false;
                     const carNumberLabel = document.getElementById("carNumber");
                     const carNumberName = getName("carNumber", carNumberId)
                     carNumberLabel.textContent = "号車:" + carNumberName
@@ -562,6 +568,7 @@ function createCarNumberButtons() {
             btn.addEventListener ("click", () => {
                 setSelected(container, btn);
                 carNumberId = item.id;
+                clickTypeBtn = false;
                 const carNumberLabel = document.getElementById("carNumber");
                 const carNumberName = getName("carNumber", carNumberId)
                 carNumberLabel.textContent = "号車:" + carNumberName
@@ -600,6 +607,7 @@ function createDestinationButtons() {
         setSelected(container, normalBtn);
         destinationId = null;
         destinationScroll = null;
+        clickTypeBtn = false;
         const destinationLabel = document.getElementById("destination");
         destinationLabel.textContent = "行先:なし"
         frame = 0;
@@ -638,6 +646,7 @@ function createDestinationButtons() {
                         setSelected(container, btn);
                         destinationId = dest.id;
                         destinationScrollId = null;
+                        clickTypeBtn = false;
 
                         if (config.hasDestinationScroll) {
                             const typeData = getItem("type", typeId);
@@ -783,6 +792,7 @@ function createDestinationButtons() {
                     setSelected(container, btn);
                     destinationId = dest.id;
                     destinationScrollId = null;
+                    clickTypeBtn = false;
 
                     if (config.hasDestinationScroll) {
                         const typeData = getItem("type", typeId);
@@ -908,6 +918,7 @@ function createDestinationButtons() {
                 setSelected(container, btn);
                 destinationId = dest.id;
                 destinationScrollId = null;
+                clickTypeBtn = false;
 
                 if (config.hasDestinationScroll) {
                     const typeData = getItem("type", typeId);
@@ -1005,6 +1016,7 @@ function createDestinationButtons() {
         });
     }
 }
+
 function createNextModeButtons() {
 
     const container = document.getElementById("nextModeButtons");
@@ -1029,6 +1041,7 @@ function createNextModeButtons() {
         displayMode = "normal";
         langIndex = 0;
         nextId = null;
+        clickTypeBtn = false;
         const nextModeLabel = document.getElementById("nextMode");
         nextModeLabel.textContent = "次駅:なし"
         frame = 0;
@@ -1062,6 +1075,7 @@ function createNextModeButtons() {
                     btn.addEventListener("click", () => {
                         setSelected(container, btn);
                         nextId = item.id;
+                        clickTypeBtn = false;
                         const nextModeLabel = document.getElementById("nextMode");
                         const nextModeName = getName("next", nextId)
                         nextModeLabel.textContent = "次駅:" + nextModeName
@@ -1121,6 +1135,7 @@ function createNextModeButtons() {
                     displayMode = "next";
                     langIndex = 0;
                     nextId = item.id;
+                    clickTypeBtn = false;
                     const nextModeLabel = document.getElementById("nextMode");
                     const nextModeName = getName("next", nextId)
                     nextModeLabel.textContent = "次駅:" + nextModeName
@@ -1162,6 +1177,7 @@ function createNextModeButtons() {
                 displayMode = "next";
                 langIndex = 0;
                 nextId = item.id;
+                clickTypeBtn = false;
                 const nextModeLabel = document.getElementById("nextMode");
                 const nextModeName = getName("next", nextId)
                 nextModeLabel.textContent = "次駅:" + nextModeName
@@ -1199,6 +1215,7 @@ function createInformationButtons() {
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
         informationId = null;
+        clickTypeBtn = false;
         const informationLabel = document.getElementById("information");
         informationLabel.textContent = "案内:なし"
         frame = 0;
@@ -1236,6 +1253,7 @@ function createInformationButtons() {
                     btn.addEventListener("click", () => {
                         setSelected(container, btn);
                         informationId = info.id;
+                        clickTypeBtn = false;
                         const informationLabel = document.getElementById("information");
                         const informationName = getName("information", informationId)
                         informationLabel.textContent = "案内:" + informationName
@@ -1305,6 +1323,7 @@ function createInformationButtons() {
                 btn.addEventListener("click", () => {
                     setSelected(container, btn);
                     informationId = info.id;
+                    clickTypeBtn = false;
                     const informationLabel = document.getElementById("information");
                     const informationName = getName("information", informationId)
                     informationLabel.textContent = "案内:" + informationName
@@ -1354,6 +1373,7 @@ function createInformationButtons() {
             btn.addEventListener ("click", () => { 
                 setSelected(container, btn);
                 informationId = info.id;
+                clickTypeBtn = false;
                 const informationLabel = document.getElementById("information");
                 const informationName = getName("information", informationId)
                 informationLabel.textContent = "案内:" + informationName
@@ -1391,6 +1411,7 @@ function createInformation2Buttons() {
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
         information2Id = null;
+        clickTypeBtn = false;
         const information2Label = document.getElementById("information2");
         information2Label.textContent = "案内2:なし"
         frame = 0;
@@ -1428,6 +1449,7 @@ function createInformation2Buttons() {
                     btn.addEventListener("click", () => {
                         setSelected(container, btn);
                         information2Id = info.id;
+                        clickTypeBtn = false;
                         const information2Label = document.getElementById("information2");
                         const information2Name = getName("information2", information2Id)
                         information2Label.textContent = "案内2:" + information2Name
@@ -1489,6 +1511,7 @@ function createInformation2Buttons() {
                 btn.addEventListener("click", () => {
                     setSelected(container, btn);
                     information2Id = info.id;
+                    clickTypeBtn = false;
                     const information2Label = document.getElementById("information2");
                     const information2Name = getName("information2", information2Id)
                     information2Label.textContent = "案内2:" + information2Name
@@ -1530,6 +1553,7 @@ function createInformation2Buttons() {
             btn.addEventListener ("click", () => { 
                 setSelected(container, btn);
                 information2Id = info.id;
+                clickTypeBtn = false;
                 const information2Label = document.getElementById("information2");
                 const information2Name = getName("information2", information2Id)
                 information2Label.textContent = "案内2:" + information2Name
@@ -1567,6 +1591,7 @@ function createLineButtons() {
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
         lineId = null;
+        clickTypeBtn = false;
         const lineLabel = document.getElementById("line");
         lineLabel.textContent = "路線名:なし"
         frame = 0;
@@ -1604,6 +1629,7 @@ function createLineButtons() {
                     btn.addEventListener("click", () => {
                         setSelected(container, btn);
                         lineId = info.id;
+                        clickTypeBtn = false;
                         const lineLabel = document.getElementById("line");
                         const lineName = getName("line", lineId)
                         lineLabel.textContent = "路線名:" + lineName
@@ -1665,6 +1691,7 @@ function createLineButtons() {
                 btn.addEventListener("click", () => {
                     setSelected(container, btn);
                     lineId = info.id;
+                    clickTypeBtn = false;
                     const lineLabel = document.getElementById("line");
                     const lineName = getName("line", lineId)
                     lineLabel.textContent = "路線名:" + lineName
@@ -1707,6 +1734,7 @@ function createLineButtons() {
             btn.addEventListener ("click", () => {
                 setSelected(container, btn);
                 lineId = info.id;
+                clickTypeBtn = false;
                 const lineLabel = document.getElementById("line");
                 const lineName = getName("line", lineId)
                 lineLabel.textContent = "路線名:" + lineName
