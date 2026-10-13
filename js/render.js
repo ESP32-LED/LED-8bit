@@ -4,6 +4,25 @@ let verticalSlideAnimationId = null;
 const slideTransitionCanvas = document.createElement("canvas");
 const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
+// ===== 縦スライド演出が有効か判定する関数 =====
+function isVerticalSlideEnabled() {
+    // 選択中の車両データ（環境に合わせて currentCar や config を参照）
+    const car = window.currentCar || config;
+
+    // 車両データに hasVerticalSlide: true かつ verticalSlide: true の記述がない場合は無効
+    if (!car || car.hasVerticalSlide !== true || car.verticalSlide !== true) {
+        return false;
+    }
+
+    // UI側のチェックボックスが存在し、チェックが外れている場合は無効
+    const checkbox = document.getElementById("verticalSlideCheckbox");
+    if (checkbox && !checkbox.checked) {
+        return false;
+    }
+
+    return true;
+}
+
 function render() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
@@ -205,23 +224,31 @@ function clearMatrix() {
     ctx.fillRect(0, 0, led.width, led.height);
 }
 
-// ===== 縦スライド演出実行関数（上から下へスライド・640ms低速版） =====
+// ===== 縦スライド演出実行関数（上から下へスライド・車両設定判定付き） =====
 function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
     }
 
+    // 縦スライドが無効化されている場合はアニメーションをスキップ
+    if (!isVerticalSlideEnabled()) {
+        isVerticalSliding = false;
+        ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
+        ctx.drawImage(toCanvas, 0, 0);
+        if (typeof onComplete === "function") onComplete();
+        return;
+    }
+
     isVerticalSliding = true;
     const totalHeight = sizeLed.width ? sizeLed.height : 32;
-    const duration = 640; // 640msに延長してほんの少しゆっくりに調整
+    const duration = 640; // 640msで上から下へスライド
     const startTime = performance.now();
 
     function animate(now) {
         const elapsed = now - startTime;
         const progress = Math.min(1, elapsed / duration);
 
-        // イージング（滑らかな移動）
         const offsetY = Math.round(progress * totalHeight);
 
         ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
