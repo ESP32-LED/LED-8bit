@@ -38,37 +38,14 @@ self.addEventListener("install", event => {
             const vehicles = await response.json();
 
             // 登録されている車両のファイルをキャッシュ
-            await cacheVehicleFiles(
-                cache,
-                vehicles
-            );
+            await cacheVehicleFiles(cache, vehicles);
 
-            console.log(
-                "Service Workerのインストール完了"
-            );
+            console.log("Service Workerのインストール完了");
 
             // 新しいService Workerをすぐ有効化
             await self.skipWaiting();
         })()
     );
-    self.addEventListener("install", event => {
-        event.waitUntil((async () => {
-            const cache = await caches.open(CACHE_NAME);
-    
-            await cache.addAll(FILES_TO_CACHE);
-    
-            const clients = await self.clients.matchAll({
-                type: "window",
-                includeUncontrolled: true
-            });
-    
-            clients.forEach(client => {
-                client.postMessage({
-                    type: "CACHE_COMPLETED"
-                });
-            });
-        })());
-    });
 });
 
 
@@ -103,6 +80,17 @@ self.addEventListener("activate", event => {
 
             // 現在開いているページにも適用
             await self.clients.claim();
+            // キャッシュ取得完了をページに通知
+            const clients = await self.clients.matchAll({
+                type: "window",
+                includeUncontrolled: true
+            });
+            
+            for (const client of clients) {
+                client.postMessage({
+                    type: "CACHE_COMPLETED"
+                });
+            }
 
             console.log(
                 "Service Workerの有効化完了"
