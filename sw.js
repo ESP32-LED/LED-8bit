@@ -51,6 +51,24 @@ self.addEventListener("install", event => {
             await self.skipWaiting();
         })()
     );
+    self.addEventListener("install", event => {
+        event.waitUntil((async () => {
+            const cache = await caches.open(CACHE_NAME);
+    
+            await cache.addAll(FILES_TO_CACHE);
+    
+            const clients = await self.clients.matchAll({
+                type: "window",
+                includeUncontrolled: true
+            });
+    
+            clients.forEach(client => {
+                client.postMessage({
+                    type: "CACHE_COMPLETED"
+                });
+            });
+        })());
+    });
 });
 
 
