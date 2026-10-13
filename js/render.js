@@ -15,6 +15,14 @@ function isVerticalSlideEnabled() {
         return false;
     }
 
+    // Full画面種別が選択されている場合は縦スライドを無効化
+    if (typeof typeId !== "undefined" && typeId !== null && typeof getItem === "function" && typeof isTypeFullScreen === "function") {
+        const type = getItem("type", typeId);
+        if (type && isTypeFullScreen(type)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -219,16 +227,14 @@ function clearMatrix() {
     ctx.fillRect(0, 0, led.width, led.height);
 }
 
-// ===== 縦スライド演出実行関数（完全ノイズ排除仕様） =====
+// ===== 縦スライド演出実行関数 =====
 function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
-    // 進行中のアニメーションを強制中断してフラグを初期化
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
     }
     isVerticalSliding = false;
 
-    // 縦スライド無効化中、または不完全なキャンバス時は即座に描画を更新
     if (!isVerticalSlideEnabled() || !fromCanvas || !toCanvas || fromCanvas.width === 0 || toCanvas.width === 0) {
         ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
         ctx.drawImage(toCanvas, 0, 0);
@@ -247,14 +253,11 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
         const progress = Math.min(1, elapsed / duration);
         const offsetY = Math.round(progress * height);
 
-        // 毎フレーム全体を完全消去して残像・ゴミドットを防止
         ctx.clearRect(0, 0, width, height);
 
-        // 旧画面を押し出す
         if (offsetY < height) {
             ctx.drawImage(fromCanvas, 0, offsetY, width, height);
         }
-        // 新画面を滑り込ませる
         ctx.drawImage(toCanvas, 0, -height + offsetY, width, height);
 
         if (progress < 1) {
@@ -262,7 +265,6 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
         } else {
             isVerticalSliding = false;
             verticalSlideAnimationId = null;
-            // 完了時に画面を確定描画
             ctx.clearRect(0, 0, width, height);
             ctx.drawImage(toCanvas, 0, 0, width, height);
             if (typeof onComplete === "function") onComplete();
