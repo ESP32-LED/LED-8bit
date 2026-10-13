@@ -606,6 +606,12 @@ input[type="number"]::-webkit-outer-spin-button {
     font-family: var(--ui-font);
 }
 
+#ledSettings {
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+}
+
 @keyframes loadingDots {
     0%   { content: ""; }
 
