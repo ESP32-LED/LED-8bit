@@ -790,11 +790,17 @@ scrollCheck.addEventListener("change", () => {
 
 const vCheck = document.getElementById("verticalSlideCheck");
 const vCheck2 = document.getElementById("verticalSlideCheck2");
-vCheck.addEventListener("change", () => {
-    vCheck2.checked = false;
-    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
-});
-vCheck2.addEventListener("change", () => {
-    vCheck.checked = false;
-    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
-});
+if (vCheck && vCheck2) {
+    vCheck.addEventListener("change", () => {
+        vCheck2.checked = false;
+        if (typeof triggerAutoTransfer === "function") {
+            triggerAutoTransfer();
+        }
+    });
+    vCheck2.addEventListener("change", () => {
+        vCheck.checked = false;
+        if (typeof triggerAutoTransfer === "function") {
+            triggerAutoTransfer();
+        }
+    });
+}
