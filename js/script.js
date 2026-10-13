@@ -128,7 +128,6 @@ function setupVehicleUI() {
     const sidebar = document.getElementById("sidebar");
     let verticalLabel = document.getElementById("verticalSlideLabel");
 
-    // hasVerticalSlide: true かつ verticalSlide: true が指定されている車両のみ表示
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
         if (!verticalLabel) {
             verticalLabel = document.createElement("label");
@@ -180,17 +179,17 @@ function nextScene() {
     applyScene();
     applyTypeScene();
 
-    // 縦スライド条件を満たしている場合のみスライド演出を実行
-    if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene) {
-        slideTransitionCtx.clearRect(0, 0, slideTransitionCanvas.width, slideTransitionCanvas.height);
-        slideTransitionCtx.drawImage(cacheCanvas, 0, 0);
+    const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
-        render();
-
+    if (isSlideValid) {
+        // 現在画面（キャプチャ用）の生成
         const fromCanvas = document.createElement("canvas");
-        fromCanvas.width = slideTransitionCanvas.width;
-        fromCanvas.height = slideTransitionCanvas.height;
-        fromCanvas.getContext("2d").drawImage(slideTransitionCanvas, 0, 0);
+        fromCanvas.width = cacheCanvas.width;
+        fromCanvas.height = cacheCanvas.height;
+        fromCanvas.getContext("2d").drawImage(cacheCanvas, 0, 0);
+
+        // 新シーンのレンダリング
+        render();
 
         startVerticalSlideAnimation(fromCanvas, cacheCanvas);
     } else {
@@ -230,18 +229,41 @@ function getSceneInterval() {
 function startRenderLoop() {
     if (renderTimer !== null) {
         clearTimeout(renderTimer);
+        renderTimer = null;
+    }
+
+    // ボタン押下などの手動更新時：アニメーションを即座にリセットしてノイズを防止
+    if (verticalSlideAnimationId !== null) {
+        cancelAnimationFrame(verticalSlideAnimationId);
+        verticalSlideAnimationId = null;
+        isVerticalSliding = false;
     }
 
     if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && cacheCanvas.width > 0) {
+        // 退避用キャンバスの複製
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
         fromCanvas.getContext("2d").drawImage(cacheCanvas, 0, 0);
 
-        nextScene();
+        frame = 0;
+        buildSceneList();
+        buildTypeSceneList();
+        scene = 0;
+        typeScene = 0;
+        applyScene();
+        applyTypeScene();
 
-        startVerticalSlideAnimation(fromCanvas, cacheCanvas);
+        render();
+
+        startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
+            if (renderTimer === null) {
+                frame = 1;
+                renderTimer = setTimeout(nextScene, getSceneInterval());
+            }
+        });
     } else {
+        frame = 0;
         nextScene();
     }
 }
@@ -476,7 +498,6 @@ function initSimulator() {
         transferController = null;
     }
 
-    // 要素が存在する場合のみ安全に処理（エラー防止策）
     const transferStatusEl = document.getElementById("transferStatus");
     if (transferStatusEl) transferStatusEl.textContent = "";
 
