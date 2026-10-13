@@ -22,6 +22,18 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
+// 縦スライドモードの判定
+function isVerticalSlideEnabled() {
+    const vCheck = document.getElementById("verticalSlideCheck");
+    if (vCheck) {
+        return vCheck.checked;
+    }
+    if (typeof config !== "undefined" && config && typeof config.verticalSlide !== "undefined") {
+        return !!config.verticalSlide;
+    }
+    return false;
+}
+
 // メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
     const srcLen = input.length;
@@ -279,7 +291,8 @@ document.addEventListener("click", (e) => {
         e.target.closest?.(".numberInput") ||
         e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
-        e.target.id === "scrollCheck"
+        e.target.id === "scrollCheck" ||
+        e.target.id === "verticalSlideCheck"
     ) {
         triggerAutoTransfer();
     }
@@ -305,6 +318,7 @@ document.addEventListener("change", (e) => {
     if (!e.target) return;
     if (
         e.target.id === "scrollCheck" ||
+        e.target.id === "verticalSlideCheck" ||
         e.target.id === "scrollText" ||
         e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
@@ -790,7 +804,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = 0x56;
+    // 縦スライドモード有効時は 0x57、無効時は 0x56 をヘッダーに設定
+    header[1] = isVerticalSlideEnabled() ? 0x57 : 0x56;
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
@@ -862,7 +877,6 @@ async function transferToESP32() {
         const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
         if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-            // 種別・行先スクロール：非表示信号含めて確実に全状態を送信
             const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
             await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
         }
