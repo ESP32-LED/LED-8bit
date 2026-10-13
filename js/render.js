@@ -16,7 +16,7 @@ function isVerticalSlideEnabled() {
         return false;
     }
 
-    if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && destinationId !== null && clickTypeBtn === false) {
+    if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
         return false;
     }
 
