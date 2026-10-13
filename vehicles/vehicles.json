@@ -659,6 +659,16 @@
         "site": "vehicles/m1000/site.json"
     },
     {
+        "id": "m13000",
+        "name": "東京メトロ13000系初期車",
+        "config": "vehicles/m13000/config.json",
+        "led": "vehicles/m13000/led.json",
+        "icons": [
+            "vehicles/m13000/icons/icon1.png"
+        ],
+        "site": "vehicles/m13000/site.json"
+    },
+    {
         "id": "keio90007000",
         "name": "京王9000系・7000系　FCLED車",
         "config": "vehicles/keio90007000/config.json",
