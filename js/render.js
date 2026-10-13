@@ -294,85 +294,34 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
     // 減速を始める位置
     const slowDots = 8;
     const logicalDotHeight = 32;
-    const tailStartProgress = Math.max(
-        0,
-        1 - slowDots / logicalDotHeight
-    );
-
-    const tailStartT = 0.75 * (
-        1 / 3 +
-        (2 / Math.PI) *
-        Math.asin(1.5 * tailStartProgress - 0.5)
-    );
-
+    const tailStartProgress = Math.max(0, 1 - slowDots / logicalDotHeight);
+    const tailStartT = 0.75 * (1 / 3 + (2 / Math.PI) * Math.asin(1.5 * tailStartProgress - 0.5));
     const tailStartTime = duration * tailStartT;
     const tailDuration = (duration - tailStartTime) * 3;
     const totalDuration = tailStartTime + tailDuration;
-
-    const tailStartAngle =
-        (tailStartT * 4 / 3 - 1 / 3) * Math.PI / 2;
-
+    const tailStartAngle = (tailStartT * 4 / 3 - 1 / 3) * Math.PI / 2;
     // 元の動きの速度と加速度
-    const tailStartSpeed =
-        (4 * Math.PI / 9) * Math.cos(tailStartAngle);
-
-    const tailStartAccel =
-        -(8 * Math.PI * Math.PI / 27) * Math.sin(tailStartAngle);
-
+    const tailStartSpeed = (4 * Math.PI / 9) * Math.cos(tailStartAngle);
     const remainingProgress = 1 - tailStartProgress;
     const timeScale = tailDuration / duration;
-
     const m = tailStartSpeed * timeScale / remainingProgress;
-    const n = tailStartAccel * timeScale * timeScale / remainingProgress;
-
-    // 滑らかにつなぐための5次曲線
-    const a3 = 10 - 6 * m - 1.5 * n;
-    const a4 = -15 + 8 * m + 1.5 * n;
-    const a5 = 6 - 3 * m - 0.5 * n;
-
     function animate(now) {
         const elapsed = now - startTime;
         let progress;
-
         if (elapsed < tailStartTime) {
-            // 最後の3ドットに入るまでは、元の動き
             const t = Math.min(1, elapsed / duration);
-            progress = (
-                Math.sin((t * 4 / 3 - 1 / 3) * Math.PI / 2) + 0.5
-            ) / 3 * 2;
+            progress = (Math.sin((t * 4 / 3 - 1 / 3) * Math.PI / 2) + 0.5) / 3 * 2;
         } else {
-            const u = Math.min(
-                1,
-                (elapsed - tailStartTime) / tailDuration
-            );
-
-            const u2 = u * u;
-            const u3 = u2 * u;
-            const u4 = u3 * u;
-            const u5 = u4 * u;
-
+            const u = Math.min(1, (elapsed - tailStartTime) / tailDuration);
             const easedTail = 1 - Math.pow(1 - u, m);
-
-            const easedTail2 =
-                m * u +
-                (n / 2) * u2 +
-                a3 * u3 +
-                a4 * u4 +
-                a5 * u5;
-
-            progress = tailStartProgress
-                + remainingProgress * easedTail;
+            progress = tailStartProgress + remainingProgress * easedTail;
         }
-
         const offsetY = Math.round(progress * height);
-
         ctx.clearRect(0, 0, width, height);
-
         if (offsetY < height) {
             ctx.drawImage(fromCanvas, 0, offsetY, width, height);
         }
         ctx.drawImage(toCanvas, 0, -height + offsetY, width, height);
-
         if (progress < totalDuration) {
             verticalSlideAnimationId = requestAnimationFrame(animate);
         } else {
