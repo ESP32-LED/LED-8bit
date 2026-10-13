@@ -22,25 +22,16 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// 縦スライドモードの判定（"hasVerticalSlide": true かつ "verticalSlide": true かつ Full種別でない場合のみ判定）
+// 縦スライドモードの判定
 function isVerticalSlideEnabled() {
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
     }
 
     const checkbox = document.getElementById("verticalSlideCheck");
-    if (checkbox && !checkbox.checked) {
-        return false;
+    if (checkbox) {
+        return checkbox.checked;
     }
-
-    // Full画面種別が選択されている場合は縦スライドを無効化
-    if (typeof typeId !== "undefined" && typeId !== null && typeof getItem === "function" && typeof isTypeFullScreen === "function") {
-        const type = getItem("type", typeId);
-        if (type && isTypeFullScreen(type)) {
-            return false;
-        }
-    }
-
     return true;
 }
 
