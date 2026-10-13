@@ -11,7 +11,7 @@ const ESP32_MAX_SCENES = 6;
 const ESP32_MAX_WIDTH = 256;
 const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
-const ESP32_HEADER_SIZE = 20;
+const ESP32_HEADER_SIZE = 22; // 6画面対応のため22バイトへ拡張
 
 const ESP32_TYPE_DESTINATION_SCROLL_MAGIC = [0x54, 0x53, 0x43, 0x52];
 const ESP32_TYPE_DESTINATION_SCROLL_VERSION = 1;
@@ -22,7 +22,6 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// 縦スライドモードの判定
 function isVerticalSlideEnabled() {
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
@@ -817,7 +816,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
 
-    for (let i = 0; i < 5; i++) {
+    // 最大6画面分の切替時間を設定
+    for (let i = 0; i < 6; i++) {
         const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? 3000)));
         header[7 + i * 2] = time & 0xff;
         header[8 + i * 2] = (time >> 8) & 0xff;
@@ -825,14 +825,13 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     const hwBright = Math.max(0, Math.min(255, Math.round(getNumberValue("hwBrightness", 12))));
 
-    header[17] = hwBright & 0xff;
-    header[18] = hw & 0xff;
-    header[19] = (hw >> 8) & 0xff;
+    header[19] = hwBright & 0xff;
+    header[20] = hw & 0xff;
+    header[21] = (hw >> 8) & 0xff;
 
     return header;
 }
 
-// 分割送信（240byte, 10msウェイト）
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
     const total = uint8Array.length;
     for (let i = 0; i < total; i += chunkSize) {
@@ -873,7 +872,6 @@ async function transferToESP32() {
             return;
         }
 
-        // メイン表示：LZ4 圧縮
         const lz4Packet = compressLZ4(rawPacket);
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
