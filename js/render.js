@@ -237,7 +237,7 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     isVerticalSliding = true;
     const width = sizeLed.width;
     const height = sizeLed.height;
-    const duration = 640;
+    const duration = 750; // 時間を750msに変更（より滑らか・ゆっくりに）
     const startTime = performance.now();
 
     function animate(now) {
