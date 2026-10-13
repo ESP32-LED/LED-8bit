@@ -306,7 +306,7 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
     );
 
     const tailStartTime = duration * tailStartT;
-    const tailDuration = (duration - tailStartTime) * 1.5;
+    const tailDuration = (duration - tailStartTime) * 3;
     const totalDuration = tailStartTime + tailDuration;
 
     const tailStartAngle =
@@ -351,7 +351,9 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
             const u4 = u3 * u;
             const u5 = u4 * u;
 
-            const easedTail =
+            const easedTail = 1 - Math.pow(1 - u, m);
+
+            const easedTail2 =
                 m * u +
                 (n / 2) * u2 +
                 a3 * u3 +
@@ -362,7 +364,7 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
                 + remainingProgress * easedTail;
         }
 
-        const offsetY = Math.floor(progress * height);
+        const offsetY = Math.round(progress * height);
 
         ctx.clearRect(0, 0, width, height);
 
