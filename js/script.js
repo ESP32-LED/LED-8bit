@@ -124,38 +124,21 @@ function setupVehicleUI() {
         document.getElementById("scroll").hidden = true;
     }
 
-    const sidebar = document.getElementById("sidebar");
-    let verticalLabel = document.getElementById("verticalSlideLabel");
+    // ===== 縦スライド切り替えUI（チェックボックス）の動的表示制御 =====
+    const verticalSlide = document.getElementById("verticalSlide");
 
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
-        if (!verticalLabel) {
-            verticalLabel = document.createElement("label");
-            verticalLabel.id = "verticalSlideLabel";
-            verticalLabel.style.cssText = "margin-top: 10px; margin-bottom: 8px; font-weight: 650; display: flex; align-items: center; gap: 8px; font-size: 14px;";
-            verticalLabel.innerHTML = `<input type="checkbox" id="verticalSlideCheck" checked> 画面切替時に縦スライドする`;
-
-            const buttonGroup = document.getElementById("buttonGroup");
-            if (buttonGroup && buttonGroup.parentNode) {
-                buttonGroup.parentNode.insertBefore(verticalLabel, buttonGroup.nextSibling);
-            } else if (sidebar) {
-                sidebar.appendChild(verticalLabel);
-            }
-
-            const vCheck = document.getElementById("verticalSlideCheck");
-            vCheck.addEventListener("change", () => {
-                if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
-            });
-        } else {
-            verticalLabel.hidden = false;
-            const vCheck = document.getElementById("verticalSlideCheck");
-            if (vCheck) vCheck.checked = true;
-        }
+        verticalSlide.hidden = false;
+        const vCheck = document.getElementById("verticalSlideCheck");
+        const vCheck2 = document.getElementById("verticalSlideCheck2");
+        if (vCheck) vCheck.checked = true;
+        if (vCheck2) vCheck2.checked = false;
     } else {
-        if (verticalLabel) {
-            verticalLabel.hidden = true;
-            const vCheck = document.getElementById("verticalSlideCheck");
-            if (vCheck) vCheck.checked = false;
-        }
+        verticalSlide.hidden = true;
+        const vCheck = document.getElementById("verticalSlideCheck");
+        const vCheck2 = document.getElementById("verticalSlideCheck2");
+        if (vCheck) vCheck.checked = false;
+        if (vCheck2) vCheck2.checked = false;
     }
 
     const scrollText = document.getElementById("scrollText");
@@ -188,9 +171,16 @@ function nextScene() {
 
         render();
 
-        startVerticalSlideAnimation(fromCanvas, cacheCanvas);
-    } else {
-        render();
+        const checkbox = document.getElementById("verticalSlideCheck");
+        const checkbox2 = document.getElementById("verticalSlideCheck2");
+
+        if (checkbox.checked) {
+            startVerticalSlideAnimation(fromCanvas, cacheCanvas);
+        } else if (checkbox2.checked) {
+            startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
+        } else {
+            render();
+        }
     }
 
     frame++;
@@ -657,6 +647,7 @@ tittle.addEventListener("click", () => {
     document.getElementById("simulator").hidden = true;
     document.getElementById("vehicleSelector").hidden = false;
     document.getElementById("scrollCheck").checked = false;
+    clickTypeBtn = false;
     scrollId = null;
     scrollTimer = null;
     clickStartScrollBtn = false;
@@ -727,4 +718,15 @@ scrollCheck.addEventListener("change", () => {
         scrollId = null;
         clearInterval(scrollTimer);
     }
+});
+
+const vCheck = document.getElementById("verticalSlideCheck");
+const vCheck2 = document.getElementById("verticalSlideCheck2");
+vCheck.addEventListener("change", () => {
+    vCheck2.checked = false;
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
+});
+vCheck2.addEventListener("change", () => {
+    vCheck.checked = false;
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 });

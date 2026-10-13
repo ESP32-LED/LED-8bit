@@ -52,4 +52,6 @@ let scrollSpeed = 450;
 let typeScroll = false;
 let destinationScroll = false;
 
+let clickTypeBtn = false;
+
 const langs = ["ja", "en"];

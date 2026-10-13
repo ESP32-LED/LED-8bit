@@ -1748,6 +1748,7 @@ function setVehicleSelectButton() {
         document.getElementById("simulator").hidden = true;
         document.getElementById("vehicleSelector").hidden = false;
         document.getElementById("scrollCheck").checked = false;
+        clickTypeBtn = false;
         scrollId = null;
         scrollTimer = null;
         clickStartScrollBtn = false;
