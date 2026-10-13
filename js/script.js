@@ -124,7 +124,6 @@ function setupVehicleUI() {
         document.getElementById("scroll").hidden = true;
     }
 
-    // ===== 縦スライド切り替えUI（チェックボックス）の動的表示制御 =====
     const sidebar = document.getElementById("sidebar");
     let verticalLabel = document.getElementById("verticalSlideLabel");
 
@@ -182,13 +181,11 @@ function nextScene() {
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
     if (isSlideValid) {
-        // 現在画面（キャプチャ用）の生成
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
         fromCanvas.getContext("2d").drawImage(cacheCanvas, 0, 0);
 
-        // 新シーンのレンダリング
         render();
 
         startVerticalSlideAnimation(fromCanvas, cacheCanvas);
@@ -232,7 +229,6 @@ function startRenderLoop() {
         renderTimer = null;
     }
 
-    // ボタン押下などの手動更新時：アニメーションを即座にリセットしてノイズを防止
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
@@ -240,7 +236,6 @@ function startRenderLoop() {
     }
 
     if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && cacheCanvas.width > 0) {
-        // 退避用キャンバスの複製
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
@@ -271,6 +266,12 @@ function startRenderLoop() {
 function buildSceneList() {
     sceneList = [];
     const type = getItem("type", typeId);
+
+    // FULL種別の場合は案内等が選択されていても複数シーンを作らず単一画面に固定
+    if (type && typeof isTypeFullScreen === "function" && isTypeFullScreen(type)) {
+        sceneList.push({ lang: "ja", information: "destination", next: false });
+        return;
+    }
 
     if (!config.type_destination_changed) {
         if (information2Id != null) {
