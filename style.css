@@ -608,7 +608,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 #ledSettings {
     color: var(--text);
-    border: 2px solid var(--border);
+    border: 2px solid "red";
     border-radius: 8px;
 }
 
