@@ -190,10 +190,10 @@ function nextScene() {
 function getSceneInterval() {
     if (sceneList.length === 0) return 1000;
     let sceneInterval = config.sceneInterval;
-    const jaTime = Number(document.querySelector("#jaTime input")?.value || 3);
-    const enTime = Number(document.querySelector("#enTime input")?.value || 3);
-    const infoTime = Number(document.querySelector("#infoTime input")?.value || 3);
-    const carNumberTime = Number(document.querySelector("#carNumberTime input")?.value || 3);
+    const jaTime = Number(document.querySelector("#jaTime input")?.value || config.jaTime || 3);
+    const enTime = Number(document.querySelector("#enTime input")?.value || config.enTime || 3);
+    const infoTime = Number(document.querySelector("#infoTime input")?.value || config.infoTime || 3);
+    const carNumberTime = Number(document.querySelector("#carNumberTime input")?.value || config.carNumberTime || 3);
 
     if (config.setSwitchingTime) {
         const currentScene = sceneList[scene];
