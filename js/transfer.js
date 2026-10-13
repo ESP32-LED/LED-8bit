@@ -7,7 +7,7 @@ let autoTransferTimeout = null;
 const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_CHARACTERISTIC_RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
-const ESP32_MAX_SCENES = 6;
+const ESP32_MAX_SCENES = 16;
 const ESP32_MAX_WIDTH = 256;
 const ESP32_MIN_WIDTH = 64;
 const ESP32_MAX_SCROLL_WIDTH = 4096;
@@ -336,14 +336,27 @@ document.addEventListener("change", (e) => {
 function getNumberValue(id, defaultValue) {
     const element = document.getElementById(id);
     if (!element) return defaultValue;
+    let valStr = "";
     if (element.matches && element.matches("input")) {
-        const value = Number(element.value);
-        return Number.isFinite(value) ? value : defaultValue;
+        valStr = element.value;
+    } else {
+        const input = element.querySelector ? element.querySelector("input") : null;
+        if (input) valStr = input.value;
     }
-    const input = element.querySelector ? element.querySelector("input") : null;
-    if (!input) return defaultValue;
-    const value = Number(input.value);
-    return Number.isFinite(value) ? value : defaultValue;
+    if (valStr === "" || valStr === null || valStr === undefined) return defaultValue;
+    const value = Number(valStr);
+    return (Number.isFinite(value) && value > 0) ? value : defaultValue;
+}
+
+function getHardwareWidth() {
+    const hwVal = getNumberValue("hardwareWidth", 0);
+    if (hwVal >= ESP32_MIN_WIDTH && hwVal <= ESP32_MAX_WIDTH) {
+        return hwVal;
+    }
+    if (typeof config !== "undefined" && config && config.ledWidth && config.ledWidth >= ESP32_MIN_WIDTH) {
+        return Math.min(ESP32_MAX_WIDTH, Math.max(ESP32_MIN_WIDTH, Number(config.ledWidth)));
+    }
+    return 192;
 }
 
 function getScrollText() {
@@ -487,7 +500,7 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
 
-    const hw = Math.round(getNumberValue("hardwareWidth", 192));
+    const hw = getHardwareWidth();
     const pw =
         typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))
             ? Number(config.ledWidth)
@@ -626,18 +639,10 @@ function createESP32Packet() {
         if (sceneList.length === 0) return new Uint8Array();
 
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
-        const calculatedSceneCount = lcm(sceneList.length, typeCount);
+        const rawSceneCount = lcm(sceneList.length, typeCount);
+        const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
 
-        if (calculatedSceneCount > ESP32_MAX_SCENES) {
-            throw new Error(`シーン数が多すぎます（最大${ESP32_MAX_SCENES}）`);
-        }
-
-        const sceneCount = calculatedSceneCount;
-        const hw = Math.round(getNumberValue("hardwareWidth", 192));
-
-        if (hw < ESP32_MIN_WIDTH || hw > ESP32_MAX_WIDTH) {
-            throw new Error(`ハードウェア幅は${ESP32_MIN_WIDTH}～${ESP32_MAX_WIDTH}pxにしてください`);
-        }
+        const hw = getHardwareWidth();
 
         const pw = Number(config.ledWidth);
         if (!Number.isFinite(pw) || pw <= 0) {
@@ -805,7 +810,6 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    // 縦スライド判定関数を通じて 0x57 / 0x56 を動的設定
     header[1] = isVerticalSlideEnabled() ? 0x57 : 0x56;
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
