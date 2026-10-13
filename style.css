@@ -614,6 +614,22 @@ input[type="number"]::-webkit-outer-spin-button {
     padding: 20px;
 }
 
+#verticalSlideLabel {
+    margin-top: 10px; 
+    margin-bottom: 8px; 
+    font-weight: 650; 
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-size: 14px;
+}
+
+#verticalSlide[hidden] {
+    display: none!important;
+}
+
 @keyframes loadingDots {
     0%   { content: ""; }
 
