@@ -182,17 +182,21 @@ function setupVehicleUI() {
     const verticalSlide = document.getElementById("verticalSlide");
 
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
-        verticalSlide.hidden = false;
-        const vCheck = document.getElementById("verticalSlideCheck");
-        const vCheck2 = document.getElementById("verticalSlideCheck2");
-        if (vCheck) vCheck.checked = true;
-        if (vCheck2) vCheck2.checked = false;
+        if (verticalSlide) {
+            verticalSlide.hidden = false;
+            const vCheck = document.getElementById("verticalSlideCheck");
+            const vCheck2 = document.getElementById("verticalSlideCheck2");
+            if (vCheck) vCheck.checked = true;
+            if (vCheck2) vCheck2.checked = false;
+        }
     } else {
-        verticalSlide.hidden = true;
-        const vCheck = document.getElementById("verticalSlideCheck");
-        const vCheck2 = document.getElementById("verticalSlideCheck2");
-        if (vCheck) vCheck.checked = false;
-        if (vCheck2) vCheck2.checked = false;
+        if (verticalSlide) {
+            verticalSlide.hidden = true;
+            const vCheck = document.getElementById("verticalSlideCheck");
+            const vCheck2 = document.getElementById("verticalSlideCheck2");
+            if (vCheck) vCheck.checked = true;
+            if (vCheck2) vCheck2.checked = false;
+        }
     }
 
     const scrollText = document.getElementById("scrollText");
