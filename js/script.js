@@ -306,20 +306,22 @@ function startRenderLoop() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox.checked) {
-            startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
-                if (renderTimer === null) {
-                    frame = 1;
-                    renderTimer = setTimeout(nextScene, getSceneInterval());
-                }
-            });
-        } else if (checkbox2.checked) {
-            startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
-                if (renderTimer === null) {
-                    frame = 1;
-                    renderTimer = setTimeout(nextScene, getSceneInterval());
-                }
-            });
+        if (checkbox && checkbox2) {
+            if (checkbox.checked) {
+                startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
+                    if (renderTimer === null) {
+                        frame = 1;
+                        renderTimer = setTimeout(nextScene, getSceneInterval());
+                    }
+                });
+            } else if (checkbox2.checked) {
+                startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
+                    if (renderTimer === null) {
+                        frame = 1;
+                        renderTimer = setTimeout(nextScene, getSceneInterval());
+                    }
+                });
+            }
         }
     } else {
         frame = 0;
