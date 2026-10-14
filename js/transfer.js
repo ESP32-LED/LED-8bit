@@ -789,6 +789,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     let times;
 
+    const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
+
     if (config.setSwitchingTime) {
         const jaTime = getNumberValue("jaTime", 3) * 1000;
         const enTime = getNumberValue("enTime", 3) * 1000;
@@ -808,10 +810,10 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
                 if (currentScene.lang === "ja") return jaTime;
                 if (currentScene.lang === "en") return enTime;
             }
-            return 3000;
+            return defaultInterval;
         });
     } else {
-        times = [3000, 3000, 3000, 3000, 3000, 3000];
+        times = Array(6).fill(defaultInterval);
     }
 
     header[0] = 0xaa;
@@ -823,7 +825,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[6] = xOff & 0xff;
 
     for (let i = 0; i < 6; i++) {
-        const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? 3000)));
+        const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? defaultInterval)));
         header[7 + i * 2] = time & 0xff;
         header[8 + i * 2] = (time >> 8) & 0xff;
     }
