@@ -249,6 +249,8 @@ function nextScene() {
 
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
+        console.log("checkbox:", checkbox?.checked);
+        console.log("checkbox2:", checkbox2?.checked);
 
         if (checkbox.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas);
