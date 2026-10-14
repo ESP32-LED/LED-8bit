@@ -235,15 +235,7 @@ function nextScene() {
     applyScene();
     applyTypeScene();
 
-    console.log("判定直前");
-    console.log(
-        "関数の型:",
-        typeof isVerticalSlideEnabled
-    );
-    console.log(
-        "判定結果:",
-        isVerticalSlideEnabled()
-    );
+    console.log("関数の実体:", isVerticalSlideEnabled.toString());
 
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
