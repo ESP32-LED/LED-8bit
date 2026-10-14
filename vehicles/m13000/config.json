@@ -1,0 +1,57 @@
+{
+    "name": "東京メトロ13000系初期車",
+
+    "explanation": "a",
+
+    "hasType": true,
+    "hasDestination": true,
+    "hasInformation": true,
+    "hasInformation2": true,
+    "hasLine": false,
+    "hasNext": false,
+    "hasScroll": false,
+    "hasCarNumber": true,
+    "hasCarNumberFull": true,
+    "hasCarNumberSmall": false,
+    "hasCarNumberNormal": false,
+    "carNumber": null,
+    "informationPosition": "normal",
+    "destinationPosition": "normal",
+
+    "destinationDistinction": true,
+    "nextModeDistinction": false,
+    "typeDistinction": false,
+    "informationDistinction": false,
+    "information2Distinction": false,
+    "lineDistinction": false,
+    "carNumberDistinction": false,
+
+    "typeSwitching": false,
+
+    "sceneInterval": 3000,
+    "languageSwitching": false,
+    "carNumberLanguageSwitching": false,
+    "destinationLanguageSwitching": false,
+    "informationLanguageSwitching": false,
+    "ledWidth": 160,
+    "ledHeight": 32,
+    "hasType": true,
+    "hasDestination": true,
+    "hasVerticalSlide": true,
+    "verticalSlide": true,
+    "pixelSize": 8.5,
+    "ledSize": 6.5,
+    "ledGap": 2,
+
+    "enAhead": false,
+    "informationAhead": false,
+
+    "setSwitchingTime": false,
+
+    "next_normal": false,
+    "nextPosition": 16,
+
+    "hasReferenceSite": true,
+
+    "ledShape": "circle"
+}
