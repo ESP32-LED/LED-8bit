@@ -660,7 +660,7 @@
     },
     {
         "id": "m13000",
-        "name": "東京メトロ13000系初期車",
+        "name": "東京メトロ13000系後期車",
         "config": "vehicles/m13000/config.json",
         "led": "vehicles/m13000/led.json",
         "icons": [
