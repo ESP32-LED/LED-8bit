@@ -37,6 +37,8 @@
     "ledHeight": 32,
     "hasVerticalSlide": true,
     "verticalSlide": true,
+    "hasVerticalSlideLabel1": true,
+    "hasVerticalSlideLabel2": true,
     "pixelSize": 8.5,
     "ledSize": 6.5,
     "ledGap": 2,
