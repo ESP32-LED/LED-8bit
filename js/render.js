@@ -1,4 +1,3 @@
-console.log("render.js 読み込み確認");
 // ===== 縦スライドアニメーション管理用変数 =====
 let isVerticalSliding = false;
 let verticalSlideAnimationId = null;
@@ -298,6 +297,8 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
 }
 
 function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
+
+    console.log("startVerticalSlideAnimation2 呼び出し");
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
