@@ -345,6 +345,10 @@ function startRenderLoop() {
     }
 }
 
+if (transferController) {
+    transferController.abort();
+    transferController = null;
+}
 function buildSceneList() {
 
     sceneList = [];
@@ -1174,32 +1178,11 @@ scrollCheck.addEventListener("change", () => {
 
 const vCheck = document.getElementById("verticalSlideCheck");
 const vCheck2 = document.getElementById("verticalSlideCheck2");
-if (vCheck && vCheck2) {
-    vCheck.addEventListener("change", () => {
-        vCheck2.checked = false;
-        if (typeof triggerAutoTransfer === "function") {
-            triggerAutoTransfer();
-        }
-    });
-    vCheck2.addEventListener("change", () => {
-        vCheck.checked = false;
-        if (typeof triggerAutoTransfer === "function") {
-            triggerAutoTransfer();
-        }
-    });
-}
-
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", event => {
-        if (event.data?.type !== "CACHE_COMPLETED") return;
-
-        const notice = document.getElementById("cacheNotice");
-        if (!notice) return;
-
-        notice.hidden = false;
-
-        setTimeout(() => {
-            notice.hidden = true;
-        }, 3000);
-    });
-}
+vCheck.addEventListener("change", () => {
+    vCheck2.checked = false;
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
+});
+vCheck2.addEventListener("change", () => {
+    vCheck.checked = false;
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
+});

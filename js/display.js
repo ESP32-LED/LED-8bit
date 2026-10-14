@@ -594,6 +594,7 @@ function getDestinationWidth(type, dest, used) {
             typeData = 0
         }
     }
+
     const typeView = isTypeFullScreen(type)
         ? "full"
         : "normal";
@@ -705,9 +706,9 @@ function isTypeFullScreen(type) {
         hasNormal = !!type.view.normal;
         hasFull = !!type.view.full;
     } else {
-        const typeScrollData = getItem("type", typeScrollId);
-        hasNormal = !!typeScrollData.view.normal;
-        hasFull = !!typeScrollData.view.full;
+        const typeScroll = getItem("type", typeScrollId);
+        hasNormal = !!typeScroll.view.normal;
+        hasFull = !!typeScroll.view.full;
     }
 
     if(hasFull && !hasNormal){
@@ -751,9 +752,9 @@ function isDestinationFullScreen(dest) {
         hasNormal = !!dest.view.normal;
         hasFull = !!dest.view.full;
     } else {
-        const destinationScrollData = getItem("destination", destinationScrollId);
-        hasNormal = !!destinationScrollData.view.normal;
-        hasFull = !!destinationScrollData.view.full;
+        const destinationScroll = getItem("destination", destinationScrollId);
+        hasNormal = !!destinationScroll.view.normal;
+        hasFull = !!destinationScroll.view.full;
     }
 
     if(hasFull && !hasNormal){
@@ -1058,6 +1059,8 @@ function drawTypeDestinationScroll(state) {
     ctx.restore();
 }
 
+let typeScrollId = null;
+
 function startTypeScroll(lang) {
     const state = lang === "ja"
         ? typeJaScrollState
@@ -1179,7 +1182,6 @@ function startDestinationScroll(lang) {
         state.waitingUntil = 0;
         state.active = true;
     }
-    destinationScrollId = null;
 
     updateScrollId();
     drawTypeDestinationScroll(state);
