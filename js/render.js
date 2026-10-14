@@ -18,6 +18,7 @@ function isVerticalSlideEnabled() {
     }
 
     if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
+        console.log("a");
         return false;
     }
 
