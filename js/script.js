@@ -256,6 +256,8 @@ function nextScene() {
 
         // 新シーンのレンダリング
         render();
+        const checkbox = document.getElementById("verticalSlideCheck");
+        const checkbox2 = document.getElementById("verticalSlideCheck2");
 
         if (checkbox.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas);
