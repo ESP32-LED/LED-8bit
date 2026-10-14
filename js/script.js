@@ -235,8 +235,6 @@ function nextScene() {
     applyScene();
     applyTypeScene();
 
-    console.log("関数の実体:", isVerticalSlideEnabled.toString());
-
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
     if (isSlideValid) {
@@ -248,21 +246,27 @@ function nextScene() {
 
         // 新シーンのレンダリング
         render();
+
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox.checked) {
-            startVerticalSlideAnimation(fromCanvas, cacheCanvas);
-        }
         if (checkbox2.checked) {
-            startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
+            startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
+                renderTimer = setTimeout(nextScene, 3000);
+            });
+        } else if (checkbox.checked) {
+            startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
+                renderTimer = setTimeout(nextScene, 3000);
+            });
         }
     } else {
         render();
     }
 
     frame++;
-    renderTimer = setTimeout(nextScene, getSceneInterval());
+    if (!isSlideValid) {
+        renderTimer = setTimeout(nextScene, getSceneInterval());
+    }
 }
 
 function getSceneInterval() {
