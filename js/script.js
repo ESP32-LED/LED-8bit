@@ -202,6 +202,7 @@ function setupVehicleUI() {
             verticalSlide.hidden = true;
             const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
+            console.log("verticalSlideLabel1:", verticalSlideLabel1);
             if (config.hasVerticalSlideLabel1) {
                 verticalSlideLabel1.hidden = true;
             }
@@ -238,22 +239,23 @@ function nextScene() {
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
     if (isSlideValid) {
+        // 現在画面（キャプチャ用）の生成
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
         fromCanvas.getContext("2d").drawImage(cacheCanvas, 0, 0);
 
+        // 新シーンのレンダリング
         render();
 
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox && checkbox2) {
-            if (checkbox.checked) {
-                startVerticalSlideAnimation(fromCanvas, cacheCanvas);
-            } else if (checkbox2.checked) {
-                startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
-            }
+        if (checkbox.checked) {
+            startVerticalSlideAnimation(fromCanvas, cacheCanvas);
+        }
+        if (checkbox2.checked) {
+            startVerticalSlideAnimation2(fromCanvas, cacheCanvas);
         }
     } else {
         render();
@@ -322,22 +324,20 @@ function startRenderLoop() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox && checkbox2) {
-            if (checkbox.checked) {
-                startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
-                    if (renderTimer === null) {
-                        frame = 1;
-                        renderTimer = setTimeout(nextScene, getSceneInterval());
-                    }
-                });
-            } else if (checkbox2.checked) {
-                startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
-                    if (renderTimer === null) {
-                        frame = 1;
-                        renderTimer = setTimeout(nextScene, getSceneInterval());
-                    }
-                });
-            }
+        if (checkbox.checked) {
+            startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
+                if (renderTimer === null) {
+                    frame = 1;
+                    renderTimer = setTimeout(nextScene, getSceneInterval());
+                }
+            });
+        } else if (checkbox2.checked) {
+            startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
+                if (renderTimer === null) {
+                    frame = 1;
+                    renderTimer = setTimeout(nextScene, getSceneInterval());
+                }
+            });
         }
     } else {
         frame = 0;
