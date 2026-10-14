@@ -50,6 +50,29 @@ function render() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
 
+    if (
+        typeId == null &&
+        destinationId == null &&
+        nextId == null &&
+        carNumberId == null &&
+        informationId == null &&
+        information2Id == null &&
+        lineId == null
+    ) {
+        const emptyMatrix = createEmptyMatrix();
+        currentMatrix = emptyMatrix;
+
+        // 縦スライドの次の表示に使うキャッシュも消す
+        drawMatrix(emptyMatrix, cacheCtx);
+
+        if (!isVerticalSliding) {
+            ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
+            ctx.drawImage(cacheCanvas, 0, 0);
+        }
+
+        return;
+    }
+
     const matrix = createDisplayMatrix();
     currentMatrix = matrix;
 
