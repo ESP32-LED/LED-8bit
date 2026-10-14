@@ -6,20 +6,6 @@ const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
 // ===== 縦スライド演出が有効か判定する関数 =====
 function isVerticalSlideEnabled() {
-    console.log("判定開始");
-    console.log("config:", config);
-    console.log("hasVerticalSlide:", config?.hasVerticalSlide);
-    console.log("verticalSlide:", config?.verticalSlide);
-
-    const checkbox = document.getElementById("verticalSlideCheck");
-    const checkbox2 = document.getElementById("verticalSlideCheck2");
-
-    console.log("checkbox1:", checkbox?.checked);
-    console.log("checkbox2:", checkbox2?.checked);
-
-    console.log("typeId:", typeId);
-    console.log("clickTypeBtn:", clickTypeBtn);
-
     if (typeId !== null) {
         console.log("isTypeFullScreen:", isTypeFullScreen(getItem("type", typeId)));
     }
@@ -27,21 +13,15 @@ function isVerticalSlideEnabled() {
         return false;
     }
 
-    const checkbox1 = document.getElementById("verticalSlideCheck");
-    const checkbox3 = document.getElementById("verticalSlideCheck2");
+    const checkbox = document.getElementById("verticalSlideCheck");
+    const checkbox2 = document.getElementById("verticalSlideCheck2");
     if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
         return false;
     }
-    console.log("typeId:", typeId);
-    console.log("isTypeFullScreen:", typeId !== null
-        ? isTypeFullScreen(getItem("type", typeId))
-        : "typeId is null");
-    console.log("clickTypeBtn:", clickTypeBtn);
 
     if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
         return false;
     }
-    console.log(typeId, isTypeFullScreen(getItem("type", typeId)), clickTypeBtn)
 
     return true;
 }
