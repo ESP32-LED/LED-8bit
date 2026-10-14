@@ -194,7 +194,7 @@ function setupVehicleUI() {
             verticalSlide.hidden = true;
             const vCheck = document.getElementById("verticalSlideCheck");
             const vCheck2 = document.getElementById("verticalSlideCheck2");
-            if (vCheck) vCheck.checked = true;
+            if (vCheck) vCheck.checked = false;
             if (vCheck2) vCheck2.checked = false;
         }
     }
