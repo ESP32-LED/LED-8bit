@@ -614,6 +614,10 @@ input[type="number"]::-webkit-outer-spin-button {
     padding: 20px;
 }
 
+#verticalSlide {
+    display: grid;
+}
+
 #verticalSlideLabel1 {
     margin-top: 10px; 
     margin-bottom: 8px; 
