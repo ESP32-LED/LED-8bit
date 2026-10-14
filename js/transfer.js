@@ -22,18 +22,6 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-function isVerticalSlideEnabled() {
-    if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
-        return false;
-    }
-
-    const checkbox = document.getElementById("verticalSlideCheck");
-    if (checkbox) {
-        return checkbox.checked;
-    }
-    return true;
-}
-
 // メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
     const srcLen = input.length;
