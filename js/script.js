@@ -184,6 +184,14 @@ function setupVehicleUI() {
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
         if (verticalSlide) {
             verticalSlide.hidden = false;
+            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
+            const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
+            if (config.hasVerticalSlideLabel1) {
+                verticalSlideLabel1.hidden = false;
+            }
+            if (config.hasVerticalSlideLabel2) {
+                verticalSlideLabel2.hidden = false;
+            }
             const vCheck = document.getElementById("verticalSlideCheck");
             const vCheck2 = document.getElementById("verticalSlideCheck2");
             if (vCheck) vCheck.checked = true;
@@ -192,6 +200,14 @@ function setupVehicleUI() {
     } else {
         if (verticalSlide) {
             verticalSlide.hidden = true;
+            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
+            const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
+            if (config.hasVerticalSlideLabel1) {
+                verticalSlideLabel1.hidden = true;
+            }
+            if (config.hasVerticalSlideLabel2) {
+                verticalSlideLabel2.hidden = true;
+            }
             const vCheck = document.getElementById("verticalSlideCheck");
             const vCheck2 = document.getElementById("verticalSlideCheck2");
             if (vCheck) vCheck.checked = false;

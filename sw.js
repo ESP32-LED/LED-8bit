@@ -108,29 +108,72 @@ self.addEventListener("fetch", event => {
     if (event.request.method !== "GET") return;
 
     event.respondWith((async () => {
-        const url = new URL(event.request.url);
+        const request = event.request;
+        const url = new URL(request.url);
+        const cache = await caches.open(CACHE_NAME);
 
-        // JSON / JS / CSS / HTMLファイルは常にネットワークを優先
-        if (
-            url.pathname.endsWith(".json") ||
-            url.pathname.endsWith(".js") ||
-            url.pathname.endsWith(".css") ||
-            url.pathname.endsWith(".html")
-        ) {
+        // ページ遷移・再読み込みはネットワークを優先
+        if (request.mode === "navigate") {
             try {
-                const response = await fetch(event.request, {
+                const response = await fetch(request, {
                     cache: "no-cache"
                 });
 
                 if (response.ok) {
-                    const cache = await caches.open(CACHE_NAME);
-                    await cache.put(event.request, response.clone());
+                    // 今回のURLを更新
+                    await cache.put(request, response.clone());
+
+                    // index.htmlのキャッシュも更新
+                    const indexUrl = new URL(
+                        "./index.html",
+                        self.location.href
+                    ).href;
+
+                    await cache.put(
+                        indexUrl,
+                        response.clone()
+                    );
                 }
 
                 return response;
             } catch (error) {
-                // オフラインならキャッシュを使用
-                const cachedResponse = await caches.match(event.request);
+                // オフラインなら、まずアクセス先のキャッシュを使用
+                const cachedResponse = await caches.match(request);
+
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
+                // アクセス先がなければindex.htmlを使用
+                const indexUrl = new URL(
+                    "./index.html",
+                    self.location.href
+                ).href;
+
+                const cachedIndex = await caches.match(indexUrl);
+
+                if (cachedIndex) {
+                    return cachedIndex;
+                }
+
+                throw error;
+            }
+        }
+
+        // JSON / JS / CSS / HTMLはネットワークを優先
+        if (/\.(json|js|css|html)$/i.test(url.pathname)) {
+            try {
+                const response = await fetch(request, {
+                    cache: "no-cache"
+                });
+
+                if (response.ok) {
+                    await cache.put(request, response.clone());
+                }
+
+                return response;
+            } catch (error) {
+                const cachedResponse = await caches.match(request);
 
                 if (cachedResponse) {
                     return cachedResponse;
@@ -140,33 +183,21 @@ self.addEventListener("fetch", event => {
             }
         }
 
-        // JSON / JS / CSS / HTML以外はキャッシュを優先
-        const cachedResponse = await caches.match(event.request);
+        // その他のファイルはキャッシュを優先
+        const cachedResponse = await caches.match(request);
 
         if (cachedResponse) {
             return cachedResponse;
         }
 
-        try {
-            const response = await fetch(event.request);
+        // キャッシュにない場合はネットワークから取得
+        const response = await fetch(request);
 
-            if (response.ok) {
-                const cache = await caches.open(CACHE_NAME);
-                await cache.put(event.request, response.clone());
-            }
-
-            return response;
-        } catch (error) {
-            if (event.request.mode === "navigate") {
-                const index = await caches.match("./index.html");
-
-                if (index) {
-                    return index;
-                }
-            }
-
-            throw error;
+        if (response.ok) {
+            await cache.put(request, response.clone());
         }
+
+        return response;
     })());
 });
 
