@@ -50,18 +50,12 @@ function render() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
 
-    if (!typeId && !destinationId && !nextId && !carNumberId) {
-        clearMatrix();
-        drawMatrix(createEmptyMatrix());
-        return;
-    }
-
     const matrix = createDisplayMatrix();
     currentMatrix = matrix;
 
+    // 表示が空の場合も、キャッシュを必ず更新する
     drawMatrix(matrix, cacheCtx);
 
-    // 縦スライド処理中でなければ通常通り描画
     if (!isVerticalSliding) {
         ctx.clearRect(0, 0, sizeLed.width, sizeLed.height);
         ctx.drawImage(cacheCanvas, 0, 0);
@@ -71,13 +65,13 @@ function render() {
 function createDisplayMatrix() {
     const matrix = createEmptyMatrix();
 
-    const type = getItem("type", typeId);
-    const dest = getItem("destination", destinationId);
-    const next = getItem("next", nextId);
-    const info = getItem("information", informationId);
-    const info2 = getItem("information2", information2Id);
-    const line = getItem("line", lineId);
-    const carNumber = getItem("carNumber", carNumberId);
+    const type = typeId != null ? getItem("type", typeId) : null;
+    const dest = destinationId != null ? getItem("destination", destinationId) : null;
+    const next = nextId != null ? getItem("next", nextId) : null;
+    const info = informationId != null ? getItem("information", informationId) : null;
+    const info2 = information2Id != null ? getItem("information2", information2Id) : null;
+    const line = lineId != null ? getItem("line", lineId) : null;
+    const carNumber = carNumberId != null ? getItem("carNumber", carNumberId) : null;
 
     // 号車
     if (config.hasCarNumberSmall) {
@@ -345,7 +339,7 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
             ctx.drawImage(fromCanvas, 0, offsetY, width, height);
         }
         ctx.drawImage(toCanvas, 0, -height + offsetY, width, height);
-        if (progress < totalDuration) {
+        if (elapsed < totalDuration) {
             verticalSlideAnimationId = requestAnimationFrame(animate);
         } else {
             isVerticalSliding = false;
