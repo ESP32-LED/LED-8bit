@@ -225,6 +225,7 @@ function setupVehicleUI() {
 let renderTimer = null;
 
 function nextScene() {
+    console.log("nextScene 実行");
     buildSceneList();
     buildTypeSceneList();
 
