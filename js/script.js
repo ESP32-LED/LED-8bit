@@ -184,7 +184,7 @@ function setupVehicleUI() {
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
         if (verticalSlide) {
             verticalSlide.hidden = false;
-            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
+            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
             if (config.hasVerticalSlideLabel1) {
                 verticalSlideLabel1.hidden = false;
@@ -204,7 +204,7 @@ function setupVehicleUI() {
     } else {
         if (verticalSlide) {
             verticalSlide.hidden = true;
-            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
+            const verticalSlideLabel1 = document.getElementById("verticalSlideLabel");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
             verticalSlideLabel1.hidden = true;
             verticalSlideLabel2.hidden = true;
