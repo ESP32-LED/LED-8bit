@@ -6,7 +6,6 @@ const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
 // ===== 縦スライド演出が有効か判定する関数 =====
 function isVerticalSlideEnabled() {
-    console.log(clickTypeBtn);
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
     }
