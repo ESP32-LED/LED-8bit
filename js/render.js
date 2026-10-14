@@ -5,7 +5,7 @@ const slideTransitionCanvas = document.createElement("canvas");
 const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
 // ===== 縦スライド演出が有効か判定する関数 =====
-function isVerticalSlideEnabled2() {
+function isVerticalSlideEnabled() {
     console.log(clickTypeBtn);
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
@@ -16,34 +16,16 @@ function isVerticalSlideEnabled2() {
     if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
         return false;
     }
+    console.log("typeId:", typeId);
+    console.log("isTypeFullScreen:", typeId !== null
+        ? isTypeFullScreen(getItem("type", typeId))
+        : "typeId is null");
+    console.log("clickTypeBtn:", clickTypeBtn);
 
     if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
         return false;
     }
     console.log(typeId, isTypeFullScreen(getItem("type", typeId)), clickTypeBtn)
-
-    return true;
-}
-
-function isVerticalSlideEnabled() {
-    console.log("isVerticalSlideEnabled() が呼ばれた");
-
-    if (
-        typeof config === "undefined" ||
-        !config ||
-        config.hasVerticalSlide !== true ||
-        config.verticalSlide !== true
-    ) {
-        console.log("縦スライド設定が無効");
-        return false;
-    }
-
-    const checkbox = document.getElementById("verticalSlideCheck");
-
-    if (checkbox) {
-        console.log("チェック状態:", checkbox.checked);
-        return checkbox.checked;
-    }
 
     return true;
 }

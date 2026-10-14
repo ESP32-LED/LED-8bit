@@ -235,17 +235,7 @@ function nextScene() {
     applyScene();
     applyTypeScene();
 
-    console.log("isVerticalSlideEnabled:", typeof isVerticalSlideEnabled === "function"
-        ? isVerticalSlideEnabled()
-        : "関数が存在しない");
-    console.log("sceneList.length:", sceneList.length);
-    console.log("frame:", frame);
-    console.log("oldScene:", oldScene);
-    console.log("scene:", scene);
-
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
-
-    console.log("isSlideValid:", isSlideValid);
 
     if (isSlideValid) {
         // 現在画面（キャプチャ用）の生成
