@@ -345,10 +345,6 @@ function startRenderLoop() {
     }
 }
 
-if (transferController) {
-    transferController.abort();
-    transferController = null;
-}
 function buildSceneList() {
 
     sceneList = [];
