@@ -6,16 +6,15 @@ const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 
 // ===== 縦スライド演出が有効か判定する関数 =====
 function isVerticalSlideEnabled() {
+    console.log(clickTypeBtn);
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
     }
 
     const checkbox = document.getElementById("verticalSlideCheck");
     const checkbox2 = document.getElementById("verticalSlideCheck2");
-    if (checkbox && checkbox2) {
-        if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
-            return false;
-        }
+    if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
+        return false;
     }
 
     if (typeId !== null && isTypeFullScreen(getItem("type", typeId)) && clickTypeBtn === false) {
