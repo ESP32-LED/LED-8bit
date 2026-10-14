@@ -297,8 +297,6 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
 }
 
 function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
-
-    console.log("startVerticalSlideAnimation2 呼び出し");
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
