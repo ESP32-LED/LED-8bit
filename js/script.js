@@ -1198,8 +1198,10 @@ vCheck2.addEventListener("change", () => {
 });
 
 const choppyScrollCheck = document.getElementById("choppyScrollCheck");
-if (choppyScrollCheck.checked) {
-    choppyScroll = true;
-} else {
-    choppyScroll = false;
-}
+choppyScrollCheck.addEventListener("change", () => {
+    if (choppyScrollCheck.checked) {
+        choppyScroll = true;
+    } else {
+        choppyScroll = false;
+    }
+});
