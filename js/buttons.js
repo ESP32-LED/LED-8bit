@@ -1777,6 +1777,11 @@ function setVehicleSelectButton() {
         document.getElementById("vehicleSelector").hidden = false;
         document.getElementById("scrollCheck").checked = false;
         document.getElementById("choppyScrollCheck").checked = false;
+        document.getElementById("setLedAgingLebel").hidden = true;
+        document.getElementById("ledAgingCheck").checked = false;
+        document.getElementById("ledAgingLebel").value = 3;
+        document.getElementById("ledAgingLebelValue").textContent = 3;
+        isLedAging = false;
         choppyScroll = false;
         clickTypeBtn = false;
         scrollId = null;

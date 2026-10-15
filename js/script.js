@@ -1112,6 +1112,11 @@ tittle.addEventListener("click", () => {
     document.getElementById("vehicleSelector").hidden = false;
     document.getElementById("scrollCheck").checked = false;
     document.getElementById("choppyScrollCheck").checked = false;
+    document.getElementById("setLedAgingLebel").hidden = true;
+    document.getElementById("ledAgingCheck").checked = false;
+    document.getElementById("ledAgingLebel").value = 3;
+    document.getElementById("ledAgingLebelValue").textContent = 3;
+    isLedAging = false;
     choppyScroll = false;
     clickTypeBtn = false;
     scrollId = null;
@@ -1190,11 +1195,9 @@ const vCheck = document.getElementById("verticalSlideCheck");
 const vCheck2 = document.getElementById("verticalSlideCheck2");
 vCheck.addEventListener("change", () => {
     vCheck2.checked = false;
-    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 });
 vCheck2.addEventListener("change", () => {
     vCheck.checked = false;
-    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 });
 
 const choppyScrollCheck = document.getElementById("choppyScrollCheck");
@@ -1204,4 +1207,22 @@ choppyScrollCheck.addEventListener("change", () => {
     } else {
         choppyScroll = false;
     }
+});
+
+const ledAgingCheck = document.getElementById("ledAgingCheck");
+const ledAgingLebel = document.getElementById("ledAgingLebel");
+const setLedAgingLebel = document.getElementById("setLedAgingLebel");
+const ledAgingLebelValue = document.getElementById("ledAgingLebelValue");
+ledAgingCheck.addEventListener("change", () => {
+    if (ledAgingCheck.checked) {
+        isLedAging = true;
+        setLedAgingLebel.hidden = false;
+    } else {
+        isLedAging = false;
+        setLedAgingLebel.hidden = true;
+    }
+});
+
+ledAgingLebel.addEventListener("input", () => {
+    ledAgingLebelValue.textContent = ledAgingLebel.value;
 });

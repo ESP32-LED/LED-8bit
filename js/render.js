@@ -7,7 +7,6 @@ const slideTransitionCtx = slideTransitionCanvas.getContext("2d");
 // ===== 縦スライド演出が有効か判定する関数 =====
 function isVerticalSlideEnabled() {
     if (typeId !== null) {
-        console.log("isTypeFullScreen:", isTypeFullScreen(getItem("type", typeId)));
     }
     if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
         return false;
@@ -185,6 +184,13 @@ function createEmptyMatrix() {
 }
 
 function drawMatrix(matrix, targetCtx = ctx) {
+    if (
+        !ledAging ||
+        ledAging.width !== config.ledWidth ||
+        ledAging.height !== config.ledHeight
+    ) {
+        ledAging = createLEDAging(config.ledWidth, config.ledHeight);
+    }
     targetCtx.fillStyle = "black";
     targetCtx.fillRect(0, 0, sizeLed.width, sizeLed.height);
 
@@ -210,17 +216,103 @@ function drawMatrix(matrix, targetCtx = ctx) {
     }
 }
 
+let ledAging = null;
+
+function createLEDAging(width, height) {
+    if (!Number.isInteger(width) || !Number.isInteger(height) ||
+        width <= 0 || height <= 0) {
+        return null;
+    }
+
+    const data = [];
+
+    for (let i = 0; i < width * height; i++) {
+        const r = Math.random();
+        let brightness = 1;
+        let dead = false;
+        let colorR = 1;
+        let colorG = 1;
+        let colorB = 1;
+
+        // 輝度低下：大部分は正常、一部だけ暗くする
+        if (r < 0.025) {
+            brightness = 0.55 + Math.random() * 0.2;
+        } else if (r < 0.10) {
+            brightness = 0.8 + Math.random() * 0.15;
+        }
+
+       // すべてのLEDをオレンジ寄りにする
+        let orange = 0.12 + Math.random() * 0.08;
+
+        // 一部のLEDはさらにオレンジ寄りにする
+        if (Math.random() < 0.025) {
+            orange = 0.35 + Math.random() * 0.2;
+        }
+
+        data.push({ brightness, dead, colorR, colorG, colorB, orange });
+    }
+
+    return { width, height, data };
+}
+
+
+function applyLEDAging(x, y, color) {
+    if (!ledAging || !ledAging.data) return color;
+    if (x >= ledAging.width || y >= ledAging.height || x < 0 || y < 0) return color;
+
+    const aging = ledAging.data[y * ledAging.width + x];
+    if (!aging) return color;
+    if (aging.dead) return { r: 0, g: 0, b: 0 };
+    
+    const red = color.r * aging.brightness * aging.colorR;
+    const green = color.g * aging.brightness;
+    const blue = color.b * aging.brightness;
+    const level = Number(ledAgingLebel.value);
+
+    const strengths = [0.12, 0.25, 0.40, 0.58, 0.75];
+    const strength = strengths[level - 1];
+    if (strength === undefined) return color;
+
+    // オレンジに近い色ほど強く暖色化
+    const orangeSimilarity = Math.max(0, Math.min(1,
+        (red - blue * 0.5) / 255
+    ));
+    const warmth = strength * (0.25 + orangeSimilarity * 0.75);
+
+    return {
+        r: Math.min(255, Math.round(red + (255 - red) * warmth * 0.30)),
+        g: Math.min(255, Math.round(green + (red - green) * warmth * 0.65)),
+        b: Math.max(0, Math.round(blue * (1 - warmth * 0.80)))
+    };
+
+}
+
+
 function drawLEDCircle(targetCtx, x, y, color) {
-    targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-    targetCtx.beginPath();
-    targetCtx.arc(x * pitch + radius, y * pitch + radius, radius, 0, Math.PI * 2);
-    targetCtx.fill();
+    if (isLedAging === true) {
+        color = applyLEDAging(x, y, color);
+        targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+        targetCtx.beginPath();
+        targetCtx.arc(x * pitch + radius, y * pitch + radius, radius, 0, Math.PI * 2);
+        targetCtx.fill();
+    } else {
+        targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+        targetCtx.beginPath();
+        targetCtx.arc(x * pitch + radius, y * pitch + radius, radius, 0, Math.PI * 2);
+        targetCtx.fill();
+    }
 }
 
 function drawLEDRectangle(targetCtx, x, y, color) {
-    targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-    targetCtx.beginPath();
-    targetCtx.fillRect(x * pitch, y * pitchY, ledsize, ledsize * 0.9);
+    if (isLedAging === true) {
+        color = applyLEDAging(x, y, color);
+        targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+        targetCtx.fillRect(x * pitch, y * pitchY, ledsize, ledsize * 0.9);
+    } else {
+        targetCtx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+        targetCtx.beginPath();
+        targetCtx.fillRect(x * pitch, y * pitchY, ledsize, ledsize * 0.9);
+    }
 }
 
 function drawImage(displayData, startX, startY, matrix) {
@@ -375,4 +467,3 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
 
     verticalSlideAnimationId = requestAnimationFrame(animate);
 }
-
