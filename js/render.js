@@ -268,7 +268,12 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
     function animate(now) {
         const elapsed = now - startTime;
         const progress = Math.min(1, elapsed / duration);
-        const offsetY = Math.round(progress * height);
+        let offsetY;
+        if (choppyScroll === false) {
+            offsetY = Math.round(progress * height);
+        } else {
+            offsetY = Math.round(progress * height / pitch) * pitch;
+        }
 
         ctx.clearRect(0, 0, width, height);
 
@@ -337,7 +342,7 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
             progress = tailStartProgress + remainingProgress * easedTail;
         }
         let offsetY;
-        if (!choppyScroll) {
+        if (choppyScroll === false) {
             offsetY = Math.round(progress * height);
         } else {
             offsetY = Math.round(progress * height / pitch) * pitch;
