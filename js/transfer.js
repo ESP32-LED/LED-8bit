@@ -696,8 +696,12 @@ function createESP32Frame(matrix, hw, margin) {
 
     for (let y = 0; y < ledHeight; y++) {
         for (let x = 0; x < ledWidth; x++) {
-            const pixel = matrix[y]?.[x];
-            if (!pixel) continue;
+            const sourcePixel = matrix[y]?.[x];
+            if (!sourcePixel) continue;
+
+            const pixel = isLedAging === true
+                ? applyLEDAging(x, y, sourcePixel)
+                : sourcePixel;
 
             const targetX = x + margin;
             if (targetX < 0 || targetX >= hw) continue;
