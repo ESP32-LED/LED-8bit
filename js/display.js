@@ -1406,12 +1406,13 @@ function createScrollMatrix() {
                     r: 255,
                     g: 242,
                     b: 0
-                });
+                }, false);
             }
         }
     }
 }
  
+
 function drawScroll() {
     if (!typeId && !destinationId) {
         stopScroll();
@@ -1421,16 +1422,13 @@ function drawScroll() {
     let type;
     let isTypeFull;
     areaLeft = 48;
+
     if (typeId != null) {
         type = getItem("type", typeId);
         isTypeFull = isTypeFullScreen(type);
     } else {
         isTypeFull = false;
-        if (config.hasScrollFullScreen) {
-            areaLeft = -1;
-        } else {
-            areaLeft = 48
-        }
+        areaLeft = config.hasScrollFullScreen ? -1 : 48;
     }
 
     if (config.hasNextFullScreen) {
@@ -1452,50 +1450,73 @@ function drawScroll() {
     const areaPixelWidth = (areaRight - areaLeft) * pitch;
     const areaPixelHeight = (areaBottom - areaTop) * pitch;
 
-    /*
-     * スクロール領域だけ通常表示に戻す
-     */
+    // スクロール領域を通常表示に戻す
     ctx.drawImage(
         cacheCanvas,
-
         areaPixelLeft,
         areaPixelTop,
         areaPixelWidth,
         areaPixelHeight,
-
         areaPixelLeft,
         areaPixelTop,
         areaPixelWidth,
         areaPixelHeight
     );
 
-    /*
-     * スクロール領域から
-     * はみ出さないようにする
-     */
+    // スクロール領域からはみ出さないようにする
     ctx.save();
-
     ctx.beginPath();
-
     ctx.rect(
         areaPixelLeft,
         areaPixelTop,
         areaPixelWidth,
         areaPixelHeight
     );
-
     ctx.clip();
 
-    /*
-     * 完成済みの文字画像を表示
-     *
-     * scrollPixelX は実際のピクセル位置
-     */
-    ctx.drawImage(
-        scrollTextCanvas,
-        scrollPixelX,
-        areaPixelTop
-    );
+    // スクロール文字を描画
+    const baseColor = {
+        r: 255,
+        g: 242,
+        b: 0
+    };
+
+    for (let charIndex = 0; charIndex < scrollTextMatrix.length; charIndex++) {
+        const charMatrix = scrollTextMatrix[charIndex];
+
+        for (let py = 0; py < 16; py++) {
+            for (let px = 0; px < 16; px++) {
+                if (!charMatrix[py][px]) continue;
+
+                // LEDのドット位置をピクセル単位で計算
+                const centerX =
+                    scrollPixelX + (charIndex * 16 + px) * pitch + radius;
+                const centerY =
+                    areaPixelTop + py * pitch + radius;
+
+                // 実際に表示されるLEDの座標で劣化を取得
+                const ledX = Math.floor(centerX / pitch);
+                const ledY = Math.floor(centerY / pitch);
+
+                const color = isLedAging === true
+                    ? applyLEDAging(ledX, ledY, baseColor)
+                    : baseColor;
+
+                ctx.fillStyle =
+                    `rgb(${color.r},${color.g},${color.b})`;
+
+                ctx.beginPath();
+                ctx.arc(
+                    centerX,
+                    centerY,
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+    }
 
     ctx.restore();
 }
