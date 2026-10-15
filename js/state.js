@@ -54,4 +54,6 @@ let destinationScroll = false;
 
 let clickTypeBtn = false;
 
+let choppyScroll = false;
+
 const langs = ["ja", "en"];
