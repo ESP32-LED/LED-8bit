@@ -272,7 +272,7 @@ function startVerticalSlideAnimation(fromCanvas, toCanvas, onComplete) {
         if (choppyScroll === false) {
             offsetY = Math.round(progress * height);
         } else {
-            offsetY = Math.round(progress * height / pitch) * pitch;
+            offsetY = Math.round(progress * height / (pitch * 2)) * pitch * 2;
         }
 
         ctx.clearRect(0, 0, width, height);
@@ -313,11 +313,11 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
     isVerticalSliding = true;
     const width = sizeLed.width;
     const height = sizeLed.height;
-    const duration = 900; // 時間を900msに変更（より滑らか・ゆっくりに）
+    const duration = 1000;
     const startTime = performance.now();
     // 最後の3ドットをゆっくり動かす設定
     // 減速を始める位置
-    const slowDots = 8;
+    let slowDots = 8;
     const logicalDotHeight = 32;
     const tailStartProgress = Math.max(0, 1 - slowDots / logicalDotHeight);
     const tailStartT = 0.75 * (1 / 3 + (2 / Math.PI) * Math.asin(1.5 * tailStartProgress - 0.5));
@@ -338,14 +338,24 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
             progress = (Math.sin((t * 4 / 3 - 1 / 3) * Math.PI / 2) + 0.5) / 3 * 2;
         } else {
             const u = Math.min(1, (elapsed - tailStartTime) / tailDuration);
-            const easedTail = 1 - Math.pow(1 - u, m);
+            const easedTail = 1 - Math.pow(1 - u, m * 1.2);
             progress = tailStartProgress + remainingProgress * easedTail;
         }
         let offsetY;
         if (choppyScroll === false) {
             offsetY = Math.round(progress * height);
         } else {
-            offsetY = Math.round(progress * height / pitch) * pitch;
+            let step;
+            if (elapsed < 100) {
+                step = pitch * 4;
+            } else if (elapsed < tailStartTime) {
+                step = pitch * 3
+            } else if (elapsed < totalDuration - 100) {
+                step = pitch;
+            } else {
+                step = pitch * 0.5;
+            }
+            offsetY = Math.round(progress * height / step) * step;
         }
         ctx.clearRect(0, 0, width, height);
         if (offsetY < height) {
@@ -365,3 +375,4 @@ function startVerticalSlideAnimation2(fromCanvas, toCanvas, onComplete) {
 
     verticalSlideAnimationId = requestAnimationFrame(animate);
 }
+
