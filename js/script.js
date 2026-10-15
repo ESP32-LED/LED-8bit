@@ -1194,3 +1194,10 @@ vCheck2.addEventListener("change", () => {
     vCheck.checked = false;
     if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 });
+
+const choppyScrollCheck = document.getElementById("choppyScrollCheck");
+if (choppyScrollCheck.checked) {
+    choppyScroll = true;
+} else {
+    choppyScroll = false;
+}
