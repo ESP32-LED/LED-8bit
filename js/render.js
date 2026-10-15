@@ -269,7 +269,7 @@ function applyLEDAging(x, y, color) {
     const blue = color.b * aging.brightness;
     const level = Number(ledAgingLebel.value);
 
-    const strengths = [0.12, 0.25, 0.40, 0.58, 0.75];
+    const strengths = [0.14, 0.29, 0.46, 0.66, 0.85, 1.00, 1.50];
     const strength = strengths[level - 1];
     if (strength === undefined) return color;
 
