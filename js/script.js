@@ -1257,7 +1257,6 @@ ledAgingLebel.addEventListener("input", () => {
 const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn") ;
 displayVerticalSlideBtn.addEventListener("click", () => {
     if (isDisplayVerticalSlide === false) {
-        mobileLog("aa");
         isDisplayVerticalSlide = true;
         displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
         verticalSlideCheckbox.hidden = false;
@@ -1267,6 +1266,7 @@ displayVerticalSlideBtn.addEventListener("click", () => {
             verticalSlideCheck.checked = false;
         }
         if (config.verticalSlideCheck2Checked) {
+            mobileLog("a");
             verticalSlideCheck2.checked = true;
         } else {
             verticalSlideCheck2.checked = false;
