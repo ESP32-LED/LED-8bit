@@ -1280,9 +1280,4 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
         verticalSlideCheckbox.hidden = true;
     }
-    mobileLog("クリック前:", displayVerticalSlideBtn.textContent);
-
-    displayVerticalSlideBtn.textContent = "テスト";
-
-    mobileLog("クリック後:", displayVerticalSlideBtn.textContent);
 });
