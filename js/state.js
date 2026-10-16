@@ -59,4 +59,6 @@ let isLedAging = false;
 
 let isDisplayVerticalSlide = false;
 
+let isDisplayLog = false;
+
 const langs = ["ja", "en"];
