@@ -227,10 +227,24 @@ function setupVehicleUI() {
                     verticalSlideLabel2.hidden = true;
                 }
             }
-            const vCheck = document.getElementById("verticalSlideCheck");
-            const vCheck2 = document.getElementById("verticalSlideCheck2");
-            if (vCheck) vCheck.checked = true;
-            if (vCheck2) vCheck2.checked = false;
+            const verticalSlideCheck = document.getElementById("verticalSlideCheck");
+            const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
+            const choppyScrollCheck = document.getElementById("choppyScrollCheck");
+            if (config.verticalSlideCheckChecked) {
+                verticalSlideCheck.checked = true;
+            } else {
+                verticalSlideCheck.checked = false;
+            }
+            if (config.verticalSlideCheck2Checked) {
+                verticalSlideCheck2.checked = true;
+            } else {
+                verticalSlideCheck2.checked = false;
+            }
+            if (config.choppyScrollCheckChecked) {
+                choppyScrollCheck.checked = true;
+            } else {
+                choppyScrollCheck.checked = false;
+            }
         }
     } else {
         if (verticalSlide) {
@@ -243,10 +257,12 @@ function setupVehicleUI() {
             if (verticalSlideLabel2) {
                 verticalSlideLabel2.hidden = true;
             }
-            const vCheck = document.getElementById("verticalSlideCheck");
-            const vCheck2 = document.getElementById("verticalSlideCheck2");
-            if (vCheck) vCheck.checked = false;
-            if (vCheck2) vCheck2.checked = false;
+            const verticalSlideCheck = document.getElementById("verticalSlideCheck");
+            const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
+            const choppyScrollCheck = document.getElementById("choppyScrollCheck");
+            verticalSlideCheck.checked = false;
+            verticalSlideCheck2.checked = false;
+            choppyScrollCheck.checked = false;
         }
     }
 
