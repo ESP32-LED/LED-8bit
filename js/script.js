@@ -1275,6 +1275,7 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         } else {
             ledAgingCheck.checked = false;
         }
+        mobileLog(config.verticalSlideCheckChecked, config.verticalSlideCheckChecked2, config.ledAgingCheckChecked);
     } else {
         isDisplayVerticalSlide = false;
         displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
