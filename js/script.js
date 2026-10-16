@@ -1287,11 +1287,15 @@ const displayLog = document.getElementById("displayLog");
 displayLog.addEventListener("click", () => {
     if (isDisplayLog === false) {
         isDisplayLog = true;
-        debugConsole.hidden = false;
+        if (debugConsole) {
+            debugConsole.hidden = false;
+        }
         displayLog.textContent = "ログを非表示にする";
     } else {
         isDisplayLog = false;
-        debugConsole.hidden = true;
+        if (debugConsole) {
+            debugConsole.hidden = true;
+        }
         displayLog.textContent = "ログを表示する";
     }
 });
