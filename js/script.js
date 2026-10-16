@@ -1279,6 +1279,21 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         isDisplayVerticalSlide = false;
         displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
         verticalSlideCheckbox.hidden = true;
+        if (config.verticalSlideCheckChecked) {
+            verticalSlideCheck.checked = true;
+        } else {
+            verticalSlideCheck.checked = false;
+        }
+        if (config.verticalSlideCheck2Checked) {
+            verticalSlideCheck2.checked = true;
+        } else {
+            verticalSlideCheck2.checked = false;
+        }
+        if (config.choppyScrollCheckChecked) {
+            choppyScrollCheck.checked = true;
+        } else {
+            choppyScrollCheck.checked = false;
+        }
     }
 });
 
