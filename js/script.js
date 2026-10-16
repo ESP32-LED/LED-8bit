@@ -1233,6 +1233,21 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         isDisplayVerticalSlide = true;
         isDisplayVerticalSlide.textContent = "縦スライド設定を非表示にする";
         verticalSlideCheckbox.hidden = false;
+        if (config.verticalSlideCheck) {
+            verticalSlideCheck.checked = true;
+        } else {
+            verticalSlideCheck.checked = false;
+        }
+        if (config.verticalSlideCheck2) {
+            verticalSlideCheck2.checked = true;
+        } else {
+            verticalSlideCheck2.checked = false;
+        }
+        if (config.ledAgingCheck) {
+            ledAgingCheck.checked = true;
+        } else {
+            ledAgingCheck.checked = false;
+        }
     } else {
         isDisplayVerticalSlide = false;
         isDisplayVerticalSlide.textContent = "縦スライド設定を表示する";
