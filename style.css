@@ -730,6 +730,27 @@ input[type="number"]::-webkit-outer-spin-button {
     display: none!important;
 }
 
+#debugConsole {
+    background: #111;
+    color: #0f0;
+    padding: 10px;
+    font: 12px monospace;
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height: 200px;
+}
+
+#debugConsole button {
+    padding: 5px 10px;
+    margin-bottom: 8px;
+}
+
+#debugLog {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 @keyframes loadingDots {
     0%   { content: ""; }
 
