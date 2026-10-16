@@ -731,24 +731,29 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 #debugConsole {
+    display: block !important;
+    position: relative;
+    z-index: 99999;
     background: #111;
-    color: #0f0;
+    color: #00ff00;
     padding: 10px;
+    margin: 10px;
     font: 12px monospace;
     white-space: pre-wrap;
-    overflow: auto;
+    overflow-wrap: anywhere;
     max-height: 200px;
+    overflow-y: auto;
 }
 
 #debugConsole button {
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    color: #000;
+    background: #fff;
+    padding: 6px;
 }
 
 #debugLog {
-    margin: 0;
+    color: #00ff00;
     white-space: pre-wrap;
-    overflow-wrap: anywhere;
 }
 
 @keyframes loadingDots {
