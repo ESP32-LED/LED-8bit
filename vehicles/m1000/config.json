@@ -41,6 +41,7 @@
     "hasVerticalSlideLabel2": true,
     "verticalSlideCheckChecked": false,
     "verticalSlideCheckChecked2": true,
+    "ledAgingCheckChecked": true,
     "pixelSize": 8.5,
     "ledSize": 6.5,
     "ledGap": 2,
