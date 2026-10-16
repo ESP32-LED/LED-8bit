@@ -71,6 +71,14 @@ function mobileLog(...args) {
     log.parentElement.scrollTop = log.parentElement.scrollHeight;
 }
 
+window.addEventListener("error", event => {
+    mobileLog("エラー:", event.message, event.filename, event.lineno);
+});
+
+window.addEventListener("unhandledrejection", event => {
+    mobileLog("Promiseエラー:", event.reason);
+});
+
 async function startVehicle() {
     clearInterval(scrollTimer);
     scrollTimer = null;
