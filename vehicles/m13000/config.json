@@ -41,7 +41,7 @@
     "hasVerticalSlideLabel2": true,
     "verticalSlideCheckChecked": false,
     "verticalSlideCheck2Checked": true,
-    "choppyScrollCheckChecked": false,
+    "choppyScrollCheckChecked": true,
     "pixelSize": 8.5,
     "ledSize": 6.5,
     "ledGap": 2,
