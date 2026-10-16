@@ -1294,4 +1294,4 @@ displayLog.addEventListener("click", () => {
         debugConsole.hidden = true;
         displayLog.textContent = "ログを表示する";
     }
-}
+});
