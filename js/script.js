@@ -1226,3 +1226,10 @@ ledAgingCheck.addEventListener("change", () => {
 ledAgingLebel.addEventListener("input", () => {
     ledAgingLebelValue.textContent = ledAgingLebel.value;
 });
+
+const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn") {
+displayVerticalSlideBtn.addEventListener("click", () => {
+    if (isDisplayVerticalSlide === false) {
+        isDisplayVerticalSlide = true
+        isDisplayVerticalSlide.textContent = 
+    }
