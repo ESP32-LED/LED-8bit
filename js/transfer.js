@@ -270,10 +270,9 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
-// 縦スライド・スクロールカクカク設定に対応するスライドコードの判定関数
 function getSlideMode() {
     if (typeof isVerticalSlideEnabled === "function" && !isVerticalSlideEnabled()) {
-        return 0x56; // 縦スライドなし
+        return 0x56;
     }
     const vCheck = document.getElementById("verticalSlideCheck");
     const vCheck2 = document.getElementById("verticalSlideCheck2");
@@ -282,11 +281,20 @@ function getSlideMode() {
     const isMode2 = vCheck2 && vCheck2.checked;
     const isChoppy = choppyCheck && choppyCheck.checked;
 
-    if (!isMode2 && !isChoppy) return 0x57; // 縦スライド(1)
-    if (isMode2 && !isChoppy) return 0x58;  // 縦スライド(2)
-    if (!isMode2 && isChoppy) return 0x59;  // 縦スライド(1) カクカク
-    if (isMode2 && isChoppy) return 0x5a;   // 縦スライド(2) カクカク
+    if (!isMode2 && !isChoppy) return 0x57;
+    if (isMode2 && !isChoppy) return 0x58;
+    if (!isMode2 && isChoppy) return 0x59;
+    if (isMode2 && isChoppy) return 0x5a;
     return 0x56;
+}
+
+// LED劣化の有効化チェック関数
+function isAgingEnabled() {
+    if (typeof isLedAging !== "undefined" && isLedAging === true) {
+        return true;
+    }
+    const agingCheck = document.getElementById("isLedAging");
+    return agingCheck ? agingCheck.checked : false;
 }
 
 document.addEventListener("click", (e) => {
@@ -301,7 +309,10 @@ document.addEventListener("click", (e) => {
         e.target.id === "scrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
-        e.target.id === "choppyScrollCheck"
+        e.target.id === "choppyScrollCheck" ||
+        e.target.id === "isLedAging" ||
+        e.target.id === "ledAgingLebel" ||
+        e.target.id === "ledAgingLevel"
     ) {
         triggerAutoTransfer();
     }
@@ -317,7 +328,10 @@ document.addEventListener("input", (e) => {
         e.target.id === "hardwareWidth" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
-        e.target.id === "hwBrightness"
+        e.target.id === "hwBrightness" ||
+        e.target.id === "isLedAging" ||
+        e.target.id === "ledAgingLebel" ||
+        e.target.id === "ledAgingLevel"
     ) {
         triggerAutoTransfer();
     }
@@ -337,7 +351,10 @@ document.addEventListener("change", (e) => {
         e.target.id === "hardwareWidth" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
-        e.target.id === "hwBrightness"
+        e.target.id === "hwBrightness" ||
+        e.target.id === "isLedAging" ||
+        e.target.id === "ledAgingLebel" ||
+        e.target.id === "ledAgingLevel"
     ) {
         triggerAutoTransfer();
     }
@@ -484,14 +501,23 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     const data = view.data;
     const sbuf = new Uint8Array(width * height * 2);
     let sp = 0;
+    const checkAging = isAgingEnabled();
 
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             const index = (y * width + x) * 3;
 
-            const srcR = Number(data[index] ?? 0);
-            const srcG = Number(data[index + 1] ?? 0);
-            const srcB = Number(data[index + 2] ?? 0);
+            let srcR = Number(data[index] ?? 0);
+            let srcG = Number(data[index + 1] ?? 0);
+            let srcB = Number(data[index + 2] ?? 0);
+
+            // LED劣化処理の適用
+            if (checkAging && typeof applyLEDAging === "function") {
+                const aged = applyLEDAging(x, y, { r: srcR, g: srcG, b: srcB });
+                srcR = aged.r;
+                srcG = aged.g;
+                srcB = aged.b;
+            }
 
             const r = Math.min(255, Math.max(0, Math.round(Math.pow(srcR / 255, gam) * br * 255)));
             const g = Math.min(255, Math.max(0, Math.round(Math.pow(srcG / 255, gam) * br * 255)));
@@ -657,7 +683,6 @@ function createESP32Packet() {
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
         let rawSceneCount = lcm(sceneList.length, typeCount);
 
-        // FULL種別時は画面数を1に固定
         if (typeIsFull) {
             rawSceneCount = 1;
         }
@@ -716,13 +741,15 @@ function createESP32Frame(matrix, hw, margin) {
     const ledHeight = Number(config.ledHeight);
     const ledWidth = Number(config.ledWidth);
     const yOffset = ledHeight < 32 ? Math.floor((32 - ledHeight) / 2) : 0;
+    const checkAging = isAgingEnabled();
 
     for (let y = 0; y < ledHeight; y++) {
         for (let x = 0; x < ledWidth; x++) {
             const sourcePixel = matrix[y]?.[x];
             if (!sourcePixel) continue;
 
-            const pixel = isLedAging === true
+            // LED劣化処理の適用
+            const pixel = (checkAging && typeof applyLEDAging === "function")
                 ? applyLEDAging(x, y, sourcePixel)
                 : sourcePixel;
 
@@ -832,7 +859,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = getSlideMode(); // 正しいスライド形式コードを出力
+    header[1] = getSlideMode();
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
