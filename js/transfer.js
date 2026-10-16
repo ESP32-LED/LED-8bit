@@ -270,6 +270,25 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
+// 縦スライド・スクロールカクカク設定に対応するスライドコードの判定関数
+function getSlideMode() {
+    if (typeof isVerticalSlideEnabled === "function" && !isVerticalSlideEnabled()) {
+        return 0x56; // 縦スライドなし
+    }
+    const vCheck = document.getElementById("verticalSlideCheck");
+    const vCheck2 = document.getElementById("verticalSlideCheck2");
+    const choppyCheck = document.getElementById("choppyScrollCheck");
+
+    const isMode2 = vCheck2 && vCheck2.checked;
+    const isChoppy = choppyCheck && choppyCheck.checked;
+
+    if (!isMode2 && !isChoppy) return 0x57; // 縦スライド(1)
+    if (isMode2 && !isChoppy) return 0x58;  // 縦スライド(2)
+    if (!isMode2 && isChoppy) return 0x59;  // 縦スライド(1) カクカク
+    if (isMode2 && isChoppy) return 0x5a;   // 縦スライド(2) カクカク
+    return 0x56;
+}
+
 document.addEventListener("click", (e) => {
     if (!e.target) return;
     if (
@@ -280,7 +299,9 @@ document.addEventListener("click", (e) => {
         e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
-        e.target.id === "verticalSlideCheck"
+        e.target.id === "verticalSlideCheck" ||
+        e.target.id === "verticalSlideCheck2" ||
+        e.target.id === "choppyScrollCheck"
     ) {
         triggerAutoTransfer();
     }
@@ -307,6 +328,8 @@ document.addEventListener("change", (e) => {
     if (
         e.target.id === "scrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
+        e.target.id === "verticalSlideCheck2" ||
+        e.target.id === "choppyScrollCheck" ||
         e.target.id === "scrollText" ||
         e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
@@ -809,7 +832,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = isVerticalSlideEnabled() ? 0x57 : 0x56;
+    header[1] = getSlideMode(); // 正しいスライド形式コードを出力
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
