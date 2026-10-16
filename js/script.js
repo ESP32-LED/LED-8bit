@@ -958,6 +958,13 @@ function buildSceneList() {
             }
         }
     } else {
+        if (typeId === null && destinationId === null) {
+            sceneList.push({
+                lang: "ja",
+                information: "type",
+                next: false
+            });
+        }
         if (typeId != null) {
             sceneList.push({
                 lang: "ja",
