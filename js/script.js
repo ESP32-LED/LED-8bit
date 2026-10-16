@@ -1231,7 +1231,7 @@ const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn
 displayVerticalSlideBtn.addEventListener("click", () => {
     if (isDisplayVerticalSlide === false) {
         isDisplayVerticalSlide = true;
-        isDisplayVerticalSlide.textContent = "縦スライド設定を非表示にする";
+        displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
         verticalSlideCheckbox.hidden = false;
         if (config.verticalSlideCheckChecked) {
             verticalSlideCheck.checked = true;
@@ -1250,7 +1250,7 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         }
     } else {
         isDisplayVerticalSlide = false;
-        isDisplayVerticalSlide.textContent = "縦スライド設定を表示する";
+        displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
         verticalSlideCheckbox.hidden = true;
     }
 });
