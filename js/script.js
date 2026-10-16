@@ -1284,18 +1284,9 @@ displayVerticalSlideBtn.addEventListener("click", () => {
 
 const debugConsole = document.getElementById("debugConsole");
 const displayLog = document.getElementById("displayLog");
+
 displayLog.addEventListener("click", () => {
-    if (isDisplayLog === false) {
-        isDisplayLog = true;
-        if (debugConsole) {
-            debugConsole.hidden = false;
-        }
-        displayLog.textContent = "ログを非表示にする";
-    } else {
-        isDisplayLog = false;
-        if (debugConsole) {
-            debugConsole.hidden = true;
-        }
-        displayLog.textContent = "ログを表示する";
-    }
+    isDisplayLog = !isDisplayLog;
+    debugConsole.hidden = !isDisplayLog;
+    displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
 });
