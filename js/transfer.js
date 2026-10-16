@@ -22,6 +22,43 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
+function isVerticalSlideEnabled() {
+    if (typeof config === "undefined" || !config || config.hasVerticalSlide !== true || config.verticalSlide !== true) {
+        return false;
+    }
+
+    const checkbox = document.getElementById("verticalSlideCheck");
+    const checkbox2 = document.getElementById("verticalSlideCheck2");
+    if (checkbox && checkbox2 && !checkbox.checked && !checkbox2.checked) {
+        return false;
+    }
+
+    if (typeof typeId !== "undefined" && typeId !== null && typeof isTypeFullScreen === "function" && typeof getItem === "function") {
+        if (isTypeFullScreen(getItem("type", typeId)) && (typeof clickTypeBtn !== "undefined" && clickTypeBtn === false)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// 縦スライドの種類（モード）を正確に特定する関数
+function getVerticalSlideMode() {
+    if (!isVerticalSlideEnabled()) return 0x56;
+
+    const v1 = document.getElementById("verticalSlideCheck")?.checked;
+    const v2 = document.getElementById("verticalSlideCheck2")?.checked;
+    const choppy = (typeof choppyScroll !== "undefined" && choppyScroll) || document.getElementById("choppyScrollCheck")?.checked;
+
+    if (v2) {
+        return choppy ? 0x5a : 0x58; // 2段階・減速スライド (カクカク / 滑らか)
+    } else if (v1) {
+        return choppy ? 0x59 : 0x57; // 通常スライド (カクカク / 滑らか)
+    }
+
+    return 0x56;
+}
+
 // メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
     const srcLen = input.length;
@@ -280,7 +317,9 @@ document.addEventListener("click", (e) => {
         e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
-        e.target.id === "verticalSlideCheck"
+        e.target.id === "verticalSlideCheck" ||
+        e.target.id === "verticalSlideCheck2" ||
+        e.target.id === "choppyScrollCheck"
     ) {
         triggerAutoTransfer();
     }
@@ -307,6 +346,8 @@ document.addEventListener("change", (e) => {
     if (
         e.target.id === "scrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
+        e.target.id === "verticalSlideCheck2" ||
+        e.target.id === "choppyScrollCheck" ||
         e.target.id === "scrollText" ||
         e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
@@ -634,7 +675,6 @@ function createESP32Packet() {
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
         let rawSceneCount = lcm(sceneList.length, typeCount);
 
-        // FULL種別時は画面数を1に固定
         if (typeIsFull) {
             rawSceneCount = 1;
         }
@@ -696,12 +736,8 @@ function createESP32Frame(matrix, hw, margin) {
 
     for (let y = 0; y < ledHeight; y++) {
         for (let x = 0; x < ledWidth; x++) {
-            const sourcePixel = matrix[y]?.[x];
-            if (!sourcePixel) continue;
-
-            const pixel = isLedAging === true
-                ? applyLEDAging(x, y, sourcePixel)
-                : sourcePixel;
+            const pixel = matrix[y]?.[x];
+            if (!pixel) continue;
 
             const targetX = x + margin;
             if (targetX < 0 || targetX >= hw) continue;
@@ -809,7 +845,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = isVerticalSlideEnabled() ? 0x57 : 0x56;
+    header[1] = getVerticalSlideMode() & 0xff; // スライドモードを詳細送信 (0x56 〜 0x5A)
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
