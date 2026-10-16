@@ -242,8 +242,10 @@ function setupVehicleUI() {
             }
             if (config.choppyScrollCheckChecked) {
                 choppyScrollCheck.checked = true;
+                choppyScroll = true;
             } else {
                 choppyScrollCheck.checked = false;
+                choppyScroll = false;
             }
         }
     } else {
@@ -260,6 +262,7 @@ function setupVehicleUI() {
             const verticalSlideCheck = document.getElementById("verticalSlideCheck");
             const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
             const choppyScrollCheck = document.getElementById("choppyScrollCheck");
+            choppyScroll = false;
             verticalSlideCheck.checked = false;
             verticalSlideCheck2.checked = false;
             choppyScrollCheck.checked = false;
@@ -1288,8 +1291,10 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         }
         if (config.choppyScrollCheckChecked) {
             choppyScrollCheck.checked = true;
+            choppyScroll = true;
         } else {
             choppyScrollCheck.checked = false;
+            choppyScroll = false;
         }
     } else {
         isDisplayVerticalSlide = false;
@@ -1307,8 +1312,10 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         }
         if (config.choppyScrollCheckChecked) {
             choppyScrollCheck.checked = true;
+            choppyScroll = true;
         } else {
             choppyScrollCheck.checked = false;
+            choppyScroll = false;
         }
     }
 });
