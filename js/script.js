@@ -1270,11 +1270,10 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         } else {
             verticalSlideCheck2.checked = false;
         }
-        if (config.ledAgingCheckChecked) {
-            mobileLog("a");
-            ledAgingCheck.checked = true;
+        if (config.choppyScrollCheckChecked) {
+            choppyScrollCheck.checked = true;
         } else {
-            ledAgingCheck.checked = false;
+            choppyScrollCheck.checked = false;
         }
     } else {
         isDisplayVerticalSlide = false;
