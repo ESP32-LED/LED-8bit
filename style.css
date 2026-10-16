@@ -745,6 +745,10 @@ input[type="number"]::-webkit-outer-spin-button {
     overflow-y: auto;
 }
 
+#debugConsole[hidden] {
+    display: none!important;
+}
+
 #debugConsole button {
     color: #000;
     background: #fff;
