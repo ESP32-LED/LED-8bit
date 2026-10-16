@@ -1281,3 +1281,17 @@ displayVerticalSlideBtn.addEventListener("click", () => {
         verticalSlideCheckbox.hidden = true;
     }
 });
+
+const debugConsole = document.getElementById("debugConsole");
+const displayLog = document.getElementById("displayLog");
+displayLog.addEventListener("click", () => {
+    if (isDisplayLog === false) {
+        isDisplayLog = true;
+        debugConsole.hidden = false;
+        displayLog.textContent = "ログを非表示にする";
+    } else {
+        isDisplayLog = false;
+        debugConsole.hidden = true;
+        displayLog.textContent = "ログを表示する";
+    }
+}
