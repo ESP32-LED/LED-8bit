@@ -52,6 +52,25 @@
     });
 })();
 
+function mobileLog(...args) {
+    const log = document.getElementById("debugLog");
+    if (!log) return;
+
+    log.textContent += args.map(arg => {
+        if (arg instanceof Error) return arg.stack || arg.message;
+        if (typeof arg === "object" && arg !== null) {
+            try {
+                return JSON.stringify(arg, null, 2);
+            } catch {
+                return String(arg);
+            }
+        }
+        return String(arg);
+    }).join(" ") + "\n";
+
+    log.parentElement.scrollTop = log.parentElement.scrollHeight;
+}
+
 async function startVehicle() {
     clearInterval(scrollTimer);
     scrollTimer = null;
