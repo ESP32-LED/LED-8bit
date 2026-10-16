@@ -1266,12 +1266,12 @@ displayVerticalSlideBtn.addEventListener("click", () => {
             verticalSlideCheck.checked = false;
         }
         if (config.verticalSlideCheck2Checked) {
-            mobileLog("a");
             verticalSlideCheck2.checked = true;
         } else {
             verticalSlideCheck2.checked = false;
         }
         if (config.ledAgingCheckChecked) {
+            mobileLog("a");
             ledAgingCheck.checked = true;
         } else {
             ledAgingCheck.checked = false;
