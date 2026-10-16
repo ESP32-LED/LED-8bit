@@ -1781,6 +1781,9 @@ function setVehicleSelectButton() {
         document.getElementById("ledAgingCheck").checked = false;
         document.getElementById("ledAgingLebel").value = 3;
         document.getElementById("ledAgingLebelValue").textContent = 3;
+        document.getElementById("displayVerticalSlideBtn").textContent = "縦スライド設定を表示する";
+        document.getElementById("verticalSlideCheckbox").hidden = true;
+        isDisplayVerticalSlide = false;
         isLedAging = false;
         choppyScroll = false;
         clickTypeBtn = false;
