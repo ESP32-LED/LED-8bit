@@ -1660,9 +1660,9 @@ function startScroll() {
 
                         clickStartScrollBtn = true;
                         startScroll();
-                    }, 500);
+                    }, 1500);
                 }, 3000);
-            }, 500);
+            }, 1500);
         }
 
         if (!scrollWaiting) {
