@@ -1,5 +1,5 @@
 {
-    "name": "東京メトロ13000系初期車",
+    "name": "東京メトロ13000系（初期車）・東武鉄道70000系・70090型",
 
     "explanation": "a",
 
@@ -39,9 +39,9 @@
     "verticalSlide": true,
     "hasVerticalSlideLabel1": true,
     "hasVerticalSlideLabel2": true,
-    "verticalSlideCheckChecked": false,
-    "verticalSlideCheck2Checked": true,
-    "choppyScrollCheckChecked": true,
+    "verticalSlideCheckChecked": true,
+    "verticalSlideCheck2Checked": false,
+    "choppyScrollCheckChecked": false,
     "pixelSize": 8.5,
     "ledSize": 6.5,
     "ledGap": 2,
