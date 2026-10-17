@@ -1858,6 +1858,9 @@ startScrollBtn.addEventListener("click", () => {
     if (!typeId && !destinationId) {
         return;
     }
+    if (config.scrollSpeed) {
+        scrollSpeed = config.scrollSpeed;
+    }
     if (!config.scroll_normal) {
         const type = getItem ("type", typeId);
         if (!isTypeFullScreen(type)) {
