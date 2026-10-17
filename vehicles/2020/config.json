@@ -47,6 +47,7 @@
 
     "enAhead": false,
     "informationAhead": false,
+    "carNumberAhead": true,
 
     "setSwitchingTime": true,
     "jaTime": 3,
