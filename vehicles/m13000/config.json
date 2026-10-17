@@ -48,6 +48,7 @@
 
     "enAhead": false,
     "informationAhead": false,
+    "carNumberAhead": true,
 
     "setSwitchingTime": false,
 
