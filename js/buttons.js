@@ -1861,6 +1861,9 @@ startScrollBtn.addEventListener("click", () => {
     if (config.scrollSpeed) {
         scrollSpeed = config.scrollSpeed;
     }
+    if (config.transerScrollSpeed) {
+        transferScrollSpeed = config.transferScrollSpeed;
+    }
     if (!config.scroll_normal) {
         const type = getItem ("type", typeId);
         if (!isTypeFullScreen(type)) {
