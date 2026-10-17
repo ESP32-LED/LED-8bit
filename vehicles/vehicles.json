@@ -863,5 +863,16 @@
             "vehicles/2000/icons/icon1.png"
         ],
         "site": "vehicles/2000/site.json"
+    },
+    {
+        "id": "hanshin9000",
+        "name": "阪神9000系",
+        "config": "vehicles/hanshin9000/config.json",
+        "led": "vehicles/hanshin9000/led.json",
+        "icons": [
+            "vehicles/hanshin9000/icons/icon1.png"
+        ],
+        "site": "vehicles/hanshin9000/site.json",
+        "font": "fonts/font_E233.json"
     }
 ]
