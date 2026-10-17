@@ -1352,10 +1352,8 @@ let lastScrollTime = null;
 let scrollSpeed
 
 // スクロール速度（1秒あたりのピクセル数）
-if (config.scrollSpeed) {
-    scrollSpeed === config.scrollSpeed;
-} else {
-    scrollSpeed === 450;
+if (typeof config !== "undefined" && config.scrollSpeed) {
+    scrollSpeed = config.scrollSpeed;
 }
 
 function createScrollMatrix() {
