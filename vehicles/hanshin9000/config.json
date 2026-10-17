@@ -21,8 +21,8 @@
     "hasNextFullScreen": false,
     "hasScrollFullScreen": false,
     "information_ja_en": false,
-    "scrollSpeed": 200,
-    "transferScrollSpeed": 12,
+    "scrollSpeed": 250,
+    "transferScrollSpeed": 13,
 
     "informationNormalOnNext": true,
 
