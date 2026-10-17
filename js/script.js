@@ -347,7 +347,7 @@ function startDestinationDisplayCycle() {
             startDestinationCycleSmallSwitch();
             clickStartScrollBtn = true;
             startScroll();
-        }, 500);
+        }, 1500);
     }, 3000);
 }
 
