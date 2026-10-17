@@ -866,7 +866,7 @@
     },
     {
         "id": "hanshin9000",
-        "name": "阪神9000系（リニューアル車）",
+        "name": "阪神9000系（リノベーション車）",
         "config": "vehicles/hanshin9000/config.json",
         "led": "vehicles/hanshin9000/led.json",
         "icons": [
