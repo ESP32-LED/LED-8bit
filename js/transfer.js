@@ -19,7 +19,10 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 17;
+let transferScrollSpeed = 17;
+if (config.transerScrollSpeed) {
+    transferScrollSpeed = config.transferScrollSpeed;
+}
 const transferTypeDestinationScrollSpeed = 13;
 
 // メイン表示用：高速 LZ4 エンコーダー
