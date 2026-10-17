@@ -779,6 +779,73 @@ function buildSceneList() {
             }
         }
 
+        if (config.carNumberAhead) {
+            if (carNumberId != null) {
+                if (config.hasCarNumberFull) {
+                    if (nextId != null) {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: true
+                        });
+                    } else {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: false
+                        });
+                    }
+                    if (hasEnglishCarNumber()) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: false
+                            });
+                        }
+                    }
+                }
+                if (!isTypeFullScreen(type)) {
+                    if (config.hasCarNumberNormal) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: false
+                            });
+                        }
+                        if (hasEnglishCarNumber()) {
+                            if (nextId != null) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: false
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (informationId != null) {
             if (config.informationPosition === "normal") {
                 if (scrollId === null) {
@@ -1035,49 +1102,19 @@ function buildSceneList() {
             }
         }
 
-        if (carNumberId != null) {
-            if (config.hasCarNumberFull) {
-                if (nextId != null) {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "carNumber",
-                        next: true
-                    });
-                } else {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "carNumber",
-                        next: false
-                    });
-                }
-                if (hasEnglishCarNumber()) {
+        if (!config.carNumberAhead) {
+            if (carNumberId != null) {
+                if (config.hasCarNumberFull) {
                     if (nextId != null) {
                         sceneList.push({
-                            lang: "en",
+                            lang: "ja",
                             information: "carNumber",
                             next: true
                         });
                     } else {
                         sceneList.push({
-                            lang: "en",
+                            lang: "ja",
                             information: "carNumber",
-                            next: false
-                        });
-                    }
-                }
-            }
-            if (!isTypeFullScreen(type)) {
-                if (config.hasCarNumberNormal) {
-                    if (nextId != null) {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber_destination",
-                            next: true
-                        });
-                    } else {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber_destination",
                             next: false
                         });
                     }
@@ -1085,15 +1122,47 @@ function buildSceneList() {
                         if (nextId != null) {
                             sceneList.push({
                                 lang: "en",
-                                information: "carNumber_destination",
+                                information: "carNumber",
                                 next: true
                             });
                         } else {
                             sceneList.push({
                                 lang: "en",
+                                information: "carNumber",
+                                next: false
+                            });
+                        }
+                    }
+                }
+                if (!isTypeFullScreen(type)) {
+                    if (config.hasCarNumberNormal) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "ja",
                                 information: "carNumber_destination",
                                 next: false
                             });
+                        }
+                        if (hasEnglishCarNumber()) {
+                            if (nextId != null) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: false
+                                });
+                            }
                         }
                     }
                 }
