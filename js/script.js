@@ -1,4 +1,3 @@
-// ===== エラー表示機能（デバッグ用）=====
 (function () {
     const errorBox = document.createElement("pre");
 
@@ -276,9 +275,153 @@ function setupVehicleUI() {
     resizeButtonText();
 }
 
+function startDestinationDisplayCycle() {
+    if (typeId == null && destinationId == null) return;
+
+    const scrollCheck = document.getElementById("scrollCheck");
+    if (!scrollCheck?.checked) return;
+
+    const type = typeId != null ? getItem("type", typeId) : null;
+    if (type && isTypeFullScreen(type)) return;
+
+    if (renderTimer !== null) {
+        clearTimeout(renderTimer);
+        renderTimer = null;
+    }
+
+    if (verticalSlideAnimationId !== null) {
+        cancelAnimationFrame(verticalSlideAnimationId);
+        verticalSlideAnimationId = null;
+        isVerticalSliding = false;
+    }
+
+    stopScroll();
+    clickStartScrollBtn = true;
+
+    buildSceneList();
+    buildTypeSceneList();
+
+    destinationCycleNormalScene = sceneList.findIndex(
+        s => s.information === "destination" &&
+             s.lang === "ja" &&
+             s.next !== true
+    );
+
+    if (destinationCycleNormalScene < 0) {
+        destinationCycleNormalScene = sceneList.findIndex(
+            s => s.information === "destination" && s.lang === "ja"
+        );
+    }
+
+    destinationCycleInfoScene = sceneList.findIndex(
+        s => typeof s.information === "string" &&
+             s.information.startsWith("information") &&
+             s.lang === "ja"
+    );
+
+    if (destinationCycleNormalScene < 0) {
+        destinationCycleActive = false;
+        console.warn("通常の行先表示シーンが見つかりません");
+        return;
+    }
+
+    destinationCycleActive = true;
+    destinationCyclePhase = "normal";
+    destinationCycleSmallMode = "destination";
+
+    showDestinationCycleScene(destinationCycleNormalScene);
+
+    renderTimer = setTimeout(() => {
+        renderTimer = null;
+        if (!destinationCycleActive) return;
+
+        destinationCyclePhase = "scroll";
+        destinationCycleSmallMode = "destination";
+        informationMode = "destination";
+        render();
+
+        renderTimer = setTimeout(() => {
+            renderTimer = null;
+            if (!destinationCycleActive) return;
+
+            startDestinationCycleSmallSwitch();
+            clickStartScrollBtn = true;
+            startScroll();
+        }, 500);
+    }, 3000);
+}
+
+function startDestinationCycleSmallSwitch() {
+    if (destinationCycleSmallTimer !== null) {
+        clearInterval(destinationCycleSmallTimer);
+        destinationCycleSmallTimer = null;
+    }
+
+    destinationCycleSmallMode = "destination";
+
+    destinationCycleSmallTimer = setInterval(() => {
+        if (
+            !destinationCycleActive ||
+            destinationCyclePhase !== "scroll" ||
+            scrollId === null
+        ) {
+            clearInterval(destinationCycleSmallTimer);
+            destinationCycleSmallTimer = null;
+            return;
+        }
+
+        if (informationId != null) {
+            destinationCycleSmallMode =
+                destinationCycleSmallMode === "destination"
+                    ? "information"
+                    : "destination";
+        } else {
+            destinationCycleSmallMode = "destination";
+        }
+
+        informationMode = destinationCycleSmallMode;
+        render();
+    }, 3000);
+}
+
+function showDestinationCycleScene(index) {
+    if (index < 0 || !sceneList[index]) return;
+
+    scene = index;
+    typeScene = frame % typeSceneList.length;
+
+    applyScene();
+    applyTypeScene();
+    render();
+
+    frame++;
+}
+
 let renderTimer = null;
 
 function nextScene() {
+    if (config.scroll_normal && destinationCycleActive) {
+        renderTimer = null;
+
+        if (destinationCyclePhase === "information") {
+            destinationCyclePhase = "normal";
+            showDestinationCycleScene(destinationCycleNormalScene);
+
+            renderTimer = setTimeout(() => {
+                renderTimer = null;
+
+                if (!destinationCycleActive) return;
+
+                destinationCyclePhase = "scroll";
+                clickStartScrollBtn = true;
+                startScroll();
+            }, 3000);
+
+            return;
+        }
+
+        return;
+    }
     buildSceneList();
     buildTypeSceneList();
 
@@ -350,6 +493,10 @@ function getSceneInterval() {
 }
 
 function startRenderLoop() {
+    if (destinationCycleActive) {
+        destinationCycleActive = false;
+        stopScroll();
+    }
     if (renderTimer !== null) {
         clearTimeout(renderTimer);
         renderTimer = null;
@@ -489,11 +636,13 @@ function buildSceneList() {
         if (config.languageSwitching) {
             if (hasEnglishType()) {
                 if (nextId != null) {
-                    sceneList.push({
-                        lang: "en",
-                        information: "destination",
-                        next: true
-                    });
+                    if (!config.nextJaOnly) {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: true
+                        });
+                    }
                 } else {
                     if (!config.destinationLanguageSwitching) {
                         if (informationId === null) {
@@ -520,11 +669,13 @@ function buildSceneList() {
             }
             if (typeId === null) {
                 if (nextId != null) {
-                    sceneList.push({
-                        lang: "en",
-                        information: "destination",
-                        next: true
-                    });
+                    if (!config.nextJaOnly) {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: true
+                        });
+                    }
                 } else {
                     if (destinationId != null) {
                         if (config.destinationPosition === "normal") {
@@ -552,21 +703,25 @@ function buildSceneList() {
             } else {
                 if (!hasEnglishType()) {
                     if (nextId != null) {
-                        sceneList.push({
-                            lang: "en",
-                            information: "destination",
-                            next: true
-                        });
+                        if (!config.nextJaOnly) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination",
+                                next: true
+                            });
+                        }
                     }
                 }
             }
         } else {
             if (nextId != null || scrollId != null) {
-                sceneList.push({
-                    lang: "en",
-                    information: "destination",
-                    next: true
-                });
+                if (!config.nextJaOnly) {
+                    sceneList.push({
+                        lang: "en",
+                        information: "destination",
+                        next: true
+                    });
+                }
             }
         }
 
@@ -586,11 +741,13 @@ function buildSceneList() {
                     if (nextId === null) {
                         if (config.hasScroll) {
                             if (scrollId === null) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination",
-                                    next: false
-                                });
+                                if (!config.nextJaOnly) {
+                                    sceneList.push({
+                                        lang: "en",
+                                        information: "destination",
+                                        next: true
+                                    });
+                                }
                             }
                         } else {
                             if (hasEnglishDestination()) {
@@ -950,11 +1107,13 @@ function buildSceneList() {
                     information: "destination",
                     next: false
                 });
-                sceneList.push({
-                    lang: "en",
-                    information: "destination",
-                    next: false
-                });
+                if (config.destinationLanguageSwitching) {
+                    sceneList.push({
+                        lang: "en",
+                        information: "destination",
+                        next: false
+                    });
+                }
             }
         }
     } else {
@@ -1165,45 +1324,75 @@ document.querySelectorAll(".numberInput").forEach((container) => {
 });
 
 const tittle = document.getElementById("tittle");
-tittle.addEventListener("click", () => {
+tittle.addEventListener("click", returnToVehicleSelector);
+
+function returnToVehicleSelector() {
     document.body.classList.remove("simulatorMode");
     initSimulator();
     clearReferenceSite();
     clearExplanation();
-    document.getElementById("scrollText").hidden = true;
-    document.getElementById("startScrollBtn").hidden = true;
-    document.getElementById("referenceSite").hidden = true;
-    document.getElementById("explanation").hidden = true;
-    document.getElementById("jaTime").hidden = true;
-    document.getElementById("enTime").hidden = true;
-    document.getElementById("infoTime").hidden = true;
-    document.getElementById("carNumberTime").hidden = true;
+
+    const hideIds = [
+        "scrollText", "startScrollBtn", "referenceSite", "explanation",
+        "jaTime", "enTime", "infoTime", "carNumberTime",
+        "setLedAgingLebel", "verticalSlideCheckbox"
+    ];
+
+    hideIds.forEach(id => {
+        document.getElementById(id).hidden = true;
+    });
+
     document.getElementById("simulator").hidden = true;
     document.getElementById("vehicleSelector").hidden = false;
+
     document.getElementById("scrollCheck").checked = false;
     document.getElementById("choppyScrollCheck").checked = false;
-    document.getElementById("setLedAgingLebel").hidden = true;
     document.getElementById("ledAgingCheck").checked = false;
     document.getElementById("ledAgingLebel").value = 3;
     document.getElementById("ledAgingLebelValue").textContent = 3;
     document.getElementById("displayVerticalSlideBtn").textContent = "縦スライド設定を表示する";
-    document.getElementById("verticalSlideCheckbox").hidden = true;
+
     isDisplayVerticalSlide = false;
     isLedAging = false;
     choppyScroll = false;
     clickTypeBtn = false;
-    scrollId = null;
-    scrollTimer = null;
-    clickStartScrollBtn = false;
-    typeDestinationScrollAnimationId = null;
     typeScroll = false;
     destinationScroll = false;
+
+    typeDestinationScrollAnimationId = null;
+
     stopTypeScroll("ja");
     stopTypeScroll("en");
     stopDestinationScroll("ja");
     stopDestinationScroll("en");
+
+    resetDestinationCycle();
+}
+
+function resetDestinationCycle() {
+    if (destinationScrollTimer !== null) {
+        clearTimeout(destinationScrollTimer);
+        destinationScrollTimer = null;
+    }
+
+    if (destinationCycleSmallTimer !== null) {
+        clearInterval(destinationCycleSmallTimer);
+        destinationCycleSmallTimer = null;
+    }
+
+    if (renderTimer !== null) {
+        clearTimeout(renderTimer);
+        renderTimer = null;
+    }
+
+    destinationCycleActive = false;
+    destinationCyclePhase = "normal";
+    destinationCycleNormalScene = -1;
+    destinationCycleInfoScene = -1;
+    destinationCycleSmallMode = "destination";
+
     stopScroll();
-});
+}
 
 function setExplanation() {
     document.getElementById("explanation").hidden = false;
@@ -1259,8 +1448,31 @@ scrollCheck.addEventListener("change", () => {
     } else {
         scrollText.hidden = true;
         startScrollBtn.hidden = true;
-        scrollId = null;
-        clearInterval(scrollTimer);
+
+        stopScroll();
+
+        if (destinationScrollTimer !== null) {
+            clearTimeout(destinationScrollTimer);
+            destinationScrollTimer = null;
+        }
+
+        if (destinationCycleSmallTimer !== null) {
+            clearInterval(destinationCycleSmallTimer);
+            destinationCycleSmallTimer = null;
+        }
+
+        if (renderTimer !== null) {
+            clearTimeout(renderTimer);
+            renderTimer = null;
+        }
+
+        destinationCycleActive = false;
+        destinationCyclePhase = "normal";
+        destinationCycleNormalScene = -1;
+        destinationCycleInfoScene = -1;
+        destinationCycleSmallMode = "destination";
+
+        startRenderLoop();
     }
 });
 

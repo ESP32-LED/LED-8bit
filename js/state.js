@@ -47,8 +47,6 @@ let areaRight = 128;
 let areaTop = 16;
 let areaBottom = 32;
 
-let scrollSpeed = 450;
-
 let typeScroll = false;
 let destinationScroll = false;
 
@@ -60,5 +58,13 @@ let isLedAging = false;
 let isDisplayVerticalSlide = false;
 
 let isDisplayLog = false;
+
+let destinationCycleActive = false;
+let destinationCyclePhase = "normal";
+let destinationCycleNormalScene = -1;
+let destinationCycleInfoScene = -1;
+let destinationScrollTimer = null;
+let destinationCycleSmallTimer = null;
+let destinationCycleSmallMode = "destination";
 
 const langs = ["ja", "en"];

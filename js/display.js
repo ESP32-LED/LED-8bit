@@ -1431,7 +1431,7 @@ function drawScroll() {
         areaLeft = config.hasScrollFullScreen ? -1 : 48;
     }
 
-    if (config.hasNextFullScreen) {
+    if (config.hasNextFullScreen && !destinationCycleActive) {
         areaLeft = -1;
     }
 
@@ -1520,9 +1520,16 @@ function drawScroll() {
 
     ctx.restore();
 }
+
  
 function startScroll() {
     const scrollCheck = document.getElementById("scrollCheck");
+    if (config.scroll_normal) {
+        if (destinationScrollTimer !== null) {
+            clearTimeout(destinationScrollTimer);
+            destinationScrollTimer = null;
+        }
+    }
 
     if (!scrollCheck.checked || clickStartScrollBtn === false) {
         stopScroll();
@@ -1549,7 +1556,9 @@ function startScroll() {
         }
     }
 
-    if (config.hasNextFullScreen) {
+    if (destinationCycleActive) {
+        areaLeft = 48;
+    } else if (config.hasNextFullScreen) {
         areaLeft = -1;
     }
 
@@ -1579,6 +1588,10 @@ function startScroll() {
 
     // スクロール中
     scrollId = true;
+    if (destinationCycleActive && destinationCyclePhase === "scroll") {
+        startDestinationCycleSmallSwitch();
+        informationMode = "destination";
+    }
 
     // スクロール表示をすぐ反映
     render();
@@ -1596,6 +1609,10 @@ function startScroll() {
         clickStartScrollBtn === false ||
         scrollId === null
     ) {
+        if (destinationCycleSmallTimer !== null) {
+            clearInterval(destinationCycleSmallTimer);
+            destinationCycleSmallTimer = null;
+        }
         stopScroll();
         return;
     }
@@ -1613,17 +1630,47 @@ function startScroll() {
     scrollPixelX -= scrollSpeed * deltaTime / 1000;
 
     // 文字が全部左へ消えた
-    if (
-        scrollPixelX + scrollTextWidth * pitch <
-        areaLeft * pitch
-    ) {
-        if (!scrollWaiting) {
+    if (scrollPixelX + scrollTextWidth * pitch < areaLeft * pitch) {
+        if (destinationCycleActive && destinationCyclePhase === "scroll") {
+            stopScroll();
 
+            // スクロール終了後、0.5秒待つ
+            renderTimer = setTimeout(() => {
+                renderTimer = null;
+                if (!destinationCycleActive) return;
+
+                // 通常サイズの行先表示に戻す
+                destinationCyclePhase = "normal";
+                showDestinationCycleScene(destinationCycleNormalScene);
+
+                // 通常表示を3秒間維持
+                renderTimer = setTimeout(() => {
+                    renderTimer = null;
+                    if (!destinationCycleActive) return;
+
+                    // 小さい行先表示に切り替える
+                    destinationCyclePhase = "scroll";
+                    destinationCycleSmallMode = "destination";
+                    informationMode = "destination";
+                    showNext = true;
+                    render();
+
+                    // 0.5秒後に次のスクロールを開始
+                    renderTimer = setTimeout(() => {
+                        renderTimer = null;
+                        if (!destinationCycleActive) return;
+
+                        clickStartScrollBtn = true;
+                        startScroll();
+                    }, 500);
+                }, 3000);
+            }, 500);
+        }
+
+        if (!scrollWaiting) {
             scrollWaiting = true;
 
             setTimeout(() => {
-
-                // 停止されていたら終了
                 if (
                     generation !== scrollGeneration ||
                     !scrollCheck.checked ||
@@ -1634,17 +1681,10 @@ function startScroll() {
                     return;
                 }
 
-                // 次の周回を右端から開始
                 scrollPixelX = areaRight * pitch;
-
                 lastScrollTime = null;
-
                 scrollWaiting = false;
-
-                // 再開
-                scrollAnimationId =
-                    requestAnimationFrame(animateScroll);
-
+                scrollAnimationId = requestAnimationFrame(animateScroll);
             }, 500);
         }
 
@@ -1665,11 +1705,6 @@ function startScroll() {
 
 function stopScroll() {
     scrollGeneration++;
-
-    if (scrollAnimationId !== null) {
-        cancelAnimationFrame(scrollAnimationId);
-        scrollAnimationId = null;
-    }
 
     if (scrollAnimationId !== null) {
         cancelAnimationFrame(scrollAnimationId);

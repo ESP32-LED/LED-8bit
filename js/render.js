@@ -74,6 +74,10 @@ function createDisplayMatrix() {
     const info2 = information2Id != null ? getItem("information2", information2Id) : null;
     const line = lineId != null ? getItem("line", lineId) : null;
     const carNumber = carNumberId != null ? getItem("carNumber", carNumberId) : null;
+    const useSmallDestination =
+        destinationCycleActive &&
+        destinationCyclePhase === "scroll" &&
+        informationMode === "destination";
 
     // 号車
     if (config.hasCarNumberSmall) {
@@ -101,7 +105,7 @@ function createDisplayMatrix() {
     if (!config.type_destination_changed) {
         if (!fullType) {
             if (scrollId === null) {
-                if (showNext) {
+                if (useSmallDestination || showNext) {
                     if (informationMode === "destination") {
                         if (destinationId != null) drawDestinationSmall(dest, matrix);
                     }
@@ -135,9 +139,11 @@ function createDisplayMatrix() {
                     if (informationMode === "destination_next") {
                         if (destinationId != null) drawDestination(dest, matrix);
                     }
-                    if (next) {
-                        if (informationMode === "destination" || (informationMode === "information" && info?.view?.small)) {
-                            drawNext(next, matrix);
+                    if (!useSmallDestination) {
+                        if (next) {
+                            if (informationMode === "destination" || (informationMode === "information" && info?.view?.small)) {
+                                drawNext(next, matrix);
+                            }
                         }
                     }
                 } else {

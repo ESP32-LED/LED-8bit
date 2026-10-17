@@ -1760,45 +1760,7 @@ function setSelected(container, button) {
 
 function setVehicleSelectButton() {
     const container = document.getElementById("vehicleSelectButton");
-    container.addEventListener("click", () => {
-        document.body.classList.remove("simulatorMode");
-        initSimulator();
-        clearReferenceSite();
-        clearExplanation();
-        document.getElementById("scrollText").hidden = true;
-        document.getElementById("startScrollBtn").hidden = true;
-        document.getElementById("referenceSite").hidden = true;
-        document.getElementById("explanation").hidden = true;
-        document.getElementById("jaTime").hidden = true;
-        document.getElementById("enTime").hidden = true;
-        document.getElementById("infoTime").hidden = true;
-        document.getElementById("carNumberTime").hidden = true;
-        document.getElementById("simulator").hidden = true;
-        document.getElementById("vehicleSelector").hidden = false;
-        document.getElementById("scrollCheck").checked = false;
-        document.getElementById("choppyScrollCheck").checked = false;
-        document.getElementById("setLedAgingLebel").hidden = true;
-        document.getElementById("ledAgingCheck").checked = false;
-        document.getElementById("ledAgingLebel").value = 3;
-        document.getElementById("ledAgingLebelValue").textContent = 3;
-        document.getElementById("displayVerticalSlideBtn").textContent = "縦スライド設定を表示する";
-        document.getElementById("verticalSlideCheckbox").hidden = true;
-        isDisplayVerticalSlide = false;
-        isLedAging = false;
-        choppyScroll = false;
-        clickTypeBtn = false;
-        scrollId = null;
-        scrollTimer = null;
-        clickStartScrollBtn = false;
-        typeDestinationScrollAnimationId = null;
-        typeScroll = false;
-        destinationScroll = false;
-        stopTypeScroll("ja");
-        stopTypeScroll("en");
-        stopDestinationScroll("ja");
-        stopDestinationScroll("en");
-        stopScroll();
-    })
+    container.addEventListener("click", returnToVehicleSelector);
 }
 
 function getName(items, itemId) {
@@ -1896,12 +1858,20 @@ startScrollBtn.addEventListener("click", () => {
     if (!typeId && !destinationId) {
         return;
     }
-    const type = getItem ("type", typeId);
-    if (!isTypeFullScreen(type)) {
-        startRenderLoop();
-        clickStartScrollBtn = true;
-        startScroll();
+    if (!config.scroll_normal) {
+        const type = getItem ("type", typeId);
+        if (!isTypeFullScreen(type)) {
+            if (renderTimer !== null) {
+                clearTimeout(renderTimer);
+                renderTimer = null;
+            }
+            startRenderLoop();
+            clickStartScrollBtn = true;
+            startScroll();
+        } else {
+            return; 
+        }
     } else {
-        return; 
+        startDestinationDisplayCycle();
     }
 });
