@@ -1349,12 +1349,7 @@ let previousScrollDots = [];
 let scrollPixelX = 0;
 let scrollAnimationId = null;
 let lastScrollTime = null;
-let scrollSpeed
-
-// スクロール速度（1秒あたりのピクセル数）
-if (typeof config !== "undefined" && config.scrollSpeed) {
-    scrollSpeed = config.scrollSpeed;
-}
+let scrollSpeed = 450;
 
 function createScrollMatrix() {
     scrollTextMatrix = [];
