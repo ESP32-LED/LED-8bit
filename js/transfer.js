@@ -20,7 +20,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
 const transferScrollSpeed = 17;
-const transferTypeDestinationScrollSpeed = 16; // 13 → 16 へ高速化（約1.6倍）
+const transferTypeDestinationScrollSpeed = 18; // さらに2段階高速化
 
 // メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
@@ -770,8 +770,9 @@ function createESP32Packet() {
     }
 }
 
+// 1ピクセルあたりRGB565（2バイト）の超軽量データ生成
 function createESP32Frame(matrix, hw, margin) {
-    const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
+    const frameBuf = new Uint8Array(hw * 32 * 2);
 
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
@@ -796,34 +797,18 @@ function createESP32Frame(matrix, hw, margin) {
             const g = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.g / 255, gam) * br * 255)));
             const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
 
-            for (let bit = 0; bit < 8; bit++) {
-                if ((r >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x01 : 0x08;
-                if ((g >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x02 : 0x10;
-                if ((b >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x04 : 0x20;
-            }
+            const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+            const idx = (targetY * hw + targetX) * 2;
+            frameBuf[idx] = rgb565 & 0xff;
+            frameBuf[idx + 1] = (rgb565 >> 8) & 0xff;
         }
     }
 
-    return frame;
-}
-
-function frameToUint8Array(frame, hw) {
-    const sceneBuf = new Uint8Array(8 * 16 * hw);
-    let p = 0;
-
-    for (let bit = 0; bit < 8; bit++) {
-        for (let y = 0; y < 16; y++) {
-            for (let x = 0; x < hw; x++) {
-                sceneBuf[p++] = frame[bit][y][x];
-            }
-        }
-    }
-
-    return sceneBuf;
+    return frameBuf;
 }
 
 function createAllESP32Scenes(sceneCount, hw, margin) {
-    const sceneSize = 8 * 16 * hw;
+    const sceneSize = hw * 32 * 2;
     const allData = new Uint8Array(sceneCount * sceneSize);
     let offset = 0;
 
@@ -839,8 +824,7 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
             applyTypeScene();
 
             const matrix = createDisplayMatrix();
-            const frame = createESP32Frame(matrix, hw, margin);
-            const sceneBuf = frameToUint8Array(frame, hw);
+            const sceneBuf = createESP32Frame(matrix, hw, margin);
 
             allData.set(sceneBuf, offset);
             offset += sceneSize;
@@ -914,7 +898,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 超高速連続送信ルーチン（タイマー遅延・DOM描画負荷を完全排除）
+// 超高速連続送信ルーチン
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 496) {
     const total = uint8Array.length;
     let lastProgress = -1;
