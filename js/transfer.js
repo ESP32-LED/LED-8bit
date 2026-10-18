@@ -156,7 +156,6 @@ function compressTypeDestRLE(uint8Array) {
     return new Uint8Array(output);
 }
 
-// Bluetooth接続ボタンの表示/非表示を切り替える
 function updateBluetoothUIButtonState(connected) {
     const btBtns = document.querySelectorAll(".btConnectBtn");
     btBtns.forEach((btn) => {
@@ -230,7 +229,7 @@ async function connectBluetooth() {
         bleDevice.addEventListener("gattserverdisconnected", () => {
             bleRxCharacteristic = null;
             updateTransferStatus("Bluetoothが切断されました");
-            updateBluetoothUIButtonState(false); // 切断されたらボタンを再表示
+            updateBluetoothUIButtonState(false);
         });
 
         updateTransferStatus("GATTサーバー接続中...");
@@ -243,7 +242,7 @@ async function connectBluetooth() {
         bleRxCharacteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_RX_UUID);
 
         updateTransferStatus("Bluetooth接続完了！");
-        updateBluetoothUIButtonState(true); // 接続成功したらボタンを消す
+        updateBluetoothUIButtonState(true);
 
         setTimeout(() => {
             transferToESP32();
@@ -253,7 +252,7 @@ async function connectBluetooth() {
     } catch (error) {
         console.error("Bluetooth接続エラー:", error);
         updateTransferStatus("接続失敗: " + (error?.message || error));
-        updateBluetoothUIButtonState(false); // 失敗時もボタンを表示状態に保持
+        updateBluetoothUIButtonState(false);
         return false;
     }
 }
@@ -301,7 +300,6 @@ function getSlideMode() {
     return 0x56;
 }
 
-// LED劣化機能の有効化判定
 function isAgingEnabled() {
     if (typeof isLedAging !== "undefined" && isLedAging === true) {
         return true;
@@ -310,7 +308,6 @@ function isAgingEnabled() {
     return agingCheck ? agingCheck.checked : false;
 }
 
-// 転送前に確実にLED劣化データを生成・確保する処理
 function ensureLEDAgingForTransfer() {
     if (!isAgingEnabled()) return;
     const hw = getHardwareWidth();
@@ -322,7 +319,6 @@ function ensureLEDAgingForTransfer() {
     }
 }
 
-// 安全にLED劣化色を取得するラッパー関数（範囲外は自動折り返し）
 function getAgedColor(x, y, color) {
     if (!isAgingEnabled() || typeof applyLEDAging !== "function" || !ledAging || !ledAging.data) {
         return color;
@@ -917,8 +913,10 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 240) {
+// 転送の爆速化：Chunkサイズ拡大（490バイト）＆ディレイ最小化（1ms）
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 490) {
     const total = uint8Array.length;
+    let count = 0;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
 
@@ -927,7 +925,11 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 24
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
 
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        count++;
+        // 5チャンクごとに1msだけWaitを入れることでBLEの詰まりを回避しつつ最高速度で送信
+        if (count % 5 === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+        }
     }
 }
 
