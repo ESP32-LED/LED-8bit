@@ -66,9 +66,11 @@ function getRailwaySegmentOverlap(a, b) {
     const crossDistance = p =>
         Math.abs(ux * (p[1] - A[1]) - uy * (p[0] - A[0]));
 
+    const tolerance = RAILWAY_OVERLAP_TOLERANCE;
+
     if (
-        crossDistance(B) > RAILWAY_OVERLAP_TOLERANCE ||
-        crossDistance(B1) > RAILWAY_OVERLAP_TOLERANCE
+        crossDistance(B) > tolerance ||
+        crossDistance(B1) > tolerance
     ) {
         return null;
     }
@@ -80,7 +82,11 @@ function getRailwaySegmentOverlap(a, b) {
     const startA = Math.max(0, Math.min(b0, b1));
     const endA = Math.min(lenA, Math.max(b0, b1));
 
-    if (endA - startA < RAILWAY_OVERLAP_MIN_LENGTH) {
+    if (endA <= startA) return null;
+
+    const overlapLength = endA - startA;
+
+    if (overlapLength < RAILWAY_OVERLAP_MIN_LENGTH) {
         return null;
     }
 
@@ -95,19 +101,28 @@ function getRailwaySegmentOverlap(a, b) {
     ];
 
     const projectB = p => (p[0] - B[0]) * vx + (p[1] - B[1]) * vy;
+
     const t0 = projectB(overlapStart);
     const t1 = projectB(overlapEnd);
 
     const startB = Math.max(0, Math.min(t0, t1));
     const endB = Math.min(lenB, Math.max(t0, t1));
 
+    if (endB <= startB) return null;
+
     if (endB - startB < RAILWAY_OVERLAP_MIN_LENGTH) {
         return null;
     }
 
     return {
-        a: [startA / lenA, endA / lenA],
-        b: [startB / lenB, endB / lenB]
+        a: [
+            Math.max(0, Math.min(1, startA / lenA)),
+            Math.max(0, Math.min(1, endA / lenA))
+        ],
+        b: [
+            Math.max(0, Math.min(1, startB / lenB)),
+            Math.max(0, Math.min(1, endB / lenB))
+        ]
     };
 }
 
