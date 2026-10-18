@@ -343,7 +343,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                 i++;
             }
 
-            if (i - start >= 2 && overlapMeters >= MIN_CONTINUOUS_OVERLAP_METERS) {
+            if (i - start >= 2) {
                 for (let j = start; j < i; j++) {
                     persistentPeers[j].add(peer);
                 }
