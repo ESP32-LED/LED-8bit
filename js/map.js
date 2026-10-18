@@ -315,8 +315,8 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                     (rank - (group.length - 1) / 2) * RAILWAY_OFFSET_SPACING_PX;
             }
 
-            addPoint(offsetRailwayPoint(start, end, t0, offsetMeters));
-            addPoint(offsetRailwayPoint(start, end, t1, offsetMeters));
+            addPoint(offsetRailwayPoint(start, end, t0, offsetPixels));
+            addPoint(offsetRailwayPoint(start, end, t1, offsetPixels));
         }
     }
 
