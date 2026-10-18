@@ -250,27 +250,26 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     }
 
     if (!coordinates.every(p =>
-        Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1])
+        Array.isArray(p) &&
+        Number.isFinite(p[0]) &&
+        Number.isFinite(p[1])
     )) {
         return coordinates;
     }
 
     const zoom = railwayMap.getZoom();
-    const SPACING = RAILWAY_OFFSET_SPACING_PX;
-    const SMOOTH_RADIUS = 64;
-    const SAMPLE_STEP = 4;
-    const TANGENT_WINDOW = 12;
-
+    const spacing = RAILWAY_OFFSET_SPACING_PX;
+    const smoothRadius = 24;
+    const sampleStep = 4;
     const projected = coordinates.map(p => railwayMap.project(p, zoom));
-    const cumulative = [0];
     const lengths = [];
+    const cumulative = [0];
 
     for (let i = 0; i < projected.length - 1; i++) {
         const length = Math.hypot(
             projected[i + 1].x - projected[i].x,
             projected[i + 1].y - projected[i].y
         );
-
         lengths.push(length);
         cumulative.push(cumulative[i] + length);
     }
@@ -278,32 +277,32 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     const totalDistance = cumulative[cumulative.length - 1];
     if (totalDistance < 0.001) return coordinates;
 
-    const segmentPeers = lengths.map((_, i) => new Set(
-        (segmentMatches[i] || [])
+    // 同じ路線と2区間以上連続して重複している場合だけ対象にする
+    const peersBySegment = lengths.map((_, i) =>
+        new Set((segmentMatches[i] || [])
             .filter(m =>
                 Number.isFinite(m.start) &&
                 Number.isFinite(m.end) &&
                 m.end - m.start > 1e-8
             )
-            .map(m => m.otherLine)
-    ));
+            .map(m => m.otherLine))
+    );
 
-    // 1線分だけの重複を除外する
-    const persistentPeers = segmentPeers.map(() => new Set());
-    const allPeers = new Set(segmentPeers.flatMap(set => [...set]));
+    const persistentPeers = lengths.map(() => new Set());
+    const allPeers = new Set(peersBySegment.flatMap(set => [...set]));
 
     for (const peer of allPeers) {
         let i = 0;
 
-        while (i < segmentPeers.length) {
-            if (!segmentPeers[i].has(peer)) {
+        while (i < peersBySegment.length) {
+            if (!peersBySegment[i].has(peer)) {
                 i++;
                 continue;
             }
 
             const start = i;
-
-            while (i < segmentPeers.length && segmentPeers[i].has(peer)) {
+            while (i < peersBySegment.length &&
+                   peersBySegment[i].has(peer)) {
                 i++;
             }
 
@@ -315,154 +314,139 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         }
     }
 
-    // 連続した重複がなければ元の座標をそのまま返す
     if (!persistentPeers.some(set => set.size > 0)) {
         return coordinates;
     }
 
-    // 重複区間ごとに路線の並び順を固定する
-    const offsets = lengths.map(() => 0);
-    let i = 0;
+    // 路線上の各区間にオフセット量を設定する
+    const spans = [];
 
-    while (i < persistentPeers.length) {
-        if (persistentPeers[i].size === 0) {
-            i++;
-            continue;
+    for (let i = 0; i < lengths.length; i++) {
+        if (lengths[i] < 0.001) continue;
+
+        const matches = (segmentMatches[i] || []).filter(
+            m => persistentPeers[i].has(m.otherLine)
+        );
+
+        const cuts = [0, 1];
+
+        for (const match of matches) {
+            cuts.push(
+                Math.max(0, Math.min(1, match.start)),
+                Math.max(0, Math.min(1, match.end))
+            );
         }
 
-        const start = i;
-        const peers = new Set();
+        cuts.sort((a, b) => a - b);
 
-        while (i < persistentPeers.length && persistentPeers[i].size > 0) {
-            persistentPeers[i].forEach(peer => peers.add(peer));
-            i++;
-        }
+        const uniqueCuts = cuts.filter((t, index) =>
+            index === 0 || Math.abs(t - cuts[index - 1]) > 1e-8
+        );
 
-        const group = [...new Set([lineIndex, ...peers])]
-            .sort((a, b) => a - b);
+        for (let j = 0; j < uniqueCuts.length - 1; j++) {
+            const t0 = uniqueCuts[j];
+            const t1 = uniqueCuts[j + 1];
+            if (t1 - t0 < 1e-8) continue;
 
-        const offset =
-            (group.indexOf(lineIndex) - (group.length - 1) / 2) * SPACING;
+            const mid = (t0 + t1) / 2;
+            const otherLines = [
+                ...new Set(matches
+                    .filter(m =>
+                        mid > m.start - 1e-8 &&
+                        mid < m.end + 1e-8
+                    )
+                    .map(m => m.otherLine))
+            ];
 
-        for (let j = start; j < i; j++) {
-            offsets[j] = offset;
+            let offset = 0;
+
+            if (otherLines.length > 0) {
+                const group = [...new Set([lineIndex, ...otherLines])]
+                    .sort((a, b) => a - b);
+
+                offset =
+                    (group.indexOf(lineIndex) - (group.length - 1) / 2) *
+                    spacing;
+            }
+
+            spans.push({
+                start: cumulative[i] + lengths[i] * t0,
+                end: cumulative[i] + lengths[i] * t1,
+                offset
+            });
         }
     }
 
-    if (offsets.every(offset => Math.abs(offset) < 1e-8)) {
-        return coordinates;
+    if (!spans.length) return coordinates;
+
+    // 重複区間の境界を探し、オフセットの切り替わりを滑らかにする
+    const transitions = [];
+
+    for (let i = 1; i < spans.length; i++) {
+        const previous = spans[i - 1];
+        const current = spans[i];
+
+        if (Math.abs(previous.offset - current.offset) < 0.001) continue;
+
+        const boundary = current.start;
+        let left = i - 1;
+        let right = i;
+
+        while (left > 0 &&
+               Math.abs(spans[left - 1].offset - previous.offset) < 0.001) {
+            left--;
+        }
+
+        while (right < spans.length - 1 &&
+               Math.abs(spans[right + 1].offset - current.offset) < 0.001) {
+            right++;
+        }
+
+        const leftWidth = Math.min(
+            smoothRadius,
+            Math.max(0, (boundary - spans[left].start) * 0.45)
+        );
+
+        const rightWidth = Math.min(
+            smoothRadius,
+            Math.max(0, (spans[right].end - boundary) * 0.45)
+        );
+
+        if (leftWidth + rightWidth < 0.5) continue;
+
+        transitions.push({
+            start: boundary - leftWidth,
+            end: boundary + rightWidth,
+            from: previous.offset,
+            to: current.offset
+        });
     }
 
-    function findSegment(distance) {
-        distance = Math.max(0, Math.min(totalDistance, distance));
-
+    function getRawOffset(distance) {
         let low = 0;
-        let high = lengths.length - 1;
+        let high = spans.length - 1;
 
         while (low < high) {
             const mid = Math.floor((low + high) / 2);
 
-            if (cumulative[mid + 1] < distance) {
+            if (spans[mid].end < distance) {
                 low = mid + 1;
             } else {
                 high = mid;
             }
         }
 
-        return low;
-    }
-
-    function getPointAtDistance(distance) {
-        distance = Math.max(0, Math.min(totalDistance, distance));
-
-        const index = findSegment(distance);
-        const length = lengths[index];
-
-        if (length < 0.001) return projected[index];
-
-        const t = Math.max(0, Math.min(1,
-            (distance - cumulative[index]) / length
-        ));
-
-        return {
-            x: projected[index].x +
-                (projected[index + 1].x - projected[index].x) * t,
-            y: projected[index].y +
-                (projected[index + 1].y - projected[index].y) * t
-        };
-    }
-
-    function getRawOffset(distance) {
-        return offsets[findSegment(distance)];
-    }
-
-    // オフセットの変化を距離に応じて平滑化する
-    const offsetTransitions = [];
-
-    for (let i = 1; i < spans.length; i++) {
-        const previous = spans[i - 1];
-        const current = spans[i];
-
-        if (Math.abs(previous.offset - current.offset) < 0.001) {
-            continue;
-        }
-
-        const boundary = current.start;
-        let start;
-        let end;
-
-        if (Math.abs(previous.offset) < 0.001) {
-            // 重複区間の開始：0から徐々に離す
-            const width = Math.min(
-                SMOOTH_RADIUS,
-                (current.end - current.start) * 0.45
-            );
-
-            start = boundary;
-            end = boundary + width;
-        } else if (Math.abs(current.offset) < 0.001) {
-            // 重複区間の終了：徐々に元の位置へ戻す
-            const width = Math.min(
-                SMOOTH_RADIUS,
-                (previous.end - previous.start) * 0.45
-            );
-
-            start = boundary - width;
-            end = boundary;
-        } else {
-            // オフセット量が変わる境界は滑らかにつなぐ
-            const width = Math.min(
-                SMOOTH_RADIUS,
-                (previous.end - previous.start) * 0.45,
-                (current.end - current.start) * 0.45
-            );
-
-            start = boundary - width;
-            end = boundary + width;
-        }
-
-        if (end - start < 0.5) continue;
-
-        offsetTransitions.push({
-            start,
-            end,
-            from: previous.offset,
-            to: current.offset
-        });
+        return spans[low].offset;
     }
 
     function getSmoothOffset(distance) {
-        for (const transition of offsetTransitions) {
-            if (
-                distance < transition.start ||
-                distance > transition.end
-            ) {
+        for (const transition of transitions) {
+            if (distance < transition.start || distance > transition.end) {
                 continue;
             }
 
             const t = (distance - transition.start) /
                 (transition.end - transition.start);
-
             const eased = t * t * (3 - 2 * t);
 
             return transition.from +
@@ -472,23 +456,49 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         return getRawOffset(distance);
     }
 
+    function getPointAtDistance(distance) {
+        distance = Math.max(0, Math.min(totalDistance, distance));
+
+        let low = 0;
+        let high = lengths.length - 1;
+
+        while (low < high) {
+            const mid = Math.floor((low + high) / 2);
+            if (cumulative[mid + 1] < distance) low = mid + 1;
+            else high = mid;
+        }
+
+        const i = low;
+        if (lengths[i] < 0.001) return projected[i];
+
+        const t = (distance - cumulative[i]) / lengths[i];
+
+        return {
+            x: projected[i].x + (projected[i + 1].x - projected[i].x) * t,
+            y: projected[i].y + (projected[i + 1].y - projected[i].y) * t
+        };
+    }
+
     const distances = [0, totalDistance, ...cumulative];
 
-    for (let d = SAMPLE_STEP; d < totalDistance; d += SAMPLE_STEP) {
+    for (let d = sampleStep; d < totalDistance; d += sampleStep) {
         distances.push(d);
     }
 
+    transitions.forEach(t => {
+        distances.push(t.start, t.end);
+    });
+
     distances.sort((a, b) => a - b);
 
-    const uniqueDistances = distances.filter((d, index, array) =>
-        index === 0 || Math.abs(d - array[index - 1]) > 0.001
+    const uniqueDistances = distances.filter((d, i, array) =>
+        i === 0 || Math.abs(d - array[i - 1]) > 0.001
     );
 
     const first = projected[0];
     const last = projected[projected.length - 1];
     const dxAll = last.x - first.x;
     const dyAll = last.y - first.y;
-
     const directionSign =
         dxAll < 0 || (Math.abs(dxAll) < 1e-6 && dyAll > 0) ? -1 : 1;
 
@@ -504,13 +514,9 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
             continue;
         }
 
-        // 前後の点から方向を求め、折れ曲がりを抑える
-        const before = getPointAtDistance(
-            Math.max(0, distance - TANGENT_WINDOW)
-        );
-
+        const before = getPointAtDistance(Math.max(0, distance - 12));
         const after = getPointAtDistance(
-            Math.min(totalDistance, distance + TANGENT_WINDOW)
+            Math.min(totalDistance, distance + 12)
         );
 
         let dx = after.x - before.x;
