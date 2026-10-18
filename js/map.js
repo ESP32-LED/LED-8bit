@@ -215,79 +215,114 @@ function buildRailwayOverlapData(lines) {
     return overlapData;
 }
 
-function offsetRailwayPoint(start, end, t, offsetPixels) {
+function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
     const lat = start[0] + (end[0] - start[0]) * t;
     const lng = start[1] + (end[1] - start[1]) * t;
 
-    if (offsetPixels === 0 || !railwayMap) {
-        return [lat, lng];
-    }
+    if (offsetPixels === 0 || !railwayMap) return [lat, lng];
 
     const zoom = railwayMap.getZoom();
     const a = railwayMap.project(start, zoom);
     const b = railwayMap.project(end, zoom);
-
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    const length = Math.hypot(dx, dy);
 
-    if (length < 0.001) return [lat, lng];
-
-    // 座標の並びが逆でも同じ側を基準にずらす
-    if (dx < 0 || (Math.abs(dx) < 0.000001 && dy > 0)) {
+    if (directionSign < 0) {
         dx = -dx;
         dy = -dy;
     }
 
-    const point = railwayMap.project([lat, lng], zoom);
+    const length = Math.hypot(dx, dy);
+    if (length < 0.001) return [lat, lng];
 
+    const point = railwayMap.project([lat, lng], zoom);
     const result = railwayMap.unproject([
         point.x + offsetPixels * dy / length,
         point.y - offsetPixels * dx / length
     ], zoom);
-    
+
     return [result.lat, result.lng];
 }
 
 function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) {
     const result = [];
+    const TRANSITION_LENGTH_PX = 24;
+    const SAMPLE_LENGTH_PX = 8;
+    const zoom = railwayMap.getZoom();
+
+    const firstPoint = railwayMap.project(coordinates[0], zoom);
+    const lastPoint = railwayMap.project(coordinates[coordinates.length - 1], zoom);
+    const overallDx = lastPoint.x - firstPoint.x;
+    const overallDy = lastPoint.y - firstPoint.y;
+
+    const directionSign = overallDx < 0 ||
+        (Math.abs(overallDx) < 0.000001 && overallDy > 0) ? -1 : 1;
+
+    let totalDistance = 0;
+    let currentTargetOffset = 0;
+    let transitionFrom = 0;
+    let transitionTo = 0;
+    let transitionStart = 0;
+    let transitionEnd = 0;
 
     function addPoint(point) {
         const last = result[result.length - 1];
 
-        if (
-            !last ||
+        if (!last ||
             Math.abs(last[0] - point[0]) > 1e-10 ||
-            Math.abs(last[1] - point[1]) > 1e-10
-        ) {
+            Math.abs(last[1] - point[1]) > 1e-10) {
             result.push(point);
         }
+    }
+
+    function getOffsetAt(distance) {
+        if (distance >= transitionEnd || transitionEnd <= transitionStart) {
+            return transitionTo;
+        }
+
+        if (distance <= transitionStart) return transitionFrom;
+
+        const t = (distance - transitionStart) /
+            (transitionEnd - transitionStart);
+        const eased = t * t * (3 - 2 * t);
+
+        return transitionFrom + (transitionTo - transitionFrom) * eased;
     }
 
     for (let i = 0; i < coordinates.length - 1; i++) {
         const start = coordinates[i];
         const end = coordinates[i + 1];
 
-        if (
-            !Array.isArray(start) || !Array.isArray(end) ||
+        if (!Array.isArray(start) || !Array.isArray(end) ||
             !Number.isFinite(start[0]) || !Number.isFinite(start[1]) ||
-            !Number.isFinite(end[0]) || !Number.isFinite(end[1])
-        ) {
+            !Number.isFinite(end[0]) || !Number.isFinite(end[1])) {
             continue;
         }
+
+        const projectedStart = railwayMap.project(start, zoom);
+        const projectedEnd = railwayMap.project(end, zoom);
+        const segmentLength = Math.hypot(
+            projectedEnd.x - projectedStart.x,
+            projectedEnd.y - projectedStart.y
+        );
+
+        if (segmentLength < 0.001) continue;
 
         const matches = segmentMatches[i] || [];
         const cuts = [0, 1];
 
         for (const match of matches) {
-            cuts.push(match.start, match.end);
+            if (Number.isFinite(match.start)) cuts.push(match.start);
+            if (Number.isFinite(match.end)) cuts.push(match.end);
         }
 
         cuts.sort((a, b) => a - b);
 
-        const uniqueCuts = cuts.filter((value, index) =>
-            index === 0 || Math.abs(value - cuts[index - 1]) > 1e-8
-        );
+        const uniqueCuts = cuts
+            .map(value => Math.max(0, Math.min(1, value)))
+            .filter((value, index, values) =>
+                index === 0 || Math.abs(value - values[index - 1]) > 1e-8
+            );
 
         for (let j = 0; j < uniqueCuts.length - 1; j++) {
             const t0 = uniqueCuts[j];
@@ -305,7 +340,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                 ...new Set(activeMatches.map(match => match.otherLine))
             ];
 
-            let offsetPixels = 0;
+            let targetOffset = 0;
 
             if (otherLines.length > 0) {
                 const group = [...new Set([lineIndex, ...otherLines])]
@@ -313,13 +348,68 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
                 const rank = group.indexOf(lineIndex);
 
-                offsetPixels =
+                targetOffset =
                     (rank - (group.length - 1) / 2) * RAILWAY_OFFSET_SPACING_PX;
             }
 
-            addPoint(offsetRailwayPoint(start, end, t0, offsetPixels));
-            addPoint(offsetRailwayPoint(start, end, t1, offsetPixels));
+            const intervalStartDistance = totalDistance + segmentLength * t0;
+
+            if (Math.abs(targetOffset - currentTargetOffset) > 1e-6) {
+                transitionFrom = getOffsetAt(intervalStartDistance);
+                transitionTo = targetOffset;
+                transitionStart = intervalStartDistance;
+                transitionEnd = intervalStartDistance + TRANSITION_LENGTH_PX;
+                currentTargetOffset = targetOffset;
+            }
+
+            const intervalEndDistance = totalDistance + segmentLength * t1;
+            const sampleDistances = [intervalStartDistance, intervalEndDistance];
+
+            const transitionSampleStart =
+                Math.max(intervalStartDistance, transitionStart);
+            const transitionSampleEnd =
+                Math.min(intervalEndDistance, transitionEnd);
+
+            if (transitionSampleEnd > transitionSampleStart) {
+                const transitionLength =
+                    transitionSampleEnd - transitionSampleStart;
+
+                const steps = Math.max(
+                    1,
+                    Math.ceil(transitionLength / SAMPLE_LENGTH_PX)
+                );
+
+                for (let k = 0; k <= steps; k++) {
+                    sampleDistances.push(
+                        transitionSampleStart + transitionLength * k / steps
+                    );
+                }
+            }
+
+            sampleDistances.sort((a, b) => a - b);
+
+            const uniqueSampleDistances = sampleDistances.filter(
+                (value, index, values) =>
+                    index === 0 || Math.abs(value - values[index - 1]) > 1e-6
+            );
+
+            for (const distance of uniqueSampleDistances) {
+                const t = Math.max(
+                    0,
+                    Math.min(1, (distance - totalDistance) / segmentLength)
+                );
+
+                addPoint(offsetRailwayPoint(
+                    start,
+                    end,
+                    t,
+                    getOffsetAt(distance),
+                    directionSign
+                ));
+            }
         }
+
+        totalDistance += segmentLength;
     }
 
     return result;
@@ -374,16 +464,13 @@ function createMap() {
     }).addTo(railwayMap);
 
     const vehicleRouteLabels = [];
-
     const renderLines = [];
+    const renderedRailwayLines = [];
 
     railwayLines.forEach(line => {
         const coordinates = line.coordinates || [];
-
         if (!coordinates.length) return;
 
-        // 座標が [緯度, 経度] なのか、
-        // 複数の座標列を含む構造なのかを判定する
         const isPoint = point =>
             Array.isArray(point) &&
             point.length >= 2 &&
@@ -413,11 +500,12 @@ function createMap() {
 
     renderLines.forEach((line, index) => {
         const coordinates = line.coordinates;
+        const segmentMatches = overlapData[index] || [];
 
         const displayCoordinates = createOffsetRailwayCoordinates(
             coordinates,
             index,
-            overlapData[index] || []
+            segmentMatches
         );
 
         if (displayCoordinates.length < 2) return;
@@ -434,8 +522,15 @@ function createMap() {
             interactive: true
         }).addTo(railwayMap);
 
-        hitLine.on("click", () => railwayLine.fire("click"));
+        renderedRailwayLines.push({
+            coordinates,
+            lineIndex: index,
+            segmentMatches,
+            railwayLine,
+            hitLine
+        });
 
+        hitLine.on("click", () => railwayLine.fire("click"));
         railwayLine.bindTooltip(line.name);
 
         railwayLine.on("click", () => {
@@ -475,11 +570,12 @@ function createMap() {
             linePanel.hidden = false;
         });
     });
+
     railwayLines.forEach(line => {
         const coordinates = line.coordinates || [];
         const vehicleNames = (line.vehicles || []).filter(Boolean);
 
-        if (coordinates.length < 2 || vehicleNames.length === 0) return;
+        if (!coordinates.length || vehicleNames.length === 0) return;
 
         const isPoint = point =>
             Array.isArray(point) &&
@@ -496,14 +592,14 @@ function createMap() {
             );
 
         const longestPart = parts.reduce(
-            (longest, part) => part.length > longest.length ? part : longest,
+            (longest, part) =>
+                part.length > longest.length ? part : longest,
             []
         );
 
         if (longestPart.length < 2) return;
 
         const midpoint = getRailwayPolylineMidpoint(longestPart);
-
         if (!midpoint) return;
 
         const label = L.tooltip({
@@ -521,7 +617,19 @@ function createMap() {
         vehicleRouteLabels.push(label);
     });
 
-    // ズーム時に車両名の表示を切り替える
+    function updateRailwayLineOffsets() {
+        renderedRailwayLines.forEach(item => {
+            const displayCoordinates = createOffsetRailwayCoordinates(
+                item.coordinates,
+                item.lineIndex,
+                item.segmentMatches
+            );
+
+            item.railwayLine.setLatLngs(displayCoordinates);
+            item.hitLine.setLatLngs(displayCoordinates);
+        });
+    }
+
     function updateVehicleRouteLabels() {
         const showLabels = railwayMap.getZoom() >= 7;
 
@@ -534,7 +642,11 @@ function createMap() {
         });
     }
 
-    railwayMap.on("zoomend", updateVehicleRouteLabels);
+    railwayMap.on("zoomend", () => {
+        updateRailwayLineOffsets();
+        updateVehicleRouteLabels();
+    });
+
     updateVehicleRouteLabels();
 }
 
