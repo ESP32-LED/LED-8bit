@@ -241,10 +241,12 @@ function offsetRailwayPoint(start, end, t, offsetPixels) {
 
     const point = railwayMap.project([lat, lng], zoom);
 
-    return railwayMap.unproject([
+    const result = railwayMap.unproject([
         point.x + offsetPixels * dy / length,
         point.y - offsetPixels * dx / length
-    ], zoom).toArray();
+    ], zoom);
+    
+    return [result.lat, result.lng];
 }
 
 function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) {
