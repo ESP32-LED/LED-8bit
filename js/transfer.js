@@ -22,7 +22,6 @@ const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 13;
 
-// メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
     const srcLen = input.length;
     if (srcLen === 0) return new Uint8Array(0);
@@ -128,7 +127,6 @@ function compressLZ4(input) {
     return result;
 }
 
-// 種別・行先スクロール用：軽量 RLE 圧縮
 function compressTypeDestRLE(uint8Array) {
     if (!uint8Array || uint8Array.length === 0) return new Uint8Array(0);
 
@@ -156,7 +154,6 @@ function compressTypeDestRLE(uint8Array) {
     return new Uint8Array(output);
 }
 
-// Bluetooth接続ボタンの表示/非表示制御
 function updateBluetoothUIButtonState(connected) {
     const btBtns = document.querySelectorAll(".btConnectBtn");
     btBtns.forEach((btn) => {
@@ -914,10 +911,11 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 爆速送信ルーチン：毎パケット待機を廃止し、8パケットごとに非同期解放
+// 爆速パケット送信ルーチン（ミリ秒ログ計測付）
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 496) {
     const total = uint8Array.length;
     let packetCount = 0;
+    const startTime = performance.now();
 
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
@@ -925,13 +923,15 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 49
         await characteristic.writeValueWithoutResponse(chunk);
         packetCount++;
 
-        // 8パケット（約4KB）送信ごとに1回だけUI更新とイベントループ解放
         if (packetCount % 8 === 0 || i + chunkSize >= total) {
             const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
             updateTransferStatus(`${label} 転送中... ${progress}%`);
             await new Promise((resolve) => setTimeout(resolve, 0));
         }
     }
+
+    const elapsed = Math.round(performance.now() - startTime);
+    console.log(`[BLE送信ログ] ${label}: ${total}バイト (${packetCount}パケット) -> 送信時間: ${elapsed}ms`);
 }
 
 async function transferToESP32() {
@@ -950,12 +950,14 @@ async function transferToESP32() {
     }
 
     isBleTransferring = true;
+    const totalStart = performance.now();
 
     try {
         updateTransferStatus("データ作成・圧縮中...");
 
         ensureLEDAgingForTransfer();
 
+        const prepStart = performance.now();
         const rawPacket = createESP32Packet();
         if (!rawPacket || rawPacket.length === 0) {
             updateTransferStatus("表示シーンが選択されていません");
@@ -963,6 +965,8 @@ async function transferToESP32() {
         }
 
         const lz4Packet = compressLZ4(rawPacket);
+        console.log(`[生成ログ] メイン表示データ: 生サイズ=${rawPacket.length}B, 圧縮後=${lz4Packet.length}B (生成時間: ${Math.round(performance.now() - prepStart)}ms)`);
+
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
         const br = getNumberValue("softBrightness", 1.0);
@@ -973,6 +977,9 @@ async function transferToESP32() {
             const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
             await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
         }
+
+        const totalElapsed = Math.round(performance.now() - totalStart);
+        console.log(`[全体完了] トータル所要時間: ${totalElapsed}ms`);
 
         updateTransferStatus("転送完了！");
     } catch (error) {
