@@ -483,6 +483,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     return result;
 }
+
 function getRailwayPolylineMidpoint(coordinates) {
     if (!coordinates || coordinates.length === 0) return null;
     if (coordinates.length === 1) return coordinates[0];
