@@ -156,6 +156,16 @@ function compressTypeDestRLE(uint8Array) {
     return new Uint8Array(output);
 }
 
+// Bluetooth接続ボタンの表示/非表示を切り替える
+function updateBluetoothUIButtonState(connected) {
+    const btBtns = document.querySelectorAll(".btConnectBtn");
+    btBtns.forEach((btn) => {
+        if (btn) {
+            btn.style.display = connected ? "none" : "block";
+        }
+    });
+}
+
 function ensureBluetoothUI() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     if (vehicleSelector && !vehicleSelector.querySelector(".esp32Setting")) {
@@ -164,7 +174,7 @@ function ensureBluetoothUI() {
         btDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;";
         btDiv.innerHTML = `
             <h2 style="margin-top: 0; color: #007bff; font-size: 16px;">Bluetooth (ESP32) 接続設定</h2>
-            <button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Bluetooth接続</button>
+            <button type="button" class="btConnectBtn" onclick="connectBluetooth()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Bluetooth接続</button>
             <p class="transferStatus" style="margin-top: 10px; margin-bottom: 0; font-size: 13px; font-weight: bold; color: #333;"></p>
         `;
         vehicleSelector.insertBefore(btDiv, vehicleSelector.firstChild);
@@ -177,7 +187,7 @@ function ensureBluetoothUI() {
         btDivSide.style.cssText = "margin-top: 15px; margin-bottom: 15px; padding: 12px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;";
         btDivSide.innerHTML = `
             <h2 style="margin-top: 0; font-size: 14px; color: #007bff;">Bluetooth設定</h2>
-            <button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
+            <button type="button" class="btConnectBtn" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
             <p class="transferStatus" style="margin-top: 8px; margin-bottom: 0; font-size: 12px; font-weight: bold; color: #333;"></p>
         `;
         const returnBtn = document.getElementById("vehicleSelectButton");
@@ -220,6 +230,7 @@ async function connectBluetooth() {
         bleDevice.addEventListener("gattserverdisconnected", () => {
             bleRxCharacteristic = null;
             updateTransferStatus("Bluetoothが切断されました");
+            updateBluetoothUIButtonState(false); // 切断されたらボタンを再表示
         });
 
         updateTransferStatus("GATTサーバー接続中...");
@@ -232,6 +243,7 @@ async function connectBluetooth() {
         bleRxCharacteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_RX_UUID);
 
         updateTransferStatus("Bluetooth接続完了！");
+        updateBluetoothUIButtonState(true); // 接続成功したらボタンを消す
 
         setTimeout(() => {
             transferToESP32();
@@ -241,6 +253,7 @@ async function connectBluetooth() {
     } catch (error) {
         console.error("Bluetooth接続エラー:", error);
         updateTransferStatus("接続失敗: " + (error?.message || error));
+        updateBluetoothUIButtonState(false); // 失敗時もボタンを表示状態に保持
         return false;
     }
 }
@@ -337,7 +350,7 @@ document.addEventListener("click", (e) => {
         e.target.id === "ledAgingLevel"
     ) {
         if (e.target.id === "isLedAging" || e.target.id === "ledAgingLebel" || e.target.id === "ledAgingLevel") {
-            ledAging = null; // 設定変更時は劣化パターンを再生成
+            ledAging = null;
         }
         triggerAutoTransfer();
     }
@@ -544,7 +557,6 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
                 b: Number(data[index + 2] ?? 0)
             };
 
-            // LED劣化処理の適用
             const pixel = getAgedColor(x, y, rawColor);
 
             const r = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.r / 255, gam) * br * 255)));
@@ -781,7 +793,6 @@ function createESP32Frame(matrix, hw, margin) {
             const targetY = y + yOffset;
             if (targetY < 0 || targetY >= 32) continue;
 
-            // LED劣化処理の適用
             const pixel = getAgedColor(targetX, targetY, sourcePixel);
 
             const r = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.r / 255, gam) * br * 255)));
@@ -940,7 +951,6 @@ async function transferToESP32() {
     try {
         updateTransferStatus("データ作成・圧縮中...");
 
-        // 転送前に確実に劣化データを生成
         ensureLEDAgingForTransfer();
 
         const rawPacket = createESP32Packet();
