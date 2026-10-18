@@ -1246,11 +1246,6 @@ function initSimulator() {
         drawMatrix(createEmptyMatrix());
     }
 
-    if (transferController) {
-        transferController.abort();
-        transferController = null;
-    }
-
     const transferStatusEl = document.getElementById("transferStatus");
     if (transferStatusEl) transferStatusEl.textContent = "";
 
