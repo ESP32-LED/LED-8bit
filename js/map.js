@@ -23,7 +23,7 @@ async function loadRailwayLines() {
 
 const RAILWAY_OVERLAP_TOLERANCE = 2.5;
 const RAILWAY_OVERLAP_MIN_LENGTH = 3;
-const RAILWAY_OFFSET_SPACING = 8;
+const RAILWAY_OFFSET_SPACING_PX = 8;
 const RAILWAY_OVERLAP_ANGLE = 12;
 
 function getRailwaySegmentOverlap(a, b) {
@@ -215,33 +215,36 @@ function buildRailwayOverlapData(lines) {
     return overlapData;
 }
 
-function offsetRailwayPoint(start, end, t, offsetMeters) {
+function offsetRailwayPoint(start, end, t, offsetPixels) {
     const lat = start[0] + (end[0] - start[0]) * t;
     const lng = start[1] + (end[1] - start[1]) * t;
 
-    if (offsetMeters === 0) return [lat, lng];
-
-    const M = 111320;
-    const cosLat = Math.cos(lat * Math.PI / 180);
-
-    let dx = (end[1] - start[1]) * M * cosLat;
-    let dy = (end[0] - start[0]) * M;
-    const length = Math.hypot(dx, dy);
-
-    if (length < 0.001 || Math.abs(cosLat) < 0.001) {
+    if (offsetPixels === 0 || !railwayMap) {
         return [lat, lng];
     }
 
-    // 座標の並びが逆の路線でも、同じ物理方向を基準にずらす
-    if (dx < 0 || (Math.abs(dx) < 0.000001 && dy < 0)) {
+    const zoom = railwayMap.getZoom();
+    const a = railwayMap.project(start, zoom);
+    const b = railwayMap.project(end, zoom);
+
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    const length = Math.hypot(dx, dy);
+
+    if (length < 0.001) return [lat, lng];
+
+    // 座標の並びが逆でも同じ側を基準にずらす
+    if (dx < 0 || (Math.abs(dx) < 0.000001 && dy > 0)) {
         dx = -dx;
         dy = -dy;
     }
 
-    return [
-        lat + offsetMeters * dx / length / M,
-        lng - offsetMeters * dy / length / (M * cosLat)
-    ];
+    const point = railwayMap.project([lat, lng], zoom);
+
+    return railwayMap.unproject([
+        point.x + offsetPixels * dy / length,
+        point.y - offsetPixels * dx / length
+    ], zoom).toArray();
 }
 
 function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) {
@@ -300,7 +303,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                 ...new Set(activeMatches.map(match => match.otherLine))
             ];
 
-            let offsetMeters = 0;
+            let offsetPixels = 0;
 
             if (otherLines.length > 0) {
                 const group = [...new Set([lineIndex, ...otherLines])]
@@ -308,8 +311,8 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
                 const rank = group.indexOf(lineIndex);
 
-                offsetMeters =
-                    (rank - (group.length - 1) / 2) * RAILWAY_OFFSET_SPACING;
+                offsetPixels =
+                    (rank - (group.length - 1) / 2) * RAILWAY_OFFSET_SPACING_PX;
             }
 
             addPoint(offsetRailwayPoint(start, end, t0, offsetMeters));
