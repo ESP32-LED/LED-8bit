@@ -368,12 +368,46 @@ function createMap() {
         attribution: "&copy; OpenStreetMap contributors"
     }).addTo(railwayMap);
 
-    const overlapData = buildRailwayOverlapData(railwayLines);
     const vehicleRouteLabels = [];
 
-    railwayLines.forEach((line, index) => {
+    const renderLines = [];
+
+    railwayLines.forEach(line => {
         const coordinates = line.coordinates || [];
-        if (coordinates.length < 2) return;
+
+        if (!coordinates.length) return;
+
+        // 座標が [緯度, 経度] なのか、
+        // 複数の座標列を含む構造なのかを判定する
+        const isPoint = point =>
+            Array.isArray(point) &&
+            point.length >= 2 &&
+            Number.isFinite(point[0]) &&
+            Number.isFinite(point[1]);
+
+        const parts = isPoint(coordinates[0])
+            ? [coordinates]
+            : coordinates.filter(part =>
+                Array.isArray(part) &&
+                part.length >= 2 &&
+                isPoint(part[0])
+            );
+
+        parts.forEach((part, partIndex) => {
+            if (part.length < 2) return;
+
+            renderLines.push({
+                ...line,
+                coordinates: part,
+                _partIndex: partIndex
+            });
+        });
+    });
+
+    const overlapData = buildRailwayOverlapData(renderLines);
+
+    renderLines.forEach((line, index) => {
+        const coordinates = line.coordinates;
 
         const displayCoordinates = createOffsetRailwayCoordinates(
             coordinates,
@@ -388,7 +422,6 @@ function createMap() {
             weight: 2
         }).addTo(railwayMap);
 
-        // 透明な太い線を当たり判定用に重ねる
         const hitLine = L.polyline(displayCoordinates, {
             color: "#000",
             weight: 16,
@@ -396,9 +429,7 @@ function createMap() {
             interactive: true
         }).addTo(railwayMap);
 
-        hitLine.on("click", () => {
-            railwayLine.fire("click");
-        });
+        hitLine.on("click", () => railwayLine.fire("click"));
 
         railwayLine.bindTooltip(line.name);
 
@@ -427,7 +458,6 @@ function createMap() {
 
                 const span = document.createElement("span");
                 span.textContent = vehicle.name;
-
                 button.append(iconContainer, span);
 
                 button.addEventListener("click", async () => {
@@ -440,16 +470,12 @@ function createMap() {
             linePanel.hidden = false;
         });
 
-        // 路線の横に車両名を表示
         const vehicleNames = (line.vehicles || []).filter(Boolean);
 
         if (vehicleNames.length > 0) {
             const midpoint = getRailwayPolylineMidpoint(displayCoordinates);
 
             if (midpoint) {
-                const labelContent = document.createElement("span");
-                labelContent.textContent = vehicleNames.join(" / ");
-
                 const label = L.tooltip({
                     permanent: true,
                     direction: "right",
@@ -459,7 +485,7 @@ function createMap() {
                     interactive: false
                 })
                     .setLatLng(midpoint)
-                    .setContent(labelContent)
+                    .setContent(vehicleNames.join(" / "))
                     .addTo(railwayMap);
 
                 vehicleRouteLabels.push(label);
