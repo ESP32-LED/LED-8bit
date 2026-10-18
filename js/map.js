@@ -244,35 +244,6 @@ function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
     return [result.lat, result.lng];
 }
 
-function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
-    const lat = start[0] + (end[0] - start[0]) * t;
-    const lng = start[1] + (end[1] - start[1]) * t;
-
-    if (offsetPixels === 0 || !railwayMap) return [lat, lng];
-
-    const zoom = railwayMap.getZoom();
-    const a = railwayMap.project(start, zoom);
-    const b = railwayMap.project(end, zoom);
-    let dx = b.x - a.x;
-    let dy = b.y - a.y;
-
-    if (directionSign < 0) {
-        dx = -dx;
-        dy = -dy;
-    }
-
-    const length = Math.hypot(dx, dy);
-    if (length < 0.001) return [lat, lng];
-
-    const point = railwayMap.project([lat, lng], zoom);
-    const result = railwayMap.unproject([
-        point.x + offsetPixels * dy / length,
-        point.y - offsetPixels * dx / length
-    ], zoom);
-
-    return [result.lat, result.lng];
-}
-
 function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) {
     if (!railwayMap || !Array.isArray(coordinates) || coordinates.length < 2) {
         return coordinates;
