@@ -20,7 +20,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
 const transferScrollSpeed = 17;
-const transferTypeDestinationScrollSpeed = 18; // さらに2段階高速化
+const transferTypeDestinationScrollSpeed = 13;
 
 // メイン表示用：高速 LZ4 エンコーダー
 function compressLZ4(input) {
@@ -247,7 +247,7 @@ async function connectBluetooth() {
 
         setTimeout(() => {
             transferToESP32();
-        }, 100);
+        }, 200);
 
         return true;
     } catch (error) {
@@ -266,7 +266,7 @@ function triggerAutoTransfer() {
         if (bleRxCharacteristic && bleDevice && bleDevice.gatt.connected) {
             transferToESP32();
         }
-    }, 150);
+    }, 200);
 }
 
 function isTypeScrollEnabled() {
@@ -770,9 +770,8 @@ function createESP32Packet() {
     }
 }
 
-// 1ピクセルあたりRGB565（2バイト）の超軽量データ生成
 function createESP32Frame(matrix, hw, margin) {
-    const frameBuf = new Uint8Array(hw * 32 * 2);
+    const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
 
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
@@ -797,18 +796,34 @@ function createESP32Frame(matrix, hw, margin) {
             const g = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.g / 255, gam) * br * 255)));
             const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
 
-            const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-            const idx = (targetY * hw + targetX) * 2;
-            frameBuf[idx] = rgb565 & 0xff;
-            frameBuf[idx + 1] = (rgb565 >> 8) & 0xff;
+            for (let bit = 0; bit < 8; bit++) {
+                if ((r >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x01 : 0x08;
+                if ((g >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x02 : 0x10;
+                if ((b >> bit) & 1) frame[bit][targetY % 16][targetX] |= targetY < 16 ? 0x04 : 0x20;
+            }
         }
     }
 
-    return frameBuf;
+    return frame;
+}
+
+function frameToUint8Array(frame, hw) {
+    const sceneBuf = new Uint8Array(8 * 16 * hw);
+    let p = 0;
+
+    for (let bit = 0; bit < 8; bit++) {
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < hw; x++) {
+                sceneBuf[p++] = frame[bit][y][x];
+            }
+        }
+    }
+
+    return sceneBuf;
 }
 
 function createAllESP32Scenes(sceneCount, hw, margin) {
-    const sceneSize = hw * 32 * 2;
+    const sceneSize = 8 * 16 * hw;
     const allData = new Uint8Array(sceneCount * sceneSize);
     let offset = 0;
 
@@ -824,7 +839,8 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
             applyTypeScene();
 
             const matrix = createDisplayMatrix();
-            const sceneBuf = createESP32Frame(matrix, hw, margin);
+            const frame = createESP32Frame(matrix, hw, margin);
+            const sceneBuf = frameToUint8Array(frame, hw);
 
             allData.set(sceneBuf, offset);
             offset += sceneSize;
@@ -898,23 +914,24 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 超高速連続送信ルーチン
+// 爆速送信ルーチン：毎パケット待機を廃止し、8パケットごとに非同期解放
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 496) {
     const total = uint8Array.length;
-    let lastProgress = -1;
+    let packetCount = 0;
 
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
 
         await characteristic.writeValueWithoutResponse(chunk);
+        packetCount++;
 
-        const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
-        if (progress !== lastProgress && progress % 10 === 0) {
+        // 8パケット（約4KB）送信ごとに1回だけUI更新とイベントループ解放
+        if (packetCount % 8 === 0 || i + chunkSize >= total) {
+            const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
             updateTransferStatus(`${label} 転送中... ${progress}%`);
-            lastProgress = progress;
+            await new Promise((resolve) => setTimeout(resolve, 0));
         }
     }
-    updateTransferStatus(`${label} 転送完了 100%`);
 }
 
 async function transferToESP32() {
