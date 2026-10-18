@@ -215,19 +215,23 @@ function buildRailwayOverlapData(lines) {
     return overlapData;
 }
 
-function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
+function offsetRailwayPoint(start, end, t, offsetPixels) {
     const lat = start[0] + (end[0] - start[0]) * t;
     const lng = start[1] + (end[1] - start[1]) * t;
 
-    if (offsetPixels === 0 || !railwayMap) return [lat, lng];
+    if (offsetPixels === 0 || !railwayMap) {
+        return [lat, lng];
+    }
 
     const zoom = railwayMap.getZoom();
     const a = railwayMap.project(start, zoom);
     const b = railwayMap.project(end, zoom);
+
     let dx = b.x - a.x;
     let dy = b.y - a.y;
 
-    if (directionSign < 0) {
+    // 線分の座標順が逆でも、同じ側にずらす
+    if (dx < 0 || (Math.abs(dx) < 0.000001 && dy < 0)) {
         dx = -dx;
         dy = -dy;
     }
@@ -236,6 +240,7 @@ function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
     if (length < 0.001) return [lat, lng];
 
     const point = railwayMap.project([lat, lng], zoom);
+
     const result = railwayMap.unproject([
         point.x + offsetPixels * dy / length,
         point.y - offsetPixels * dx / length
