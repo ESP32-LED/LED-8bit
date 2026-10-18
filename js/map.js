@@ -388,6 +388,18 @@ function createMap() {
             weight: 2
         }).addTo(railwayMap);
 
+        // 透明な太い線を当たり判定用に重ねる
+        const hitLine = L.polyline(displayCoordinates, {
+            color: "#000",
+            weight: 16,
+            opacity: 0,
+            interactive: true
+        }).addTo(railwayMap);
+
+        hitLine.on("click", () => {
+            railwayLine.fire("click");
+        });
+
         railwayLine.bindTooltip(line.name);
 
         railwayLine.on("click", () => {
