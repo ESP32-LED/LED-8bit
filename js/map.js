@@ -257,7 +257,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     const zoom = railwayMap.getZoom();
     const SPACING = RAILWAY_OFFSET_SPACING_PX;
-    const SMOOTH_RADIUS = 24;
+    const SMOOTH_RADIUS = 64;
     const SAMPLE_STEP = 4;
     const TANGENT_WINDOW = 12;
 
@@ -397,23 +397,79 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     }
 
     // オフセットの変化を距離に応じて平滑化する
-    function getSmoothOffset(distance) {
-        let sum = 0;
-        let weightSum = 0;
+    const offsetTransitions = [];
 
-        for (
-            let delta = -SMOOTH_RADIUS;
-            delta <= SMOOTH_RADIUS;
-            delta += SAMPLE_STEP
-        ) {
-            const weight =
-                1 - Math.abs(delta) / (SMOOTH_RADIUS + SAMPLE_STEP);
+    for (let i = 1; i < spans.length; i++) {
+        const previous = spans[i - 1];
+        const current = spans[i];
 
-            sum += getRawOffset(distance + delta) * weight;
-            weightSum += weight;
+        if (Math.abs(previous.offset - current.offset) < 0.001) {
+            continue;
         }
 
-        return weightSum ? sum / weightSum : getRawOffset(distance);
+        const boundary = current.start;
+        let start;
+        let end;
+
+        if (Math.abs(previous.offset) < 0.001) {
+            // 重複区間の開始：0から徐々に離す
+            const width = Math.min(
+                SMOOTH_RADIUS,
+                (current.end - current.start) * 0.45
+            );
+
+            start = boundary;
+            end = boundary + width;
+        } else if (Math.abs(current.offset) < 0.001) {
+            // 重複区間の終了：徐々に元の位置へ戻す
+            const width = Math.min(
+                SMOOTH_RADIUS,
+                (previous.end - previous.start) * 0.45
+            );
+
+            start = boundary - width;
+            end = boundary;
+        } else {
+            // オフセット量が変わる境界は滑らかにつなぐ
+            const width = Math.min(
+                SMOOTH_RADIUS,
+                (previous.end - previous.start) * 0.45,
+                (current.end - current.start) * 0.45
+            );
+
+            start = boundary - width;
+            end = boundary + width;
+        }
+
+        if (end - start < 0.5) continue;
+
+        offsetTransitions.push({
+            start,
+            end,
+            from: previous.offset,
+            to: current.offset
+        });
+    }
+
+    function getSmoothOffset(distance) {
+        for (const transition of offsetTransitions) {
+            if (
+                distance < transition.start ||
+                distance > transition.end
+            ) {
+                continue;
+            }
+
+            const t = (distance - transition.start) /
+                (transition.end - transition.start);
+
+            const eased = t * t * (3 - 2 * t);
+
+            return transition.from +
+                (transition.to - transition.from) * eased;
+        }
+
+        return getRawOffset(distance);
     }
 
     const distances = [0, totalDistance, ...cumulative];
