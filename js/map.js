@@ -469,28 +469,51 @@ function createMap() {
 
             linePanel.hidden = false;
         });
-
+    });
+    railwayLines.forEach(line => {
+        const coordinates = line.coordinates || [];
         const vehicleNames = (line.vehicles || []).filter(Boolean);
 
-        if (vehicleNames.length > 0) {
-            const midpoint = getRailwayPolylineMidpoint(displayCoordinates);
+        if (coordinates.length < 2 || vehicleNames.length === 0) return;
 
-            if (midpoint) {
-                const label = L.tooltip({
-                    permanent: true,
-                    direction: "right",
-                    offset: [8, 0],
-                    className: "vehicle-route-label",
-                    opacity: 1,
-                    interactive: false
-                })
-                    .setLatLng(midpoint)
-                    .setContent(vehicleNames.join(" / "))
-                    .addTo(railwayMap);
+        const isPoint = point =>
+            Array.isArray(point) &&
+            point.length >= 2 &&
+            Number.isFinite(point[0]) &&
+            Number.isFinite(point[1]);
 
-                vehicleRouteLabels.push(label);
-            }
-        }
+        const parts = isPoint(coordinates[0])
+            ? [coordinates]
+            : coordinates.filter(part =>
+                Array.isArray(part) &&
+                part.length >= 2 &&
+                isPoint(part[0])
+            );
+
+        const longestPart = parts.reduce(
+            (longest, part) => part.length > longest.length ? part : longest,
+            []
+        );
+
+        if (longestPart.length < 2) return;
+
+        const midpoint = getRailwayPolylineMidpoint(longestPart);
+
+        if (!midpoint) return;
+
+        const label = L.tooltip({
+            permanent: true,
+            direction: "right",
+            offset: [8, 0],
+            className: "vehicle-route-label",
+            opacity: 1,
+            interactive: false
+        })
+            .setLatLng(midpoint)
+            .setContent(vehicleNames.join(" / "))
+            .addTo(railwayMap);
+
+        vehicleRouteLabels.push(label);
     });
 
     // ズーム時に車両名の表示を切り替える
