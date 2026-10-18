@@ -257,9 +257,12 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     const zoom = railwayMap.getZoom();
     const spacing = RAILWAY_OFFSET_SPACING_PX;
-    const smoothingDistance = 28;
     const sampleStep = 4;
     const tangentWindow = 24;
+    const maxGapPixels = 80;
+    const transitionDistance = 28;
+    const minOverlapMeters = 30;
+
     const projected = coordinates.map(p => railwayMap.project(p, zoom));
     const lengths = [];
     const groundLengths = [];
@@ -305,26 +308,68 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         if (!ranges.length) return 0;
 
         let fraction = 0;
-        let rangeStart = ranges[0][0];
-        let rangeEnd = ranges[0][1];
+        let start = ranges[0][0];
+        let end = ranges[0][1];
 
         for (let i = 1; i < ranges.length; i++) {
-            if (ranges[i][0] <= rangeEnd) {
-                rangeEnd = Math.max(rangeEnd, ranges[i][1]);
+            if (ranges[i][0] <= end) {
+                end = Math.max(end, ranges[i][1]);
             } else {
-                fraction += rangeEnd - rangeStart;
-                rangeStart = ranges[i][0];
-                rangeEnd = ranges[i][1];
+                fraction += end - start;
+                start = ranges[i][0];
+                end = ranges[i][1];
             }
         }
 
-        fraction += rangeEnd - rangeStart;
+        fraction += end - start;
         return groundLengths[segmentIndex] * fraction;
     }
 
-    const persistentPeers = lengths.map(() => new Set());
+    // 短い未検出区間を挟んでいても、同じ路線との重なりをつなぐ
     const allPeers = new Set(peersBySegment.flatMap(set => [...set]));
-    const MIN_CONTINUOUS_OVERLAP_METERS = 30;
+
+    for (const peer of allPeers) {
+        let i = 0;
+
+        while (i < peersBySegment.length) {
+            if (!peersBySegment[i].has(peer)) {
+                i++;
+                continue;
+            }
+
+            let end = i + 1;
+
+            while (end < peersBySegment.length) {
+                if (peersBySegment[end].has(peer)) {
+                    end++;
+                    continue;
+                }
+
+                let next = end;
+
+                while (next < peersBySegment.length &&
+                    !peersBySegment[next].has(peer)) {
+                    next++;
+                }
+
+                if (next >= peersBySegment.length) break;
+
+                const gapPixels = cumulative[next] - cumulative[end];
+
+                if (gapPixels > maxGapPixels) break;
+
+                for (let j = end; j < next; j++) {
+                    peersBySegment[j].add(peer);
+                }
+
+                end = next + 1;
+            }
+
+            i = Math.max(end, i + 1);
+        }
+    }
+
+    const persistentPeers = lengths.map(() => new Set());
 
     for (const peer of allPeers) {
         let i = 0;
@@ -343,7 +388,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                 i++;
             }
 
-            if (i - start >= 2 && overlapMeters >= MIN_CONTINUOUS_OVERLAP_METERS) {
+            if (i - start >= 2 && overlapMeters >= minOverlapMeters) {
                 for (let j = start; j < i; j++) {
                     persistentPeers[j].add(peer);
                 }
@@ -353,76 +398,35 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     if (!persistentPeers.some(set => set.size > 0)) return coordinates;
 
+    // 区間ごとのオフセットを作る。短い未検出区間にも同じオフセットを適用する
     const spans = [];
 
     for (let i = 0; i < lengths.length; i++) {
         if (lengths[i] < 0.001) continue;
 
-        const matches = (segmentMatches[i] || []).filter(
-            m => persistentPeers[i].has(m.otherLine)
-        );
-        const cuts = [0, 1];
+        const group = [...new Set([
+            lineIndex,
+            ...persistentPeers[i]
+        ])].sort((a, b) => a - b);
 
-        for (const match of matches) {
-            cuts.push(
-                Math.max(0, Math.min(1, match.start)),
-                Math.max(0, Math.min(1, match.end))
-            );
-        }
+        const offset = persistentPeers[i].size
+            ? (group.indexOf(lineIndex) - (group.length - 1) / 2) * spacing
+            : 0;
 
-        cuts.sort((a, b) => a - b);
-
-        const uniqueCuts = cuts.filter((t, index) =>
-            index === 0 || Math.abs(t - cuts[index - 1]) > 1e-8
-        );
-
-        for (let j = 0; j < uniqueCuts.length - 1; j++) {
-            const t0 = uniqueCuts[j];
-            const t1 = uniqueCuts[j + 1];
-            if (t1 - t0 < 1e-8) continue;
-
-            const mid = (t0 + t1) / 2;
-            const otherLines = [...new Set(matches
-                .filter(m => mid > m.start - 1e-8 && mid < m.end + 1e-8)
-                .map(m => m.otherLine))];
-
-            let offset = 0;
-
-            if (otherLines.length) {
-                const group = [...new Set([lineIndex, ...otherLines])]
-                    .sort((a, b) => a - b);
-
-                offset =
-                    (group.indexOf(lineIndex) - (group.length - 1) / 2) * spacing;
-            }
-
-            spans.push({
-                start: cumulative[i] + lengths[i] * t0,
-                end: cumulative[i] + lengths[i] * t1,
-                offset
-            });
-        }
+        spans.push({
+            start: cumulative[i],
+            end: cumulative[i + 1],
+            offset
+        });
     }
 
-    if (!spans.length || spans.every(span => Math.abs(span.offset) < 0.001)) {
+    if (!spans.some(span => Math.abs(span.offset) > 0.001)) {
         return coordinates;
     }
 
-    const prefixArea = [0];
-
-    for (const span of spans) {
-        prefixArea.push(
-            prefixArea[prefixArea.length - 1] +
-            Math.max(0, span.end - span.start) * span.offset
-        );
-    }
-
-    function offsetIntegral(distance) {
-        if (distance <= 0) return 0;
-
-        if (distance >= totalDistance) {
-            return prefixArea[prefixArea.length - 1];
-        }
+    // 区間境界では滑らかに切り替え、オフセット中の間隔を平均処理で縮めない
+    function getRawOffset(distance) {
+        distance = Math.max(0, Math.min(totalDistance, distance));
 
         let low = 0;
         let high = spans.length - 1;
@@ -430,23 +434,34 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         while (low < high) {
             const mid = Math.floor((low + high) / 2);
 
-            if (spans[mid].end < distance) low = mid + 1;
-            else high = mid;
+            if (spans[mid].end < distance) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
         }
 
-        const span = spans[low];
+        return spans[low].offset;
+    }
 
-        if (distance <= span.start) return prefixArea[low];
-
-        return prefixArea[low] +
-            Math.min(distance - span.start, span.end - span.start) * span.offset;
+    function smoothStep(t) {
+        t = Math.max(0, Math.min(1, t));
+        return t * t * (3 - 2 * t);
     }
 
     function getSmoothOffset(distance) {
-        return (
-            offsetIntegral(distance + smoothingDistance) -
-            offsetIntegral(distance - smoothingDistance)
-        ) / (2 * smoothingDistance);
+        const raw = getRawOffset(distance);
+        const left = Math.max(0, distance - transitionDistance);
+        const right = Math.min(totalDistance, distance + transitionDistance);
+
+        const leftOffset = getRawOffset(left);
+        const rightOffset = getRawOffset(right);
+
+        if (leftOffset === raw && rightOffset === raw) return raw;
+
+        const t = (distance - left) / Math.max(0.001, right - left);
+
+        return leftOffset + (rightOffset - leftOffset) * smoothStep(t);
     }
 
     function getPointAtDistance(distance) {
@@ -458,15 +473,19 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         while (low < high) {
             const mid = Math.floor((low + high) / 2);
 
-            if (cumulative[mid + 1] < distance) low = mid + 1;
-            else high = mid;
+            if (cumulative[mid + 1] < distance) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
         }
 
         const i = low;
         if (lengths[i] < 0.001) return projected[i];
 
         const t = Math.max(0, Math.min(
-            1, (distance - cumulative[i]) / lengths[i]
+            1,
+            (distance - cumulative[i]) / lengths[i]
         ));
 
         return {
@@ -487,8 +506,8 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     distances.sort((a, b) => a - b);
 
-    const uniqueDistances = distances.filter((d, index, array) =>
-        index === 0 || Math.abs(d - array[index - 1]) > 0.001
+    const uniqueDistances = distances.filter((d, i, arr) =>
+        i === 0 || Math.abs(d - arr[i - 1]) > 0.001
     );
 
     const first = projected[0];
