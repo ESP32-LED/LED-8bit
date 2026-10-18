@@ -874,5 +874,15 @@
         ],
         "site": "vehicles/hanshin9000/site.json",
         "font": "fonts/font_E233.json"
+    },
+    {
+        "id": "metro400",
+        "name": "大阪メトロ400系",
+        "config": "vehicles/metro400/config.json",
+        "led": "vehicles/metro400/led.json",
+        "icons": [
+            "vehicles/metro400/icons/icon1.png"
+        ],
+        "site": "vehicles/metro400/site.json"
     }
 ]
