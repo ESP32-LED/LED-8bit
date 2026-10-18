@@ -348,6 +348,21 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                     persistentPeers[j].add(peer);
                 }
             }
+            mobileLog(
+
+                "persistentPeers:",
+            
+                persistentPeers.map((set, i) => ({
+            
+                    segment: i,
+            
+                    peers: [...set],
+            
+                    length: groundLengths[i]
+            
+                })).filter(item => item.peers.length > 0)
+            
+            );
         }
     }
 
