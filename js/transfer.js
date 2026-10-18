@@ -156,6 +156,7 @@ function compressTypeDestRLE(uint8Array) {
     return new Uint8Array(output);
 }
 
+// Bluetooth接続ボタンの表示/非表示制御
 function updateBluetoothUIButtonState(connected) {
     const btBtns = document.querySelectorAll(".btConnectBtn");
     btBtns.forEach((btn) => {
@@ -913,10 +914,9 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 転送の爆速化：Chunkサイズ拡大（490バイト）＆ディレイ最小化（1ms）
-async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 490) {
+// 爆速送信対応：ChunkSize拡大(496) & 間隔短縮(1ms)
+async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 496) {
     const total = uint8Array.length;
-    let count = 0;
     for (let i = 0; i < total; i += chunkSize) {
         const chunk = uint8Array.slice(i, i + chunkSize);
 
@@ -925,11 +925,7 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 49
         const progress = Math.min(100, Math.floor(((i + chunk.length) / total) * 100));
         updateTransferStatus(`${label} 転送中... ${progress}%`);
 
-        count++;
-        // 5チャンクごとに1msだけWaitを入れることでBLEの詰まりを回避しつつ最高速度で送信
-        if (count % 5 === 0) {
-            await new Promise((resolve) => setTimeout(resolve, 1));
-        }
+        await new Promise((resolve) => setTimeout(resolve, 1));
     }
 }
 
