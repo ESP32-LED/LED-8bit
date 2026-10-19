@@ -815,6 +815,13 @@ function createMap() {
     updateVehicleRouteLabels();
 }
 
+let prefectureData = [];
+async function loadPrefectureData() {
+    const response = await fetch("data/prefectures.json");
+    const data = await response.json();
+
+    prefectureData = data.prefectures;
+}
 
 // 車両選択方法を変更
 vehicleSelectMethod.addEventListener("change", async () => {
@@ -844,12 +851,21 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
         const prefectureHeader = document.createElement("div");
-        prefectureHeader.className = "prefectureGroupHeader";
-        prefectureHeader.textContent = "▸ " + group.name;
-        
-        const prefectureGroupContainer = document.createElement("div");
-        prefectureGroupContainer.className = "prefectureGroupButtons";
-        prefectureGroupContainer.hidden = true;
+        await loadPrefectureData();
+        prefectureData.forEach(items => () {
+            prefectureHeader.className = "prefectureGroupHeader";
+            prefectureHeader.textContent = "▸ " + items.name;
+            
+            const prefectureGroupContainer = document.createElement("div");
+            prefectureGroupContainer.className = "prefectureGroupButtons";
+            prefectureGroupContainer.hidden = true;
+            prefectureHeader.addEventListener("click", () => {
+                prefectureGroupContainer.hidden = !prefectureGroupContainer.hidden;
+                prefectureHeader.textContent = (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
+            });
+            container.appendChild(prefectureHeader);
+            container.appendChild(prefectureGroupContainer);
+        });
     }
 
 });
