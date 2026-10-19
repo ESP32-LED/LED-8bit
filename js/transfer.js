@@ -20,7 +20,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
 const transferScrollSpeed = 17;
-const transferTypeDestinationScrollSpeed = 13;
+const transferTypeDestinationScrollSpeed = 14; // ★速度を1段階アップ (13 -> 14)
 
 function compressLZ4(input) {
     const srcLen = input.length;
@@ -911,7 +911,6 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     return header;
 }
 
-// 爆速パケット送信ルーチン（ミリ秒ログ計測付）
 async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 496) {
     const total = uint8Array.length;
     let packetCount = 0;
