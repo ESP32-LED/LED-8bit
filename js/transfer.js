@@ -19,8 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-// 通常スクロールの速度を17から16へ1段階低速化
-const transferScrollSpeed = 16; 
+// 普通の停車駅スクロール速度を16から15へさらに1段階低下
+const transferScrollSpeed = 15; 
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -281,7 +281,7 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
-// 1周後切り替え車両（阪神9000系等）の判定
+// 特殊スクロール車両（阪神9000系等）の判定
 function isPauseScrollVehicle() {
     if (typeof config !== "undefined" && config) {
         if (config.scroll_normal === true || typeof config.transferScrollSpeed === "number") {
@@ -293,7 +293,7 @@ function isPauseScrollVehicle() {
 
 function getSlideMode() {
     if (isPauseScrollVehicle()) {
-        return 0x5b; // 1周後即時切り替え用の識別フラグ
+        return 0x5b; // 特殊スクロール識別用モード値
     }
 
     if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
