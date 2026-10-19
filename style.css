@@ -943,6 +943,12 @@ input[type="number"]::-webkit-outer-spin-button {
         grid-template-columns: repeat(1, 1fr);
         gap: 8px;
     }
+    
+    #prefectureList {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 8px;
+    }
 
     .vehicleIcons {
         display: grid;
