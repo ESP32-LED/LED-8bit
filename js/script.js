@@ -1422,6 +1422,8 @@ function returnToVehicleSelector() {
     clickTypeBtn = false;
     typeScroll = false;
     destinationScroll = false;
+    scrollSpeed = 450;
+    transferScrollSpeed = 17;
 
     typeDestinationScrollAnimationId = null;
 
