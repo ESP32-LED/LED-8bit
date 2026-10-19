@@ -816,16 +816,17 @@ function createMap() {
 }
 
 let prefectureData = [];
+
 async function loadPrefectureData() {
     const response = await fetch("data/prefectures.json");
-    const data = await response.json();
+    if (!response.ok) throw new Error("都道府県データの読み込みに失敗しました");
 
+    const data = await response.json();
     prefectureData = data.prefectures;
 }
 
 // 車両選択方法を変更
 vehicleSelectMethod.addEventListener("change", async () => {
-
     if (vehicleSelectMethod.value === "grid") {
         vehicleSelect.hidden = true;
         mapElement.hidden = false;
@@ -834,10 +835,8 @@ vehicleSelectMethod.addEventListener("change", async () => {
         await window.vehiclesReady;
         await loadRailwayLines();
 
-        // 地図を作成
         createMap();
 
-        // hidden状態から表示した直後のサイズをLeafletに再計算させる
         setTimeout(() => {
             railwayMap.invalidateSize();
         }, 100);
@@ -846,31 +845,38 @@ vehicleSelectMethod.addEventListener("change", async () => {
         mapElement.hidden = true;
         vehicleSelect.hidden = false;
         prefectureList.hidden = true;
+
     } else {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
-        const prefectureHeader = document.createElement("div");
-        const prefectureList = document.createElement("prefectureList");
+
+        await loadPrefectureData();
+
+        prefectureList.replaceChildren();
+
         prefectureData.forEach(items => {
+            const prefectureHeader = document.createElement("div");
             prefectureHeader.className = "prefectureGroupHeader";
             prefectureHeader.textContent = "▸ " + items.name;
-            
+
             const prefectureGroupContainer = document.createElement("div");
-            prefectureGroupContainer.innerHTML = "";
             prefectureGroupContainer.className = "prefectureGroupButtons";
             prefectureGroupContainer.hidden = true;
+
             prefectureHeader.addEventListener("click", () => {
                 prefectureGroupContainer.hidden = !prefectureGroupContainer.hidden;
-                prefectureHeader.textContent = (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
+                prefectureHeader.textContent =
+                    (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
             });
-            prefectureList.appendChild(prefectureHeader);
-            prefectureList.appendChild(prefectureGroupContainer);
-            prefectureData.vehicles.forEach(vehicle => {
+
+            prefectureList.append(prefectureHeader, prefectureGroupContainer);
+
+            (items.vehicles || []).forEach(vehicle => {
                 const btn = document.createElement("button");
                 const iconContainer = document.createElement("div");
                 iconContainer.className = "vehicleIcons";
-        
+
                 if (Array.isArray(vehicle.icons)) {
                     vehicle.icons.forEach(icon => {
                         const img = document.createElement("img");
@@ -879,18 +885,18 @@ vehicleSelectMethod.addEventListener("change", async () => {
                         iconContainer.appendChild(img);
                     });
                 }
-        
+
                 const span = document.createElement("span");
                 span.textContent = vehicle.name || vehicle.id || "車両";
-        
+
                 btn.append(iconContainer, span);
-        
+
                 btn.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
                 });
+
                 prefectureGroupContainer.appendChild(btn);
             });
         });
     }
-
 });
