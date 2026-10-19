@@ -1,6 +1,7 @@
 const vehicleSelectMethod = document.getElementById("vehicleSelectMethod");
 const vehicleSelect = document.getElementById("vehicleSelect");
 const mapElement = document.getElementById("map");
+const prefectureList = document.getElementById("prefectureList");
 const lineVehicleList = document.getElementById("lineVehicleList");
 const closeLinePanel = document.getElementById("closeLinePanel");
 closeLinePanel.addEventListener("click", () => {
@@ -819,12 +820,9 @@ function createMap() {
 vehicleSelectMethod.addEventListener("change", async () => {
 
     if (vehicleSelectMethod.value === "grid") {
-
-        // リストを隠す
         vehicleSelect.hidden = true;
-
-        // 地図を表示
         mapElement.hidden = false;
+        prefectureList.hidden = true;
 
         await window.vehiclesReady;
         await loadRailwayLines();
@@ -837,13 +835,14 @@ vehicleSelectMethod.addEventListener("change", async () => {
             railwayMap.invalidateSize();
         }, 100);
 
-    } else {
-
-        // 地図を隠す
+    } else if (vehicleSelectMethod.value === "list") {
         mapElement.hidden = true;
-
-        // リストを表示
         vehicleSelect.hidden = false;
+        prefectureList.hidden = true;
+    } else {
+        mapElement.hidden = true;
+        vehicleSelect.hidden = true;
+        prefectureList.hidden = false;
     }
 
 });
