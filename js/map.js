@@ -857,6 +857,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
             prefectureHeader.textContent = "▸ " + items.name;
             
             const prefectureGroupContainer = document.createElement("div");
+            prefectureGroupContainer.innerHTML = "";
             prefectureGroupContainer.className = "prefectureGroupButtons";
             prefectureGroupContainer.hidden = true;
             prefectureHeader.addEventListener("click", () => {
