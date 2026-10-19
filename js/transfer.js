@@ -19,7 +19,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-// 普通の停車駅スクロール速度を17から16へ1段階低下
+// 通常スクロールの速度を17から16へ1段階低速化
 const transferScrollSpeed = 16; 
 const transferTypeDestinationScrollSpeed = 14;
 
@@ -281,7 +281,7 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
-// 1周後静止スクロール車両（阪神9000系等）の判定
+// 1周後切り替え車両（阪神9000系等）の判定
 function isPauseScrollVehicle() {
     if (typeof config !== "undefined" && config) {
         if (config.scroll_normal === true || typeof config.transferScrollSpeed === "number") {
@@ -293,7 +293,7 @@ function isPauseScrollVehicle() {
 
 function getSlideMode() {
     if (isPauseScrollVehicle()) {
-        return 0x5b; // 特殊スクロール用識別モードフラグ
+        return 0x5b; // 1周後即時切り替え用の識別フラグ
     }
 
     if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
@@ -774,7 +774,6 @@ function createESP32Packet() {
 
         const slideMode = getSlideMode();
 
-        // 阪神9000系などの特殊スクロール（0x5B）は速度13、その他通常は16を送信
         let activeScrollSpeed = transferScrollSpeed;
         if (typeof config.transferScrollSpeed === "number") {
             activeScrollSpeed = config.transferScrollSpeed;
