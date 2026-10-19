@@ -725,6 +725,16 @@
         "site": "vehicles/l00/site.json"
     },
     {
+        "id": "odakyu4000",
+        "name": "小田急4000形",
+        "config": "vehicles/odakyu4000/config.json",
+        "led": "vehicles/odakyu4000/led.json",
+        "icons": [
+            "vehicles/odakyu4000/icons/icon1.png"
+        ],
+        "site": "vehicles/odakyu4000/site.json"
+    },
+    {
         "id": "so9000",
         "name": "相鉄8000系・9000系 (FC)",
         "config": "vehicles/so9000/config.json",
