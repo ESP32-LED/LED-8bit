@@ -146,14 +146,6 @@ button:focus-visible {
     object-fit: contain;
 }
 
-.prefectureGroupButtons button span {
-    display: block;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    line-height: 1.4;
-    text-align: center;
-}
-
 .prefectureGroupButtons[hidden] {
     display: none;
 }
