@@ -19,7 +19,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 17;
+const transferScrollSpeed = 17; // 通常車両のスクロール速度
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -280,8 +280,21 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
+// 1周後静止スクロール車両（阪神9000系など）かの判定
+function isPauseScrollVehicle() {
+    if (typeof config !== "undefined" && config) {
+        if (config.scroll_normal === true || typeof config.transferScrollSpeed === "number") {
+            return true;
+        }
+    }
+    return false;
+}
+
 function getSlideMode() {
-    // 車両config側に slideMode (0x5B 等) の指定がある場合は優先適用
+    if (isPauseScrollVehicle()) {
+        return 0x5b; // 特殊スクロール識別用モード値
+    }
+
     if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
         return config.slideMode;
     }
@@ -758,7 +771,17 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff);
+        const slideMode = getSlideMode();
+
+        // configにtransferScrollSpeedの指定があればその値（13）、なければ標準値（17）をセット
+        let activeScrollSpeed = transferScrollSpeed;
+        if (typeof config.transferScrollSpeed === "number") {
+            activeScrollSpeed = config.transferScrollSpeed;
+        } else if (isPauseScrollVehicle()) {
+            activeScrollSpeed = 13;
+        }
+
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, activeScrollSpeed, xOff, slideMode);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -862,7 +885,7 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, slideMode) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     let times;
 
@@ -894,9 +917,9 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = getSlideMode();
+    header[1] = slideMode & 0xff;
     header[2] = sceneCount & 0xff;
-    header[3] = transferScrollSpeed & 0xff;
+    header[3] = speed & 0xff;
     header[4] = scrollWidth & 0xff;
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
