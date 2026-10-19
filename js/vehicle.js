@@ -115,3 +115,108 @@ window.selectVehicle = selectVehicle;
 window.initVehicles = initVehicles;
 
 window.vehiclesReady = initVehicles();
+
+let prefectureData = [];
+
+async function loadPrefectureData() {
+    const response = await fetch("data/prefectures.json");
+
+    mobileLog("HTTPステータス:", response.status);
+    mobileLog("取得URL:", response.url);
+
+    const text = await response.text();
+    mobileLog("取得内容:", text);
+
+    if (!response.ok) {
+        throw new Error(`JSON取得失敗: HTTP ${response.status}`);
+    }
+
+    try {
+        const data = JSON.parse(text);
+        prefectureData = data.prefectures;
+    } catch (error) {
+        mobileLog("JSON解析エラー:", error);
+        throw error;
+    }
+}
+
+// 車両選択方法を変更
+vehicleSelectMethod.addEventListener("change", async () => {
+    if (vehicleSelectMethod.value === "grid") {
+        vehicleSelect.hidden = true;
+        mapElement.hidden = false;
+        prefectureList.hidden = true;
+
+        await window.vehiclesReady;
+        await loadRailwayLines();
+
+        createMap();
+
+        setTimeout(() => {
+            railwayMap.invalidateSize();
+        }, 100);
+
+    } else if (vehicleSelectMethod.value === "list") {
+        mapElement.hidden = true;
+        vehicleSelect.hidden = false;
+        prefectureList.hidden = true;
+
+    } else {
+        mapElement.hidden = true;
+        vehicleSelect.hidden = true;
+        prefectureList.hidden = false;
+
+        await loadPrefectureData();
+
+        prefectureList.replaceChildren();
+        
+        prefectureData.forEach(items => {
+            const prefectureHeader = document.createElement("div");
+            prefectureHeader.className = "prefectureGroupHeader";
+            prefectureHeader.textContent = "▸ " + items.name;
+        
+            const prefectureGroupContainer = document.createElement("div");
+            prefectureGroupContainer.className = "prefectureGroupButtons";
+            prefectureGroupContainer.hidden = true;
+        
+            prefectureHeader.addEventListener("click", () => {
+                prefectureGroupContainer.hidden = !prefectureGroupContainer.hidden;
+                prefectureHeader.textContent =
+                    (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
+            });
+        
+            prefectureList.append(prefectureHeader, prefectureGroupContainer);
+        
+            (items.vehicles || []).forEach(vehicleName => {
+                const vehicle = vehicles.find(
+                    vehicle => vehicle.name === vehicleName
+                );
+        
+                if (!vehicle) return;
+        
+                const button = document.createElement("button");
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+        
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+        
+                const span = document.createElement("span");
+                span.textContent = vehicle.name || vehicle.id || "車両";
+        
+                button.append(iconContainer, span);
+        
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+        
+                prefectureGroupContainer.appendChild(button);
+            });
+        });
+    }
+});
