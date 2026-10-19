@@ -865,6 +865,30 @@ vehicleSelectMethod.addEventListener("change", async () => {
             });
             container.appendChild(prefectureHeader);
             container.appendChild(prefectureGroupContainer);
+            prefectureData.vehicles.forEach(vehicle => {
+                const btn = document.createElement("button");
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+        
+                if (Array.isArray(vehicle.icons)) {
+                    vehicle.icons.forEach(icon => {
+                        const img = document.createElement("img");
+                        img.src = icon;
+                        img.className = "vehicleIcon";
+                        iconContainer.appendChild(img);
+                    });
+                }
+        
+                const span = document.createElement("span");
+                span.textContent = vehicle.name || vehicle.id || "車両";
+        
+                btn.append(iconContainer, span);
+        
+                btn.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+                container.appendChild(btn);
+            });
         });
     }
 
