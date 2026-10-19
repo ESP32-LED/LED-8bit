@@ -84,6 +84,18 @@ button:focus-visible {
     background: #fff1f1;
 }
 
+#prefectureList {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: transparent;
+    border: 2px solid var(--border);
+}
+
+#prefectureList[hidden] {
+    display:none!important;
+}
+
 body {
     margin: 0;
     height: 100%;
