@@ -89,6 +89,7 @@ button:focus-visible {
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     background: transparent;
+    border-radius: 12px;
     border: 2px solid var(--border);
 }
 
