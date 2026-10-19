@@ -1,7 +1,7 @@
 {
     "prefectures": [
         {
-            "id": 01,
+            "id": 1,
             "name": "北海道",
             "vehicles": [
                 "H100形"
