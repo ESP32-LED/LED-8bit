@@ -96,6 +96,21 @@ button:focus-visible {
     display:none!important;
 }
 
+.prefectureGroupHeader {
+    padding: 11.5px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    background: rgb(227, 225, 225);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--ui-font);
+    font-size: 18px;
+    transition: 0.05s;
+}
+
 body {
     margin: 0;
     height: 100%;
