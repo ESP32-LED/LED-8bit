@@ -19,7 +19,6 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-// 普通の停車駅スクロール速度を15から14へさらに1段階低下
 const transferScrollSpeed = 14; 
 const transferTypeDestinationScrollSpeed = 14;
 
@@ -719,7 +718,13 @@ function createESP32Packet() {
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
-    if (scrollActive) scrollId = true;
+    // 特殊スクロール車両（阪神9000系等）の場合、背景シーンはスクロール枠ではなく通常の「行先固定表示画面（写真の日本語・英語併記）」として作成する
+    const isPause = isPauseScrollVehicle();
+    if (scrollActive && !isPause) {
+        scrollId = true;
+    } else {
+        scrollId = false;
+    }
 
     try {
         buildSceneList();
@@ -777,7 +782,7 @@ function createESP32Packet() {
         let activeScrollSpeed = transferScrollSpeed;
         if (typeof config.transferScrollSpeed === "number") {
             activeScrollSpeed = config.transferScrollSpeed;
-        } else if (isPauseScrollVehicle()) {
+        } else if (isPause) {
             activeScrollSpeed = 13;
         }
 
