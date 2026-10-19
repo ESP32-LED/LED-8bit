@@ -126,6 +126,44 @@ button:focus-visible {
     gap: 8px;
 }
 
+.prefectureGroupButtons button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    min-height: 100px;
+    padding: 16px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.prefectureGroupButtons .vehicleIcons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+.prefectureGroupButtons .vehicleIcon {
+    display: block;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.prefectureGroupButtons button span {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .prefectureGroupButtons[hidden] {
     display: none;
 }
