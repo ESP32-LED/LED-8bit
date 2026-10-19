@@ -851,6 +851,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
         const prefectureHeader = document.createElement("div");
+        const prefectureListContainer = document.createElement("prefectureListContainer");
         prefectureData.forEach(items => {
             prefectureHeader.className = "prefectureGroupHeader";
             prefectureHeader.textContent = "▸ " + items.name;
@@ -862,8 +863,8 @@ vehicleSelectMethod.addEventListener("change", async () => {
                 prefectureGroupContainer.hidden = !prefectureGroupContainer.hidden;
                 prefectureHeader.textContent = (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
             });
-            container.appendChild(prefectureHeader);
-            container.appendChild(prefectureGroupContainer);
+            prefectureListContainer.appendChild(prefectureHeader);
+            prefectureListContainer.appendChild(prefectureGroupContainer);
             prefectureData.vehicles.forEach(vehicle => {
                 const btn = document.createElement("button");
                 const iconContainer = document.createElement("div");
