@@ -111,6 +111,14 @@ button:focus-visible {
     transition: 0.05s;
 }
 
+.prefectureGroupHeader:hover {
+    background: #e9e8e8;
+}
+
+.prefectureGroupHeader:active {
+    transform: scale(0.96);
+}
+
 .prefectureGroupButtons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
