@@ -868,48 +868,53 @@ vehicleSelectMethod.addEventListener("change", async () => {
         await loadPrefectureData();
 
         prefectureList.replaceChildren();
-
+        
         prefectureData.forEach(items => {
             const prefectureHeader = document.createElement("div");
             prefectureHeader.className = "prefectureGroupHeader";
             prefectureHeader.textContent = "▸ " + items.name;
-
+        
             const prefectureGroupContainer = document.createElement("div");
             prefectureGroupContainer.className = "prefectureGroupButtons";
             prefectureGroupContainer.hidden = true;
-
+        
             prefectureHeader.addEventListener("click", () => {
                 prefectureGroupContainer.hidden = !prefectureGroupContainer.hidden;
                 prefectureHeader.textContent =
                     (prefectureGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
             });
-
+        
             prefectureList.append(prefectureHeader, prefectureGroupContainer);
-
-            (items.vehicles || []).forEach(vehicle => {
-                const btn = document.createElement("button");
+        
+            (items.vehicles || []).forEach(vehicleName => {
+                const vehicle = vehicles.find(
+                    vehicle => vehicle.name === vehicleName
+                );
+        
+                if (!vehicle) return;
+        
+                const button = document.createElement("button");
                 const iconContainer = document.createElement("div");
                 iconContainer.className = "vehicleIcons";
-
-                if (Array.isArray(vehicle.icons)) {
-                    vehicle.icons.forEach(icon => {
-                        const img = document.createElement("img");
-                        img.src = icon;
-                        img.className = "vehicleIcon";
-                        iconContainer.appendChild(img);
-                    });
-                }
-
+        
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+        
                 const span = document.createElement("span");
                 span.textContent = vehicle.name || vehicle.id || "車両";
-
-                btn.append(iconContainer, span);
-
-                btn.addEventListener("click", async () => {
+        
+                button.append(iconContainer, span);
+        
+                button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
                 });
-
-                prefectureGroupContainer.appendChild(btn);
+        
+                prefectureGroupContainer.appendChild(button);
             });
         });
     }
