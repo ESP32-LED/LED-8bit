@@ -843,6 +843,13 @@ vehicleSelectMethod.addEventListener("change", async () => {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
+        const prefectureHeader = document.createElement("div");
+        prefectureHeader.className = "prefectureGroupHeader";
+        prefectureHeader.textContent = "▸ " + group.name;
+        
+        const prefectureGroupContainer = document.createElement("div");
+        prefectureGroupContainer.className = "prefectureGroupButtons";
+        prefectureGroupContainer.hidden = true;
     }
 
 });
