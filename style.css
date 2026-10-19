@@ -85,6 +85,7 @@ button:focus-visible {
 }
 
 #prefectureList {
+    padding: 10px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
