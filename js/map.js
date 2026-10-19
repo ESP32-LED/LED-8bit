@@ -819,10 +819,24 @@ let prefectureData = [];
 
 async function loadPrefectureData() {
     const response = await fetch("data/prefectures.json");
-    if (!response.ok) throw new Error("都道府県データの読み込みに失敗しました");
 
-    const data = await response.json();
-    prefectureData = data.prefectures;
+    mobileLog("HTTPステータス:", response.status);
+    mobileLog("取得URL:", response.url);
+
+    const text = await response.text();
+    mobileLog("取得内容:", text);
+
+    if (!response.ok) {
+        throw new Error(`JSON取得失敗: HTTP ${response.status}`);
+    }
+
+    try {
+        const data = JSON.parse(text);
+        prefectureData = data.prefectures;
+    } catch (error) {
+        mobileLog("JSON解析エラー:", error);
+        throw error;
+    }
 }
 
 // 車両選択方法を変更
