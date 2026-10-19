@@ -111,6 +111,16 @@ button:focus-visible {
     transition: 0.05s;
 }
 
+.prefectureGroupButtons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.prefectureGroupButtons[hidden] {
+    display: none;
+}
+
 body {
     margin: 0;
     height: 100%;
