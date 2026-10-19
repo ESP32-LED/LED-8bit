@@ -19,8 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-// 普通の停車駅スクロール速度を16から15へさらに1段階低下
-const transferScrollSpeed = 15; 
+// 普通の停車駅スクロール速度を15から14へさらに1段階低下
+const transferScrollSpeed = 14; 
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
