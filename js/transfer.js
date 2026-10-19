@@ -281,6 +281,11 @@ function isTypeDestinationScrollCategoryEnabled(category) {
 }
 
 function getSlideMode() {
+    // 車両config側に slideMode (0x5B 等) の指定がある場合は優先適用
+    if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
+        return config.slideMode;
+    }
+
     if (typeof isVerticalSlideEnabled === "function" && !isVerticalSlideEnabled()) {
         return 0x56;
     }
