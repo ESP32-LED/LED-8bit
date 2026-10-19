@@ -851,7 +851,6 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
         const prefectureHeader = document.createElement("div");
-        await loadPrefectureData();
         prefectureData.forEach(items => {
             prefectureHeader.className = "prefectureGroupHeader";
             prefectureHeader.textContent = "▸ " + items.name;
