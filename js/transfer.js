@@ -773,6 +773,8 @@ function createESP32Packet() {
 
     try {
         if (!scrollActive) {
+            // スクロールOFF時は特殊スクロール対象車両であっても通常（画面全高/標準）の行先を描画させるため
+            // 一時的に config.scroll_normal を false に設定
             config.scroll_normal = false;
             scrollId = false;
         } else {
@@ -805,13 +807,9 @@ function createESP32Packet() {
                     informationMode = spec.infoMode;
                     lang = spec.langVal;
 
-                    // スクロールなし（種別・行先のみの固定表示シーン1）の時は
-                    // 大きい行先（縦32）を描画させるため config.scroll_normal を一時的に false に切り替える
-                    if (!spec.scrollIdVal) {
-                        config.scroll_normal = false;
-                    } else {
-                        config.scroll_normal = oldScrollNormal;
-                    }
+                    // スクロールなしの種別・行先のみ表示(scrollIdVal: false)のシーンでは、
+                    // 行先を大きいサイズ(縦32px/標準)で描画するため config.scroll_normal を false に切り替え
+                    config.scroll_normal = spec.scrollIdVal ? oldScrollNormal : false;
 
                     const matrix = createDisplayMatrix();
                     const frame = createESP32Frame(matrix, hw, margin);
