@@ -99,6 +99,7 @@ function drawType(type, matrix) {
                 ?? type.view?.[view]?.ja
                 ?? type.view?.normal?.[typeLang]
                 ?? type.view?.normal?.ja;
+        }
     } else {
         if (nextId != null || scrollId != null) {
             if (typeHasNormal) {
