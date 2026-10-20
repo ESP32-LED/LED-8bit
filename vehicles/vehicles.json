@@ -749,7 +749,7 @@
     },
     {
         "id": "toei10_300_3color",
-        "name": "都営10300形 (3色)",
+        "name": "都営10-300形（1・2次車・3色LED）",
         "config": "vehicles/toei10_300_3color/config.json",
         "led": "vehicles/toei10_300_3color/led.json",
         "icons": [
