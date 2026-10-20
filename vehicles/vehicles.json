@@ -571,7 +571,7 @@
     },
     {
         "id": "90000",
-        "name": "東武50070型（ゴシック体）・90000型",
+        "name": "東武50070型（ゴシック体）・90000系",
         "config": "vehicles/90000/config.json",
         "led": "vehicles/90000/led.json",
         "icons": [
