@@ -246,8 +246,8 @@ vehicleSelectMethod.addEventListener("change", async () => {
     } else {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
-        prefectureList.hidden = false;
-        companyList.hidden = true;
+        prefectureList.hidden = true;
+        companyList.hidden = false;
         await loadCompanyData();
 
         companyList.replaceChildren();
