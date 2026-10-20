@@ -69,10 +69,8 @@ function drawType(type, matrix) {
         }
     }
     if (isTypeFullScreen(type)) {
-        mobileLog("a");
         view = "full";
     }
-    mobileLog(isTypeFullScreen(type));
 
     let data = null;
     
@@ -95,7 +93,12 @@ function drawType(type, matrix) {
                 ?? type.view?.[view]?.ja
                 ?? type.view?.normal3?.[typeLang]
                 ?? type.view?.normal3?.ja;
-        }
+        } else {
+            data =
+                type.view?.[view]?.[typeLang]
+                ?? type.view?.[view]?.ja
+                ?? type.view?.normal?.[typeLang]
+                ?? type.view?.normal?.ja;
     } else {
         if (nextId != null || scrollId != null) {
             if (typeHasNormal) {
@@ -116,6 +119,12 @@ function drawType(type, matrix) {
                     ?? type.view?.[view]?.ja
                     ?? type.view?.normal3?.[typeLang]
                     ?? type.view?.normal3?.ja;
+            } else {
+                data =
+                    type.view?.[view]?.[typeLang]
+                    ?? type.view?.[view]?.ja
+                    ?? type.view?.normal?.[typeLang]
+                    ?? type.view?.normal?.ja;
             }
         } else {
             if (typeHasNormal) {
@@ -125,7 +134,7 @@ function drawType(type, matrix) {
                     ?? type.view?.[view]?.ja
                     ?? type.view?.normal?.ja_en
                     ?? type.view?.normal?.[typeLang]
-                    ?? type.view?.normal?.ja
+                    ?? type.view?.normal?.ja;
             } else if (typeHasNormal2) {
                 data =
                     type.view?.[view]?.ja_en
@@ -133,7 +142,7 @@ function drawType(type, matrix) {
                     ?? type.view?.[view]?.ja
                     ?? type.view?.normal2?.ja_en
                     ?? type.view?.normal2?.[typeLang]
-                    ?? type.view?.normal2?.ja
+                    ?? type.view?.normal2?.ja;
             } else if (typeHasNormal3) {
                 data =
                     type.view?.[view]?.ja_en
@@ -141,7 +150,15 @@ function drawType(type, matrix) {
                     ?? type.view?.[view]?.ja
                     ?? type.view?.normal3?.ja_en
                     ?? type.view?.normal3?.[typeLang]
-                    ?? type.view?.normal3?.ja
+                    ?? type.view?.normal3?.ja;
+            } else {
+                data =
+                    type.view?.[view]?.ja_en
+                    ?? type.view?.[view]?.[typeLang]
+                    ?? type.view?.[view]?.ja
+                    ?? type.view?.normal?.ja_en
+                    ?? type.view?.normal?.[typeLang]
+                    ?? type.view?.normal?.ja;
             }
         }
     }
