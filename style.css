@@ -88,7 +88,7 @@ button:focus-visible {
     padding: 10px;
     margin-bottom: 10px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 8px;
     background: transparent;
     border-radius: 12px;
@@ -119,12 +119,12 @@ button:focus-visible {
 }
 
 .prefectureGroupHeader:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
 }
 
 .prefectureGroupButtons {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 
@@ -156,7 +156,7 @@ button:focus-visible {
    padding: 10px;
    margin-bottom: 10px;
    display: grid;
-   grid-template-columns: repeat(4, 1fr);
+   grid-template-columns: repeat(1, 1fr);
    gap: 8px;
    background: transparent;
    border-radius: 12px;
@@ -191,13 +191,13 @@ button:focus-visible {
 
 
 .companyGroupHeader:active {
-   transform: scale(0.96);
+   transform: scale(0.98);
 }
 
 
 .companyGroupButtons {
    display: grid;
-   grid-template-columns: repeat(3, 1fr);
+   grid-template-columns: repeat(4, 1fr);
    gap: 8px;
 }
 
