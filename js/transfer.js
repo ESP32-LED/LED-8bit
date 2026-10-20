@@ -889,7 +889,15 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     }
 
     header[0] = 0xaa;
-    header[1] = getSlideMode();
+
+    // 特殊スクロール判定（config(2)のような scroll_normal が無い車両を区別）
+    let slideModeVal = getSlideMode();
+    const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
+    if (isSpecialScroll) {
+        slideModeVal |= 0x80; // フラグ付与
+    }
+
+    header[1] = slideModeVal;
     header[2] = sceneCount & 0xff;
     header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
