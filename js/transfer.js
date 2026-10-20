@@ -734,7 +734,7 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // 1. スクロール中に背景として切り替えるシーン（案内・英語等）を正確に書き込み
+            // 1. スクロール中に背景として切り替えるシーン
             for (let i = 0; i < totalSceneCount - 1; i++) {
                 scene = i % scrollScenes.length;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
@@ -785,7 +785,6 @@ function createESP32Packet() {
             rawSceneCount = 1;
         }
 
-        // 大画面・6画面対応のため正確にESP32_MAX_SCENES(6)までに固定
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
         const hw = getHardwareWidth();
         const pw = Number(config.ledWidth);
