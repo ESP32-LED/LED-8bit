@@ -19,7 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 14; 
+// 停車駅スクロール速度を15に設定
+const transferScrollSpeed = 15;
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -280,7 +281,6 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
-// 特殊スクロール車両（阪神9000系等）の判定
 function isPauseScrollVehicle() {
     if (typeof config !== "undefined" && config) {
         if (config.scroll_normal === true || typeof config.transferScrollSpeed === "number") {
@@ -292,7 +292,7 @@ function isPauseScrollVehicle() {
 
 function getSlideMode() {
     if (isPauseScrollVehicle()) {
-        return 0x5b; // 特殊スクロール識別用モード値
+        return 0x5b;
     }
 
     if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
@@ -716,88 +716,121 @@ function createESP32Packet() {
 
     const scrollText = getScrollText();
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
-    const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
-
-    // 特殊スクロール車両（阪神9000系等）の場合、背景シーンはスクロール枠ではなく通常の「行先固定表示画面（写真の日本語・英語併記）」として作成する
     const isPause = isPauseScrollVehicle();
-    if (scrollActive && !isPause) {
-        scrollId = true;
+
+    const hw = getHardwareWidth();
+    const pw = Number(config.ledWidth);
+    if (!Number.isFinite(pw) || pw <= 0) {
+        throw new Error("config.ledWidth が正しくありません");
+    }
+
+    const margin = Math.max(0, hw - pw);
+    const br = getNumberValue("softBrightness", 1.0);
+    const gam = getNumberValue("gammaCorrection", 2.5);
+
+    const scrollData = createESP32ScrollData(br, gam);
+
+    let areaLeft = 48;
+    const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
+    let typeIsFull = false;
+    if (type && typeof isTypeFullScreen === "function") {
+        typeIsFull = isTypeFullScreen(type);
+    }
+
+    if (scrollActive && typeIsFull) {
+        scrollData.tw = 0;
+        scrollData.sbuf = new Uint8Array(0);
+    }
+
+    if (typeof typeId !== "undefined" && typeId === null && config.hasScrollFullScreen) {
+        areaLeft = 0;
+    }
+
+    if (config.hasNextFullScreen) {
+        areaLeft = 0;
+    }
+
+    let xOff = Math.max(0, Math.min(255, areaLeft + margin));
+    const slideMode = getSlideMode();
+
+    let activeScrollSpeed = transferScrollSpeed; // 15
+    if (typeof config.transferScrollSpeed === "number") {
+        activeScrollSpeed = config.transferScrollSpeed;
+    } else if (isPause) {
+        activeScrollSpeed = 13;
+    }
+
+    let sceneCount = 1;
+    let sceneData = new Uint8Array(0);
+
+    if (isPause) {
+        // --- 特殊スクロール車両用 シーン群構築 ---
+        const scenesToRender = [
+            { scrollIdVal: true, infoMode: "destination", langVal: "ja" },
+            { scrollIdVal: false, infoMode: "destination", langVal: "ja" }
+        ];
+
+        if (typeof informationId !== "undefined" && informationId !== null) {
+            scenesToRender.push({ scrollIdVal: true, infoMode: "information", langVal: "ja" });
+        }
+
+        sceneCount = scenesToRender.length;
+        const sceneSize = 8 * 16 * hw;
+        sceneData = new Uint8Array(sceneCount * sceneSize);
+
+        const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
+        const oldInfoMode = typeof informationMode !== "undefined" ? informationMode : null;
+        const oldLang = typeof lang !== "undefined" ? lang : null;
+
+        try {
+            let offset = 0;
+            for (let i = 0; i < sceneCount; i++) {
+                const spec = scenesToRender[i];
+                scrollId = spec.scrollIdVal;
+                informationMode = spec.infoMode;
+                lang = spec.langVal;
+
+                const matrix = createDisplayMatrix();
+                const frame = createESP32Frame(matrix, hw, margin);
+                const sceneBuf = frameToUint8Array(frame, hw);
+
+                sceneData.set(sceneBuf, offset);
+                offset += sceneSize;
+            }
+        } finally {
+            if (typeof scrollId !== "undefined") scrollId = oldScrollId;
+            if (typeof informationMode !== "undefined") informationMode = oldInfoMode;
+            if (typeof lang !== "undefined") lang = oldLang;
+        }
     } else {
-        scrollId = false;
+        // --- 通常車両用 シーン群構築 ---
+        const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
+        if (scrollActive) scrollId = true; else scrollId = false;
+
+        try {
+            buildSceneList();
+            buildTypeSceneList();
+
+            if (sceneList.length === 0) return new Uint8Array();
+
+            const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
+            let rawSceneCount = lcm(sceneList.length, typeCount);
+            if (typeIsFull) rawSceneCount = 1;
+
+            sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
+            sceneData = createAllESP32Scenes(sceneCount, hw, margin);
+        } finally {
+            if (typeof scrollId !== "undefined") scrollId = oldScrollId;
+        }
     }
 
-    try {
-        buildSceneList();
-        buildTypeSceneList();
+    const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, activeScrollSpeed, xOff, slideMode);
+    const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
+    packet.set(header, 0);
+    packet.set(scrollData.sbuf, header.length);
+    packet.set(sceneData, header.length + scrollData.sbuf.length);
 
-        if (sceneList.length === 0) return new Uint8Array();
-
-        const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
-        let typeIsFull = false;
-        if (type && typeof isTypeFullScreen === "function") {
-            typeIsFull = isTypeFullScreen(type);
-        }
-
-        const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
-        let rawSceneCount = lcm(sceneList.length, typeCount);
-
-        if (typeIsFull) {
-            rawSceneCount = 1;
-        }
-
-        const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
-
-        const hw = getHardwareWidth();
-
-        const pw = Number(config.ledWidth);
-        if (!Number.isFinite(pw) || pw <= 0) {
-            throw new Error("config.ledWidth が正しくありません");
-        }
-
-        const margin = Math.max(0, hw - pw);
-        const br = getNumberValue("softBrightness", 1.0);
-        const gam = getNumberValue("gammaCorrection", 2.5);
-
-        const scrollData = createESP32ScrollData(br, gam);
-
-        let areaLeft = 48;
-
-        if (scrollActive && typeIsFull) {
-            scrollData.tw = 0;
-            scrollData.sbuf = new Uint8Array(0);
-        }
-
-        if (typeof typeId !== "undefined" && typeId === null && config.hasScrollFullScreen) {
-            areaLeft = 0;
-        }
-
-        if (config.hasNextFullScreen) {
-            areaLeft = 0;
-        }
-
-        let xOff = Math.max(0, Math.min(255, areaLeft + margin));
-
-        const slideMode = getSlideMode();
-
-        let activeScrollSpeed = transferScrollSpeed;
-        if (typeof config.transferScrollSpeed === "number") {
-            activeScrollSpeed = config.transferScrollSpeed;
-        } else if (isPause) {
-            activeScrollSpeed = 13;
-        }
-
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, activeScrollSpeed, xOff, slideMode);
-        const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
-
-        const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
-        packet.set(header, 0);
-        packet.set(scrollData.sbuf, header.length);
-        packet.set(sceneData, header.length + scrollData.sbuf.length);
-
-        return packet;
-    } finally {
-        if (typeof scrollId !== "undefined") scrollId = oldScrollId;
-    }
+    return packet;
 }
 
 function createESP32Frame(matrix, hw, margin) {
