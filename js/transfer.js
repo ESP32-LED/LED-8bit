@@ -768,10 +768,16 @@ function createESP32Packet() {
     let sceneCount = 1;
     let sceneData = new Uint8Array(0);
 
+    const oldScrollNormal = config.scroll_normal;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
     try {
-        if (scrollActive) scrollId = true;
+        if (!scrollActive) {
+            config.scroll_normal = false;
+            scrollId = false;
+        } else {
+            scrollId = true;
+        }
 
         if (isPause) {
             // --- 特殊スクロール車両用 シーン群構築 (スクロールON時) ---
@@ -799,6 +805,14 @@ function createESP32Packet() {
                     informationMode = spec.infoMode;
                     lang = spec.langVal;
 
+                    // スクロールなし（種別・行先のみの固定表示シーン1）の時は
+                    // 大きい行先（縦32）を描画させるため config.scroll_normal を一時的に false に切り替える
+                    if (!spec.scrollIdVal) {
+                        config.scroll_normal = false;
+                    } else {
+                        config.scroll_normal = oldScrollNormal;
+                    }
+
                     const matrix = createDisplayMatrix();
                     const frame = createESP32Frame(matrix, hw, margin);
                     const sceneBuf = frameToUint8Array(frame, hw);
@@ -825,6 +839,7 @@ function createESP32Packet() {
             sceneData = createAllESP32Scenes(sceneCount, hw, margin);
         }
     } finally {
+        config.scroll_normal = oldScrollNormal;
         if (typeof scrollId !== "undefined") scrollId = oldScrollId;
     }
 
