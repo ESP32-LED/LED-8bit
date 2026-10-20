@@ -19,7 +19,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 17;
+const transferScrollSpeed = 13;
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -894,12 +894,17 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     let slideModeVal = getSlideMode();
     const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
     if (isSpecialScroll) {
-        slideModeVal |= 0x80; // フラグ付与
+        slideModeVal |= 0x80; // 最上位ビットにフラグ付与
     }
+
+    // 車両configに transferScrollSpeed が定義されている場合はそれを使い、無ければ13にする
+    const actualScrollSpeed = (typeof config !== "undefined" && config && typeof config.transferScrollSpeed === "number")
+        ? config.transferScrollSpeed
+        : transferScrollSpeed;
 
     header[1] = slideModeVal;
     header[2] = sceneCount & 0xff;
-    header[3] = transferScrollSpeed & 0xff;
+    header[3] = actualScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
