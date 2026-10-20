@@ -19,8 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 17;
-const transferSpecialScrollSpeed = 13; // 特殊スクロールの速度を13に設定
+const transferScrollSpeed = 15; // 停車駅スクロールのスピードを15に設定
+const transferSpecialScrollSpeed = 13; // 特殊スクロールのスピードを13に設定
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -704,6 +704,76 @@ function createESP32Packet() {
     if (scrollActive) scrollId = true;
 
     try {
+        // 特殊スクロール(config(2))の判定
+        const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
+
+        // 特殊スクロール時は、静止画用シーン（scrollId = null）とスクロール用シーン（scrollId = true）の両方を含むシーンリストを作成
+        if (isSpecialScroll && scrollActive) {
+            scrollId = null;
+            buildSceneList();
+            const staticScenes = [...sceneList];
+
+            scrollId = true;
+            buildSceneList();
+            const scrollScenes = [...sceneList];
+
+            buildTypeSceneList();
+
+            const hw = getHardwareWidth();
+            const pw = Number(config.ledWidth);
+            const margin = Math.max(0, hw - pw);
+            const br = getNumberValue("softBrightness", 1.0);
+            const gam = getNumberValue("gammaCorrection", 2.5);
+            const scrollData = createESP32ScrollData(br, gam);
+
+            let areaLeft = 48;
+            if (typeof typeId !== "undefined" && typeId === null && config.hasScrollFullScreen) areaLeft = 0;
+            if (config.hasNextFullScreen) areaLeft = 0;
+            let xOff = Math.max(0, Math.min(255, areaLeft + margin));
+
+            // 総シーン数: 静止画シーン群 + スクロール用シーン（合計最大6）
+            const totalSceneCount = Math.min(ESP32_MAX_SCENES, staticScenes.length + scrollScenes.length);
+            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff);
+
+            // 静止シーンとスクロールシーンを結合して全データを作成
+            const sceneSize = 8 * 16 * hw;
+            const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
+            let offset = 0;
+
+            // 1. 静止シーンを配置
+            for (let i = 0; i < staticScenes.length && (i < totalSceneCount); i++) {
+                scene = i;
+                typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
+                scrollId = null;
+                applyScene();
+                applyTypeScene();
+                const matrix = createDisplayMatrix();
+                const frame = createESP32Frame(matrix, hw, margin);
+                allSceneData.set(frameToUint8Array(frame, hw), offset);
+                offset += sceneSize;
+            }
+
+            // 2. スクロールシーンを配置
+            for (let i = 0; i < scrollScenes.length && (staticScenes.length + i < totalSceneCount); i++) {
+                scene = i;
+                typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
+                scrollId = true;
+                applyScene();
+                applyTypeScene();
+                const matrix = createDisplayMatrix();
+                const frame = createESP32Frame(matrix, hw, margin);
+                allSceneData.set(frameToUint8Array(frame, hw), offset);
+                offset += sceneSize;
+            }
+
+            const packet = new Uint8Array(header.length + scrollData.sbuf.length + allSceneData.length);
+            packet.set(header, 0);
+            packet.set(scrollData.sbuf, header.length);
+            packet.set(allSceneData, header.length + scrollData.sbuf.length);
+
+            return packet;
+        }
+
         buildSceneList();
         buildTypeSceneList();
 
@@ -723,9 +793,7 @@ function createESP32Packet() {
         }
 
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
-
         const hw = getHardwareWidth();
-
         const pw = Number(config.ledWidth);
         if (!Number.isFinite(pw) || pw <= 0) {
             throw new Error("config.ledWidth が正しくありません");
@@ -754,7 +822,6 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
         const speedVal = isSpecialScroll ? transferSpecialScrollSpeed : transferScrollSpeed;
 
         const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff);
