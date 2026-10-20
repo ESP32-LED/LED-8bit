@@ -19,8 +19,7 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-// 停車駅スクロール速度を15に設定
-const transferScrollSpeed = 15;
+const transferScrollSpeed = 17;
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -281,27 +280,7 @@ function isTypeDestinationScrollCategoryEnabled(category) {
     return true;
 }
 
-function isPauseScrollVehicle() {
-    if (typeof config !== "undefined" && config) {
-        if (config.scroll_normal === true || typeof config.transferScrollSpeed === "number") {
-            return true;
-        }
-    }
-    return false;
-}
-
 function getSlideMode() {
-    const scrollText = getScrollText();
-    const scrollActive = typeof config !== "undefined" && config && config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
-
-    if (isPauseScrollVehicle() && scrollActive) {
-        return 0x5b;
-    }
-
-    if (typeof config !== "undefined" && config && typeof config.slideMode === "number") {
-        return config.slideMode;
-    }
-
     if (typeof isVerticalSlideEnabled === "function" && !isVerticalSlideEnabled()) {
         return 0x56;
     }
@@ -719,132 +698,73 @@ function createESP32Packet() {
 
     const scrollText = getScrollText();
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
-    
-    // スクロールが有効(ONかつ文字あり)の時のみ特殊スクロール動作を有効化
-    const isPause = isPauseScrollVehicle() && scrollActive;
-
-    const hw = getHardwareWidth();
-    const pw = Number(config.ledWidth);
-    if (!Number.isFinite(pw) || pw <= 0) {
-        throw new Error("config.ledWidth が正しくありません");
-    }
-
-    const margin = Math.max(0, hw - pw);
-    const br = getNumberValue("softBrightness", 1.0);
-    const gam = getNumberValue("gammaCorrection", 2.5);
-
-    const scrollData = createESP32ScrollData(br, gam);
-
-    let areaLeft = 48;
-    const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
-    let typeIsFull = false;
-    if (type && typeof isTypeFullScreen === "function") {
-        typeIsFull = isTypeFullScreen(type);
-    }
-
-    if (scrollActive && typeIsFull) {
-        scrollData.tw = 0;
-        scrollData.sbuf = new Uint8Array(0);
-    }
-
-    if (typeof typeId !== "undefined" && typeId === null && config.hasScrollFullScreen) {
-        areaLeft = 0;
-    }
-
-    if (config.hasNextFullScreen) {
-        areaLeft = 0;
-    }
-
-    let xOff = Math.max(0, Math.min(255, areaLeft + margin));
-    const slideMode = getSlideMode();
-
-    let activeScrollSpeed = transferScrollSpeed; // 15
-    if (typeof config.transferScrollSpeed === "number") {
-        activeScrollSpeed = config.transferScrollSpeed;
-    } else if (isPause) {
-        activeScrollSpeed = 13;
-    }
-
-    let sceneCount = 1;
-    let sceneData = new Uint8Array(0);
-
-    const oldScrollNormal = config.scroll_normal;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
+    if (scrollActive) scrollId = true;
+
     try {
-        if (isPause) {
-            // --- 特殊スクロール車両用 シーン群構築 (スクロールON時) ---
-            scrollId = true;
+        buildSceneList();
+        buildTypeSceneList();
 
-            const scenesToRender = [
-                { scrollIdVal: true, infoMode: "destination", langVal: "ja" },
-                { scrollIdVal: false, infoMode: "destination", langVal: "ja" }
-            ];
+        if (sceneList.length === 0) return new Uint8Array();
 
-            if (typeof informationId !== "undefined" && informationId !== null) {
-                scenesToRender.push({ scrollIdVal: true, infoMode: "information", langVal: "ja" });
-            }
-
-            sceneCount = scenesToRender.length;
-            const sceneSize = 8 * 16 * hw;
-            sceneData = new Uint8Array(sceneCount * sceneSize);
-
-            const oldInfoMode = typeof informationMode !== "undefined" ? informationMode : null;
-            const oldLang = typeof lang !== "undefined" ? lang : null;
-
-            try {
-                let offset = 0;
-                for (let i = 0; i < sceneCount; i++) {
-                    const spec = scenesToRender[i];
-                    scrollId = spec.scrollIdVal;
-                    informationMode = spec.infoMode;
-                    lang = spec.langVal;
-
-                    // スクロールなし固定表示シーン(scrollIdVal: false)では行先を大きいサイズ(32px)で描画
-                    config.scroll_normal = spec.scrollIdVal ? oldScrollNormal : false;
-
-                    const matrix = createDisplayMatrix();
-                    const frame = createESP32Frame(matrix, hw, margin);
-                    const sceneBuf = frameToUint8Array(frame, hw);
-
-                    sceneData.set(sceneBuf, offset);
-                    offset += sceneSize;
-                }
-            } finally {
-                if (typeof informationMode !== "undefined") informationMode = oldInfoMode;
-                if (typeof lang !== "undefined") lang = oldLang;
-            }
-        } else {
-            // --- 通常車両 (およびスクロールOFF時の全車両) ---
-            // メイン表示シーン群（大行先・次駅表示など）を作成するため、
-            // 明示的に scrollId = false, config.scroll_normal = false に設定して全シーンを構築
-            scrollId = false;
-            config.scroll_normal = false;
-
-            buildSceneList();
-            buildTypeSceneList();
-
-            if (sceneList.length === 0) return new Uint8Array();
-
-            const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
-            let rawSceneCount = lcm(sceneList.length, typeCount);
-            if (typeIsFull) rawSceneCount = 1;
-
-            sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
-            sceneData = createAllESP32Scenes(sceneCount, hw, margin);
+        const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
+        let typeIsFull = false;
+        if (type && typeof isTypeFullScreen === "function") {
+            typeIsFull = isTypeFullScreen(type);
         }
+
+        const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
+        let rawSceneCount = lcm(sceneList.length, typeCount);
+
+        if (typeIsFull) {
+            rawSceneCount = 1;
+        }
+
+        const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
+
+        const hw = getHardwareWidth();
+
+        const pw = Number(config.ledWidth);
+        if (!Number.isFinite(pw) || pw <= 0) {
+            throw new Error("config.ledWidth が正しくありません");
+        }
+
+        const margin = Math.max(0, hw - pw);
+        const br = getNumberValue("softBrightness", 1.0);
+        const gam = getNumberValue("gammaCorrection", 2.5);
+
+        const scrollData = createESP32ScrollData(br, gam);
+
+        let areaLeft = 48;
+
+        if (scrollActive && typeIsFull) {
+            scrollData.tw = 0;
+            scrollData.sbuf = new Uint8Array(0);
+        }
+
+        if (typeof typeId !== "undefined" && typeId === null && config.hasScrollFullScreen) {
+            areaLeft = 0;
+        }
+
+        if (config.hasNextFullScreen) {
+            areaLeft = 0;
+        }
+
+        let xOff = Math.max(0, Math.min(255, areaLeft + margin));
+
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff);
+        const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
+
+        const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
+        packet.set(header, 0);
+        packet.set(scrollData.sbuf, header.length);
+        packet.set(sceneData, header.length + scrollData.sbuf.length);
+
+        return packet;
     } finally {
-        config.scroll_normal = oldScrollNormal;
         if (typeof scrollId !== "undefined") scrollId = oldScrollId;
     }
-
-    const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, activeScrollSpeed, xOff, slideMode);
-    const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
-    packet.set(header, 0);
-    packet.set(scrollData.sbuf, header.length);
-    packet.set(sceneData, header.length + scrollData.sbuf.length);
-
-    return packet;
 }
 
 function createESP32Frame(matrix, hw, margin) {
@@ -937,9 +857,9 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, slideMode) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
-    let times = [];
+    let times;
 
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -949,40 +869,29 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, sli
         const infoTime = getNumberValue("infoTime", 3) * 1000;
         const carNumberTime = getNumberValue("carNumberTime", 3) * 1000;
 
-        for (let i = 0; i < ESP32_MAX_SCENES; i++) {
-            let t = defaultInterval;
-            if (i < sceneCount && typeof sceneList !== "undefined" && sceneList.length > 0) {
-                const currentScene = sceneList[i % sceneList.length];
-                if (currentScene) {
-                    if (
-                        currentScene.information === "carNumber" ||
-                        currentScene.information === "carNumber_normal" ||
-                        currentScene.information === "carNumber_destination"
-                    ) {
-                        t = carNumberTime;
-                    } else if (
-                        currentScene.information === "information" ||
-                        currentScene.information === "next" ||
-                        currentScene.information === "next_ja" ||
-                        currentScene.information === "next_en"
-                    ) {
-                        t = infoTime;
-                    } else if (currentScene.information === "destination") {
-                        if (currentScene.lang === "ja") t = jaTime;
-                        else if (currentScene.lang === "en") t = enTime;
-                    }
-                }
+        times = sceneList.slice(0, ESP32_MAX_SCENES).map((currentScene) => {
+            if (
+                currentScene.information === "carNumber" ||
+                currentScene.information === "carNumber_normal" ||
+                currentScene.information === "carNumber_destination"
+            ) {
+                return carNumberTime;
             }
-            times.push(t);
-        }
+            if (currentScene.information === "information") return infoTime;
+            if (currentScene.information === "destination") {
+                if (currentScene.lang === "ja") return jaTime;
+                if (currentScene.lang === "en") return enTime;
+            }
+            return defaultInterval;
+        });
     } else {
         times = Array(6).fill(defaultInterval);
     }
 
     header[0] = 0xaa;
-    header[1] = slideMode & 0xff;
+    header[1] = getSlideMode();
     header[2] = sceneCount & 0xff;
-    header[3] = speed & 0xff;
+    header[3] = transferScrollSpeed & 0xff;
     header[4] = scrollWidth & 0xff;
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
