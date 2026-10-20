@@ -291,7 +291,10 @@ function isPauseScrollVehicle() {
 }
 
 function getSlideMode() {
-    if (isPauseScrollVehicle()) {
+    const scrollText = getScrollText();
+    const scrollActive = typeof config !== "undefined" && config && config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
+
+    if (isPauseScrollVehicle() && scrollActive) {
         return 0x5b;
     }
 
@@ -716,7 +719,9 @@ function createESP32Packet() {
 
     const scrollText = getScrollText();
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
-    const isPause = isPauseScrollVehicle();
+    
+    // スクロールが有効(ONかつ文字あり)の時のみ特殊スクロール動作を有効化
+    const isPause = isPauseScrollVehicle() && scrollActive;
 
     const hw = getHardwareWidth();
     const pw = Number(config.ledWidth);
@@ -763,51 +768,50 @@ function createESP32Packet() {
     let sceneCount = 1;
     let sceneData = new Uint8Array(0);
 
-    if (isPause) {
-        // --- 特殊スクロール車両用 シーン群構築 ---
-        const scenesToRender = [
-            { scrollIdVal: true, infoMode: "destination", langVal: "ja" },
-            { scrollIdVal: false, infoMode: "destination", langVal: "ja" }
-        ];
+    const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
-        if (typeof informationId !== "undefined" && informationId !== null) {
-            scenesToRender.push({ scrollIdVal: true, infoMode: "information", langVal: "ja" });
-        }
+    try {
+        if (scrollActive) scrollId = true;
 
-        sceneCount = scenesToRender.length;
-        const sceneSize = 8 * 16 * hw;
-        sceneData = new Uint8Array(sceneCount * sceneSize);
+        if (isPause) {
+            // --- 特殊スクロール車両用 シーン群構築 (スクロールON時) ---
+            const scenesToRender = [
+                { scrollIdVal: true, infoMode: "destination", langVal: "ja" },
+                { scrollIdVal: false, infoMode: "destination", langVal: "ja" }
+            ];
 
-        const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
-        const oldInfoMode = typeof informationMode !== "undefined" ? informationMode : null;
-        const oldLang = typeof lang !== "undefined" ? lang : null;
-
-        try {
-            let offset = 0;
-            for (let i = 0; i < sceneCount; i++) {
-                const spec = scenesToRender[i];
-                scrollId = spec.scrollIdVal;
-                informationMode = spec.infoMode;
-                lang = spec.langVal;
-
-                const matrix = createDisplayMatrix();
-                const frame = createESP32Frame(matrix, hw, margin);
-                const sceneBuf = frameToUint8Array(frame, hw);
-
-                sceneData.set(sceneBuf, offset);
-                offset += sceneSize;
+            if (typeof informationId !== "undefined" && informationId !== null) {
+                scenesToRender.push({ scrollIdVal: true, infoMode: "information", langVal: "ja" });
             }
-        } finally {
-            if (typeof scrollId !== "undefined") scrollId = oldScrollId;
-            if (typeof informationMode !== "undefined") informationMode = oldInfoMode;
-            if (typeof lang !== "undefined") lang = oldLang;
-        }
-    } else {
-        // --- 通常車両用 シーン群構築 ---
-        const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
-        if (scrollActive) scrollId = true; else scrollId = false;
 
-        try {
+            sceneCount = scenesToRender.length;
+            const sceneSize = 8 * 16 * hw;
+            sceneData = new Uint8Array(sceneCount * sceneSize);
+
+            const oldInfoMode = typeof informationMode !== "undefined" ? informationMode : null;
+            const oldLang = typeof lang !== "undefined" ? lang : null;
+
+            try {
+                let offset = 0;
+                for (let i = 0; i < sceneCount; i++) {
+                    const spec = scenesToRender[i];
+                    scrollId = spec.scrollIdVal;
+                    informationMode = spec.infoMode;
+                    lang = spec.langVal;
+
+                    const matrix = createDisplayMatrix();
+                    const frame = createESP32Frame(matrix, hw, margin);
+                    const sceneBuf = frameToUint8Array(frame, hw);
+
+                    sceneData.set(sceneBuf, offset);
+                    offset += sceneSize;
+                }
+            } finally {
+                if (typeof informationMode !== "undefined") informationMode = oldInfoMode;
+                if (typeof lang !== "undefined") lang = oldLang;
+            }
+        } else {
+            // --- 通常車両およびスクロールOFF時の特殊車両 ---
             buildSceneList();
             buildTypeSceneList();
 
@@ -819,9 +823,9 @@ function createESP32Packet() {
 
             sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
             sceneData = createAllESP32Scenes(sceneCount, hw, margin);
-        } finally {
-            if (typeof scrollId !== "undefined") scrollId = oldScrollId;
         }
+    } finally {
+        if (typeof scrollId !== "undefined") scrollId = oldScrollId;
     }
 
     const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, activeScrollSpeed, xOff, slideMode);
@@ -943,7 +947,14 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, sli
             ) {
                 return carNumberTime;
             }
-            if (currentScene.information === "information") return infoTime;
+            if (
+                currentScene.information === "information" ||
+                currentScene.information === "next" ||
+                currentScene.information === "next_ja" ||
+                currentScene.information === "next_en"
+            ) {
+                return infoTime;
+            }
             if (currentScene.information === "destination") {
                 if (currentScene.lang === "ja") return jaTime;
                 if (currentScene.lang === "en") return enTime;
