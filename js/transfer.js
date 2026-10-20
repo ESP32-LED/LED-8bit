@@ -772,66 +772,36 @@ function createESP32Packet() {
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
     try {
-        if (!scrollActive) {
-            config.scroll_normal = false;
-            scrollId = false;
-        } else {
-            scrollId = true;
-        }
-
         if (isPause) {
             // --- 特殊スクロール車両用 シーン群構築 (スクロールON時) ---
-            buildSceneList();
-            buildTypeSceneList();
-
-            // 次駅/案内表示(information)が存在するかチェック
-            let infoSceneIdx = -1;
-            let destSceneIdx = 0;
-            if (typeof sceneList !== "undefined" && sceneList.length > 0) {
-                for (let i = 0; i < sceneList.length; i++) {
-                    if (sceneList[i] && sceneList[i].information && sceneList[i].information !== "destination") {
-                        infoSceneIdx = i;
-                        break;
-                    }
-                }
-            }
+            scrollId = true;
 
             const scenesToRender = [
-                // 画面0: スクロールON（小行先16px + 下部スクロール）
-                { scrollIdVal: true, scrollNormalVal: oldScrollNormal, sceneIdx: destSceneIdx },
-                // 画面1: 通常固定表示（大行先32px + 種別）
-                { scrollIdVal: false, scrollNormalVal: false, sceneIdx: destSceneIdx }
+                { scrollIdVal: true, infoMode: "destination", langVal: "ja" },
+                { scrollIdVal: false, infoMode: "destination", langVal: "ja" }
             ];
 
-            // 次駅/案内表示がある場合は画面2（インデックス2）として追加
-            if (infoSceneIdx !== -1) {
-                scenesToRender.push({ scrollIdVal: true, scrollNormalVal: oldScrollNormal, sceneIdx: infoSceneIdx });
+            if (typeof informationId !== "undefined" && informationId !== null) {
+                scenesToRender.push({ scrollIdVal: true, infoMode: "information", langVal: "ja" });
             }
 
             sceneCount = scenesToRender.length;
             const sceneSize = 8 * 16 * hw;
             sceneData = new Uint8Array(sceneCount * sceneSize);
 
-            const oldScene = typeof scene !== "undefined" ? scene : 0;
-            const oldTypeScene = typeof typeScene !== "undefined" ? typeScene : 0;
+            const oldInfoMode = typeof informationMode !== "undefined" ? informationMode : null;
+            const oldLang = typeof lang !== "undefined" ? lang : null;
 
             try {
                 let offset = 0;
                 for (let i = 0; i < sceneCount; i++) {
                     const spec = scenesToRender[i];
                     scrollId = spec.scrollIdVal;
-                    config.scroll_normal = spec.scrollNormalVal;
+                    informationMode = spec.infoMode;
+                    lang = spec.langVal;
 
-                    if (typeof sceneList !== "undefined" && sceneList.length > 0) {
-                        scene = spec.sceneIdx % sceneList.length;
-                    }
-                    if (typeof typeSceneList !== "undefined" && typeSceneList.length > 0) {
-                        typeScene = 0;
-                    }
-
-                    // 描画キャンバスとマトリクスを最新のシーン設定で更新
-                    applyScene();
-                    applyTypeScene();
+                    // スクロールなし固定表示シーン(scrollIdVal: false)では行先を大きいサイズ(32px)で描画
+                    config.scroll_normal = spec.scrollIdVal ? oldScrollNormal : false;
 
                     const matrix = createDisplayMatrix();
                     const frame = createESP32Frame(matrix, hw, margin);
@@ -841,11 +811,16 @@ function createESP32Packet() {
                     offset += sceneSize;
                 }
             } finally {
-                if (typeof scene !== "undefined") scene = oldScene;
-                if (typeof typeScene !== "undefined") typeScene = oldTypeScene;
+                if (typeof informationMode !== "undefined") informationMode = oldInfoMode;
+                if (typeof lang !== "undefined") lang = oldLang;
             }
         } else {
-            // --- 通常車両およびスクロールOFF時の特殊車両 ---
+            // --- 通常車両 (およびスクロールOFF時の全車両) ---
+            // メイン表示シーン群（大行先・次駅表示など）を作成するため、
+            // 明示的に scrollId = false, config.scroll_normal = false に設定して全シーンを構築
+            scrollId = false;
+            config.scroll_normal = false;
+
             buildSceneList();
             buildTypeSceneList();
 
