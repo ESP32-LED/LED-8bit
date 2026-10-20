@@ -4,10 +4,10 @@
 
     "hasType": true,
     "hasDestination": true,
-    "hasInformation": true,
+    "hasInformation": false,
     "hasInformation2": false,
     "hasLine": false,
-    "hasNext": true,
+    "hasNext": false,
     "hasScroll": false,
     "scrollLabel": "",
     "hasCarNumber": true,
