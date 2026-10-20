@@ -832,6 +832,7 @@ function isTypeFullScreen(type) {
         hasNormal = !!typeScroll.view.normal;
         hasFull = !!typeScroll.view.full;
     }
+    mobileLog(hasNormal, hasFull);
 
     if(hasFull && !hasNormal){
         return true;
