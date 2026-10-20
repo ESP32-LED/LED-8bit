@@ -117,6 +117,7 @@ window.initVehicles = initVehicles;
 window.vehiclesReady = initVehicles();
 
 let prefectureData = [];
+let companyData = [];
 
 async function loadPrefectureData() {
     const response = await fetch("data/prefectures.json");
@@ -140,12 +141,35 @@ async function loadPrefectureData() {
     }
 }
 
+async function loadCompanyData() {
+    const response = await fetch("data/companies.json");
+
+    mobileLog("HTTPステータス:", response.status);
+    mobileLog("取得URL:", response.url);
+
+    const text = await response.text();
+    mobileLog("取得内容:", text);
+
+    if (!response.ok) {
+        throw new Error(`JSON取得失敗: HTTP ${response.status}`);
+    }
+
+    try {
+        const data = JSON.parse(text);
+        companyData = data.companies;
+    } catch (error) {
+        mobileLog("JSON解析エラー:", error);
+        throw error;
+    }
+}
+
 // 車両選択方法を変更
 vehicleSelectMethod.addEventListener("change", async () => {
     if (vehicleSelectMethod.value === "grid") {
         vehicleSelect.hidden = true;
         mapElement.hidden = false;
         prefectureList.hidden = true;
+        companyList.hidden = true;
 
         await window.vehiclesReady;
         await loadRailwayLines();
@@ -160,11 +184,12 @@ vehicleSelectMethod.addEventListener("change", async () => {
         mapElement.hidden = true;
         vehicleSelect.hidden = false;
         prefectureList.hidden = true;
-
-    } else {
+        companyList.hidden = true;
+    } else if (vehicleSelectMethod.value === "prefecture") {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
+        companyList.hidden = true;
 
         await loadPrefectureData();
 
@@ -216,6 +241,63 @@ vehicleSelectMethod.addEventListener("change", async () => {
                 });
         
                 prefectureGroupContainer.appendChild(button);
+            });
+        });
+    } else {
+        mapElement.hidden = true;
+        vehicleSelect.hidden = true;
+        prefectureList.hidden = false;
+        companyList.hidden = true;
+        await loadCompanyData();
+
+        companyList.replaceChildren();
+      
+        companyData.forEach(items => {
+            const companyHeader = document.createElement("div");
+            companyHeader.className = "companyGroupHeader";
+            companyHeader.textContent = "▸ " + items.name;
+        
+            const companyGroupContainer = document.createElement("div");
+            companyGroupContainer.className = "companyGroupButtons";
+            companyGroupContainer.hidden = true;
+        
+            companyHeader.addEventListener("click", () => {
+                companyGroupContainer.hidden = !companyGroupContainer.hidden;
+                companyHeader.textContent =
+                    (companyGroupContainer.hidden ? "▸ " : "▾ ") + items.name;
+            });
+        
+            companyList.append(companyHeader, companyGroupContainer);
+        
+            (items.vehicles || []).forEach(vehicleName => {
+                const vehicle = vehicles.find(
+                    vehicle => vehicle.name === vehicleName
+                );
+        
+                if (!vehicle) return;
+        
+                const button = document.createElement("button");
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+        
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+        
+                const span = document.createElement("span");
+                span.textContent = vehicle.name || vehicle.id || "車両";
+        
+                button.append(iconContainer, span);
+        
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+        
+                companyGroupContainer.appendChild(button);
             });
         });
     }

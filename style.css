@@ -152,6 +152,84 @@ button:focus-visible {
     display: none;
 }
 
+#companyList {
+   padding: 10px;
+   margin-bottom: 10px;
+   display: grid;
+   grid-template-columns: repeat(4, 1fr);
+   gap: 8px;
+   background: transparent;
+   border-radius: 12px;
+   border: 2px solid var(--border);
+}
+
+
+#companyList[hidden] {
+   display:none!important;
+}
+
+
+.companyGroupHeader {
+   padding: 11.5px;
+   margin-top: 8px;
+   margin-bottom: 4px;
+   font-weight: bold;
+   background: rgb(227, 225, 225);
+   color: var(--text);
+   border-radius: 6px;
+   cursor: pointer;
+   user-select: none;
+   font-family: var(--ui-font);
+   font-size: 18px;
+   transition: 0.05s;
+}
+
+
+.companyGroupHeader:hover {
+   background: #e9e8e8;
+}
+
+
+.companyGroupHeader:active {
+   transform: scale(0.96);
+}
+
+
+.companyGroupButtons {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 8px;
+}
+
+
+.companyGroupButtons button {
+   display: flex;
+   align-items: center;
+   justify-content: flex-start;
+   text-align: left;
+}
+
+
+.companyGroupButtons .vehicleIcons {
+   display: grid;
+   grid-template-columns: repeat(6,1fr);
+   gap: 4px;
+   flex-shrink: 0;
+}
+
+
+.companyGroupButtons .vehicleIcon {
+   width: 28px;
+   height: 28px;
+   object-fit: contain;
+}
+
+
+.companyGroupButtons[hidden] {
+   display: none;
+}
+
+
 body {
     margin: 0;
     height: 100%;
@@ -974,6 +1052,16 @@ input[type="number"]::-webkit-outer-spin-button {
     }
     
     .prefectureGroupButtons {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    #companyList {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 8px;
+    }
+    
+    .companyGroupButtons {
         grid-template-columns: repeat(1, 1fr);
     }
 

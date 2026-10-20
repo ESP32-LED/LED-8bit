@@ -1,0 +1,9 @@
+{
+    "companies": {
+        "id": 1,
+        "name": "JR北海道",
+        "vehicles": [
+            "H100形"
+        ]
+    }
+}
