@@ -69,8 +69,10 @@ function drawType(type, matrix) {
         }
     }
     if (isTypeFullScreen(type)) {
+        mobileLog("a");
         view = "full";
     }
+    mobileLog(isTypeFullScreen(type));
 
     let data = null;
     
