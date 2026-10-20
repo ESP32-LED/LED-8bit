@@ -119,48 +119,34 @@ window.vehiclesReady = initVehicles();
 let prefectureData = [];
 let companyData = [];
 
-async function loadPrefectureData() {
-    const response = await fetch("data/prefectures.json");
-
-    mobileLog("HTTPステータス:", response.status);
-    mobileLog("取得URL:", response.url);
-
-    const text = await response.text();
-    mobileLog("取得内容:", text);
+async function loadJsonData(url, key) {
+    const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(`JSON取得失敗: HTTP ${response.status}`);
+        throw new Error(`JSON取得失敗: HTTP ${response.status} (${url})`);
     }
 
-    try {
-        const data = JSON.parse(text);
-        prefectureData = data.prefectures;
-    } catch (error) {
-        mobileLog("JSON解析エラー:", error);
-        throw error;
+    const data = await response.json();
+
+    if (!Array.isArray(data[key])) {
+        throw new Error(`${url}: ${key} が配列ではありません`);
     }
+
+    return data[key];
+}
+
+async function loadPrefectureData() {
+    prefectureData = await loadJsonData(
+        "data/prefectures.json",
+        "prefectures"
+    );
 }
 
 async function loadCompanyData() {
-    const response = await fetch("data/companies.json");
-
-    mobileLog("HTTPステータス:", response.status);
-    mobileLog("取得URL:", response.url);
-
-    const text = await response.text();
-    mobileLog("取得内容:", text);
-
-    if (!response.ok) {
-        throw new Error(`JSON取得失敗: HTTP ${response.status}`);
-    }
-
-    try {
-        const data = JSON.parse(text);
-        companyData = data.companies;
-    } catch (error) {
-        mobileLog("JSON解析エラー:", error);
-        throw error;
-    }
+    companyData = await loadJsonData(
+        "data/companies.json",
+        "companies"
+    );
 }
 
 // 車両選択方法を変更
