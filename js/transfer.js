@@ -19,8 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 15; // 停車駅スクロールのスピード：15
-const transferSpecialScrollSpeed = 13; // 特殊スクロールのスピード：13
+const transferScrollSpeed = 15; // 停車駅スクロールのスピード
+const transferSpecialScrollSpeed = 13; // 特殊スクロールのスピード
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -704,11 +704,10 @@ function createESP32Packet() {
     if (scrollActive) scrollId = true;
 
     try {
-        // 特殊スクロール判定：scroll_normal が true でない車両を「特殊スクロール車両」とする
-        const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
+        // 【重要修正】特殊スクロール判定：config(2) のように config.scroll_normal === true の車両が「特殊スクロール」です。
+        const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
 
         if (isSpecialScroll && scrollActive) {
-            // --- 特殊スクロール車両用パケット生成 ---
             scrollId = null;
             buildSceneList();
             const staticScenes = [...sceneList];
@@ -738,11 +737,11 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let offset = 0;
 
-            // 1. 静止シーンを配置（単体表示用）
-            for (let i = 0; i < staticScenes.length && (i < totalSceneCount); i++) {
+            // 1. スクロールシーン（スクロール用背景）を先頭に設定
+            for (let i = 0; i < scrollScenes.length && (i < totalSceneCount); i++) {
                 scene = i;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
-                scrollId = null;
+                scrollId = true;
                 applyScene();
                 applyTypeScene();
                 const matrix = createDisplayMatrix();
@@ -751,11 +750,11 @@ function createESP32Packet() {
                 offset += sceneSize;
             }
 
-            // 2. スクロールシーンを配置（スクロール中の背景用）
-            for (let i = 0; i < scrollScenes.length && (staticScenes.length + i < totalSceneCount); i++) {
+            // 2. 静止画面用シーン群（案内・号車などの全切り替え）を後ろに配置
+            for (let i = 0; i < staticScenes.length && (scrollScenes.length + i < totalSceneCount); i++) {
                 scene = i;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
-                scrollId = true;
+                scrollId = null;
                 applyScene();
                 applyTypeScene();
                 const matrix = createDisplayMatrix();
@@ -772,7 +771,6 @@ function createESP32Packet() {
             return packet;
         }
 
-        // --- 通常停車駅スクロール車両用パケット生成 ---
         buildSceneList();
         buildTypeSceneList();
 
@@ -821,7 +819,9 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff);
+        const speedVal = isSpecialScroll ? transferSpecialScrollSpeed : transferScrollSpeed;
+
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -958,10 +958,11 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     header[0] = 0xaa;
 
+    // 【修正】config.scroll_normal === true の場合に特殊スクロールフラグ(0x80)を付与
     let slideModeVal = getSlideMode();
-    const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal !== true;
+    const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
     if (isSpecialScroll) {
-        slideModeVal |= 0x80; // 特殊スクロール識別フラグ
+        slideModeVal |= 0x80;
     }
 
     header[1] = slideModeVal;
