@@ -19,8 +19,8 @@ const ESP32_TYPE_DESTINATION_SCROLL_COUNT = 4;
 const ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE = 8;
 const ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE = 16;
 
-const transferScrollSpeed = 15; // 停車駅スクロールのスピード
-const transferSpecialScrollSpeed = 13; // 特殊スクロールのスピード
+const transferScrollSpeed = 15;
+const transferSpecialScrollSpeed = 13;
 const transferTypeDestinationScrollSpeed = 14;
 
 function compressLZ4(input) {
@@ -707,15 +707,9 @@ function createESP32Packet() {
         const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
 
         if (isSpecialScroll && scrollActive) {
-            // スクロール用背景シーン群（案内・号車・英語など）を取得
             scrollId = true;
             buildSceneList();
             const scrollScenes = [...sceneList];
-
-            // 種別＋行先単体（静止画面用）シーンを取得
-            scrollId = null;
-            buildSceneList();
-            const staticScenes = [...sceneList];
 
             buildTypeSceneList();
 
@@ -731,30 +725,29 @@ function createESP32Packet() {
             if (config.hasNextFullScreen) areaLeft = 0;
             let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-            // シーン配置：0〜(N-2) にスクロール中切り替え用背景、最後の1つ(N-1)に「種別＋行先単体表示」を配置
-            const scrollSceneCount = Math.min(5, scrollScenes.length);
+            const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, scrollScenes.length);
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
             const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff);
 
             const sceneSize = 8 * 16 * hw;
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
-            let offset = 0;
+            let writeOffset = 0;
 
-            // 1. スクロール中に背景として切り替えるシーン（案内・英語等）を配置
-            for (let i = 0; i < scrollSceneCount && i < totalSceneCount - 1; i++) {
-                scene = i;
+            // 1. スクロール中に背景として切り替えるシーン（案内・英語等）を正確に書き込み
+            for (let i = 0; i < totalSceneCount - 1; i++) {
+                scene = i % scrollScenes.length;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
                 scrollId = true;
                 applyScene();
                 applyTypeScene();
                 const matrix = createDisplayMatrix();
                 const frame = createESP32Frame(matrix, hw, margin);
-                allSceneData.set(frameToUint8Array(frame, hw), offset);
-                offset += sceneSize;
+                allSceneData.set(frameToUint8Array(frame, hw), writeOffset);
+                writeOffset += sceneSize;
             }
 
-            // 2. スクロール終了後に単体で表示する「種別＋行先単体」シーンを末尾に1つ配置
+            // 2. スクロール終了後に単体表示する「種別＋行先単体」シーンを末尾(totalSceneCount - 1)へ書き込み
             scene = 0;
             typeScene = 0;
             scrollId = null;
@@ -762,11 +755,13 @@ function createESP32Packet() {
             applyTypeScene();
             const matrix = createDisplayMatrix();
             const frame = createESP32Frame(matrix, hw, margin);
-            allSceneData.set(frameToUint8Array(frame, hw), offset);
+            allSceneData.set(frameToUint8Array(frame, hw), writeOffset);
 
             const packet = new Uint8Array(header.length + scrollData.sbuf.length + allSceneData.length);
             packet.set(header, 0);
-            packet.set(scrollData.sbuf, header.length);
+            if (scrollData.sbuf.length > 0) {
+                packet.set(scrollData.sbuf, header.length);
+            }
             packet.set(allSceneData, header.length + scrollData.sbuf.length);
 
             return packet;
@@ -790,6 +785,7 @@ function createESP32Packet() {
             rawSceneCount = 1;
         }
 
+        // 大画面・6画面対応のため正確にESP32_MAX_SCENES(6)までに固定
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
         const hw = getHardwareWidth();
         const pw = Number(config.ledWidth);
@@ -827,7 +823,9 @@ function createESP32Packet() {
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
         packet.set(header, 0);
-        packet.set(scrollData.sbuf, header.length);
+        if (scrollData.sbuf.length > 0) {
+            packet.set(scrollData.sbuf, header.length);
+        }
         packet.set(sceneData, header.length + scrollData.sbuf.length);
 
         return packet;
