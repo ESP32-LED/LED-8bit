@@ -929,7 +929,7 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
 
 function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, slideMode) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
-    let times;
+    let times = [];
 
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -939,28 +939,32 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, speed, xOff, sli
         const infoTime = getNumberValue("infoTime", 3) * 1000;
         const carNumberTime = getNumberValue("carNumberTime", 3) * 1000;
 
-        times = sceneList.slice(0, ESP32_MAX_SCENES).map((currentScene) => {
-            if (
-                currentScene.information === "carNumber" ||
-                currentScene.information === "carNumber_normal" ||
-                currentScene.information === "carNumber_destination"
-            ) {
-                return carNumberTime;
+        for (let i = 0; i < ESP32_MAX_SCENES; i++) {
+            let t = defaultInterval;
+            if (i < sceneCount && typeof sceneList !== "undefined" && sceneList.length > 0) {
+                const currentScene = sceneList[i % sceneList.length];
+                if (currentScene) {
+                    if (
+                        currentScene.information === "carNumber" ||
+                        currentScene.information === "carNumber_normal" ||
+                        currentScene.information === "carNumber_destination"
+                    ) {
+                        t = carNumberTime;
+                    } else if (
+                        currentScene.information === "information" ||
+                        currentScene.information === "next" ||
+                        currentScene.information === "next_ja" ||
+                        currentScene.information === "next_en"
+                    ) {
+                        t = infoTime;
+                    } else if (currentScene.information === "destination") {
+                        if (currentScene.lang === "ja") t = jaTime;
+                        else if (currentScene.lang === "en") t = enTime;
+                    }
+                }
             }
-            if (
-                currentScene.information === "information" ||
-                currentScene.information === "next" ||
-                currentScene.information === "next_ja" ||
-                currentScene.information === "next_en"
-            ) {
-                return infoTime;
-            }
-            if (currentScene.information === "destination") {
-                if (currentScene.lang === "ja") return jaTime;
-                if (currentScene.lang === "en") return enTime;
-            }
-            return defaultInterval;
-        });
+            times.push(t);
+        }
     } else {
         times = Array(6).fill(defaultInterval);
     }
