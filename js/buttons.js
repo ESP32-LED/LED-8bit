@@ -47,6 +47,10 @@ function createTypeButtons() {
                         item.view?.normal?.en?.name ??
                         item.view?.full?.ja?.name ??
                         item.view?.full?.en?.name ??
+                        item.view?.normal2?.ja?.name ??
+                        item.view?.normal2?.en?.name ??
+                        item.view?.normal3?.ja?.name ??
+                        item.view?.normal3?.en?.name ??
                         item.name ??
                         "no-name";
 
@@ -185,6 +189,10 @@ function createTypeButtons() {
                     item.view?.normal?.en?.name ??
                     item.view?.full?.ja?.name ??
                     item.view?.full?.en?.name ??
+                    item.view?.normal2?.ja?.name ??
+                    item.view?.normal2?.en?.name ??
+                    item.view?.normal3?.ja?.name ??
+                    item.view?.normal3?.en?.name ??
                     item.name ??
                     "no-name";
 
@@ -308,6 +316,10 @@ function createTypeButtons() {
                 item.view?.normal?.en?.name ??
                 item.view?.full?.ja?.name ??
                 item.view?.full?.en?.name ??
+                item.view?.normal2?.ja?.name ??
+                item.view?.normal2?.en?.name ??
+                item.view?.normal3?.ja?.name ??
+                item.view?.normal3?.en?.name ??
                 item.name ??
                 "no-name";
             btn.textContent = label;
@@ -637,6 +649,10 @@ function createDestinationButtons() {
                         dest.view?.small?.en?.name ??
                         dest.view?.full?.ja?.name ??
                         dest.view?.full?.en?.name ??
+                        dest.view?.normal2?.ja?.name ??
+                        dest.view?.normal2?.en?.name ??
+                        dest.view?.normal3?.ja?.name ??
+                        dest.view?.normal3?.en?.name ??
                         dest.name ??
                         "no-name";
 
@@ -779,6 +795,10 @@ function createDestinationButtons() {
                     dest.view?.small?.en?.name ??
                     dest.view?.full?.ja?.name ??
                     dest.view?.full?.en?.name ??
+                    dest.view?.normal2?.ja?.name ??
+                    dest.view?.normal2?.en?.name ??
+                    dest.view?.normal3?.ja?.name ??
+                    dest.view?.normal3?.en?.name ??
                     dest.name ??
                     "no-name";
 
@@ -906,6 +926,10 @@ function createDestinationButtons() {
                 dest.view?.small?.en?.name ??
                 dest.view?.full?.ja?.name ??
                 dest.view?.full?.en?.name ??
+                dest.view?.normal2?.ja?.name ??
+                dest.view?.normal2?.en?.name ??
+                dest.view?.normal3?.ja?.name ??
+                dest.view?.normal3?.en?.name ??
                 dest.name ??
                 "no-name";
             btn.textContent = label;
@@ -1767,6 +1791,8 @@ function getName(items, itemId) {
     const item = getItem(items, itemId);
     return (
         item.view?.normal?.ja?.name ??
+        item.view?.normal2?.ja?.name ??
+        item.view?.normal3?.ja?.name ??
         item.view?.small?.ja?.name ??
         item.view?.full?.ja?.name ??
         item.view?.small1?.ja?.name ??
@@ -1860,9 +1886,6 @@ startScrollBtn.addEventListener("click", () => {
     }
     if (config.scrollSpeed) {
         scrollSpeed = config.scrollSpeed;
-    }
-    if (config.transerScrollSpeed) {
-        transferScrollSpeed = config.transferScrollSpeed;
     }
     if (!config.scroll_normal) {
         const type = getItem ("type", typeId);
