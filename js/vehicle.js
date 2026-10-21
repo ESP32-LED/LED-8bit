@@ -288,3 +288,89 @@ vehicleSelectMethod.addEventListener("change", async () => {
         });
     }
 });
+
+// 車両名・都道府県名で検索
+const vehiclePrefectureSearchInput = document.getElementById("vehiclePrefectureSearchInput");
+const vehiclePrefectureSearchResults = document.getElementById("vehiclePrefectureSearchResults");
+
+if (vehiclePrefectureSearchInput && vehiclePrefectureSearchResults) {
+    vehiclePrefectureSearchInput.addEventListener("input", async () => {
+        const query = vehiclePrefectureSearchInput.value.trim().toLowerCase();
+
+        vehiclePrefectureSearchResults.replaceChildren();
+
+        if (!query) return;
+
+        // 車両データの読み込み完了を待つ
+        await window.vehiclesReady;
+
+        // 都道府県データを必要なときに読み込む
+        if (prefectureData.length === 0) {
+            try {
+                await loadPrefectureData();
+            } catch (error) {
+                console.error("都道府県データの読み込み失敗:", error);
+            }
+        }
+
+        // 車両名で検索
+        const matchedVehicles = vehicles.filter(vehicle =>
+            (vehicle.name || "").toLowerCase().includes(query) ||
+            (vehicle.id || "").toLowerCase().includes(query)
+        );
+
+        if (matchedVehicles.length > 0) {
+            const heading = document.createElement("h3");
+            heading.textContent = "車両";
+            vehiclePrefectureSearchResults.appendChild(heading);
+
+            matchedVehicles.forEach(vehicle => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = vehicle.name || vehicle.id;
+
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+
+                vehiclePrefectureSearchResults.appendChild(button);
+            });
+        }
+
+        // 都道府県名で検索
+        const matchedPrefectures = prefectureData.filter(prefecture =>
+            (prefecture.name || "").toLowerCase().includes(query)
+        );
+
+        matchedPrefectures.forEach(prefecture => {
+            const heading = document.createElement("h3");
+            heading.textContent = prefecture.name;
+            vehiclePrefectureSearchResults.appendChild(heading);
+
+            // 都道府県に登録されている車両を表示
+            (prefecture.vehicles || []).forEach(vehicleName => {
+                const vehicle = vehicles.find(
+                    item => item.name === vehicleName
+                );
+
+                if (!vehicle) return;
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = vehicle.name || vehicle.id;
+
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+
+                vehiclePrefectureSearchResults.appendChild(button);
+            });
+        });
+
+        if (matchedVehicles.length === 0 && matchedPrefectures.length === 0) {
+            const message = document.createElement("p");
+            message.textContent = "該当する車両・都道府県がありません。";
+            vehiclePrefectureSearchResults.appendChild(message);
+        }
+    });
+}
