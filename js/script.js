@@ -423,7 +423,7 @@ async function startVehicle() {
             information2Label.textContent = "案内2:" + information2Name;
         }
         if (config.hasNext) {
-            const nextCategory = getCategory("nextMode");
+            const nextCategory = getCategory("next");
             do {
                 if (config.nextModeDistinction) {
                     const randomIndexGroups = Math.floor(
