@@ -1,0 +1,53 @@
+{
+    "name": "相鉄12000系・10000系FCLED",
+
+    "explanation": "a",
+
+    "hasType": true,
+    "hasDestination": true,
+    "hasInformation": true,
+    "hasInformation2": true,
+    "hasLine": false,
+    "hasNext": true,
+    "hasScroll": false,
+    "hasCarNumber": false,
+    "hasCarNumberFull": false,
+    "hasCarNumberSmall": false,
+    "hasCarNumberNormal": false,
+    "carNumber": null,
+    "informationPosition": "normal",
+    "destinationPosition": "normal",
+
+    "destinationDistinction": true,
+    "nextModeDistinction": true,
+    "typeDistinction": true,
+    "informationDistinction": true,
+    "information2Distinction": true,
+    "lineDistinction": false,
+    "carNumberDistinction": false,
+
+    "typeSwitching": true,
+
+    "sceneInterval": 3000,
+    "languageSwitching": false,
+    "carNumberLanguageSwitching": false,
+    "destinationLanguageSwitching": false,
+    "informationLanguageSwitching": false,
+    "ledWidth": 144,
+    "ledHeight": 32,
+    "pixelSize": 8.5,
+    "ledSize": 6.5,
+    "ledGap": 2,
+
+    "enAhead": false,
+    "informationAhead": false,
+
+    "setSwitchingTime": false,
+
+    "next_normal": false,
+    "nextPosition": 16,
+
+    "hasReferenceSite": false,
+
+    "ledShape": "circle"
+}
