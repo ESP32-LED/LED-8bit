@@ -693,7 +693,7 @@ function getTypeWidth(type, used, view) {
         }
     }
 
-    let currentView = normal;
+    let currentView = "normal";
     if (view) {
         currentView = view;
     }
