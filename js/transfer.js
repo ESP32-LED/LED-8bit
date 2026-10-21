@@ -682,7 +682,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     return packet;
 }
 
-// アイテムに英語表示データ(en)が存在するか判定
 function hasEnglishView(item) {
     if (!item) return false;
     if (item.view) {
@@ -692,6 +691,28 @@ function hasEnglishView(item) {
     }
     if (item.en || item.nameEn || item.textEn) return true;
     return false;
+}
+
+// 言語設定を強制変更し、Webアプリのシーン・種別リストを再構築する関数
+function setGlobalLanguageAndRebuild(targetLang) {
+    if (typeof lang !== "undefined") lang = targetLang;
+    if (typeof typeLang !== "undefined") typeLang = targetLang;
+    if (typeof destLang !== "undefined") destLang = targetLang;
+    if (typeof currentLang !== "undefined") currentLang = targetLang;
+
+    if (typeof selectLang === "function") {
+        try { selectLang(targetLang); } catch(e){}
+    }
+    if (typeof setLanguage === "function") {
+        try { setLanguage(targetLang); } catch(e){}
+    }
+
+    if (typeof buildSceneList === "function") {
+        try { buildSceneList(); } catch(e){}
+    }
+    if (typeof buildTypeSceneList === "function") {
+        try { buildTypeSceneList(); } catch(e){}
+    }
 }
 
 function createESP32Packet() {
@@ -726,8 +747,7 @@ function createESP32Packet() {
         // 1. 特殊スクロール車両で、かつスクロールがONの場合
         if (isSpecialScroll && scrollActive) {
             scrollId = true;
-            buildSceneList();
-            buildTypeSceneList();
+            setGlobalLanguageAndRebuild("ja");
             const scrollScenes = [...sceneList];
 
             const hw = getHardwareWidth();
@@ -756,19 +776,14 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // ① スクロール実行中に背景として切り替えるシーン
+            // ① スクロール実行中に背景として切り替えるシーン（ja/enを切り替えて描画）
             for (let i = 0; i < totalSceneCount - 1; i++) {
-                scene = scrollScenes.length > 0 ? i % scrollScenes.length : 0;
-                typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
-                scrollId = true;
+                const targetLang = (i % 2 === 1 && (hasTypeEn || hasDestEn)) ? "en" : "ja";
+                setGlobalLanguageAndRebuild(targetLang);
 
-                if (i % 2 === 1 && (hasTypeEn || hasDestEn)) {
-                    if (typeof lang !== "undefined") lang = "en";
-                    if (typeof typeLang !== "undefined") typeLang = "en";
-                } else {
-                    if (typeof lang !== "undefined") lang = "ja";
-                    if (typeof typeLang !== "undefined") typeLang = "ja";
-                }
+                scene = sceneList && sceneList.length > 0 ? i % sceneList.length : 0;
+                typeScene = typeSceneList && typeSceneList.length > 0 ? i % typeSceneList.length : 0;
+                scrollId = true;
 
                 applyScene();
                 applyTypeScene();
@@ -781,8 +796,7 @@ function createESP32Packet() {
             // ② スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾へ書き込み
             scrollId = null;
             if (typeof nextId !== "undefined") nextId = null;
-            buildSceneList();
-            buildTypeSceneList();
+            setGlobalLanguageAndRebuild("ja");
             scene = 0;
             typeScene = 0;
             applyScene();
@@ -808,13 +822,11 @@ function createESP32Packet() {
             scrollId = null;
         }
 
-        buildSceneList();
-        buildTypeSceneList();
+        setGlobalLanguageAndRebuild("ja");
 
         let sCount = sceneList ? sceneList.length : 0;
         let tCount = typeSceneList ? typeSceneList.length : 0;
 
-        // 画面数（コマ数）の適正計算
         let rawSceneCount = 1;
         if (sCount > 0 && tCount > 0) {
             rawSceneCount = lcm(sCount, tCount);
@@ -824,7 +836,6 @@ function createESP32Packet() {
             rawSceneCount = tCount;
         }
 
-        // 種別や行先に英語が存在するのに1コマしか計算されなかった場合の補正（最低2コマ化）
         if ((hasTypeEn || hasDestEn) && rawSceneCount <= 1) {
             rawSceneCount = 2;
         }
@@ -883,6 +894,7 @@ function createESP32Packet() {
     } finally {
         if (typeof scrollId !== "undefined") scrollId = oldScrollId;
         if (typeof nextId !== "undefined") nextId = oldNextId;
+        setGlobalLanguageAndRebuild("ja");
     }
 }
 
@@ -938,7 +950,7 @@ function frameToUint8Array(frame, hw) {
     return sceneBuf;
 }
 
-function createAllESP32Scenes(sceneCount, hw, margin, enableLangFallback = false) {
+function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) {
     const sceneSize = 8 * 16 * hw;
     const allData = new Uint8Array(sceneCount * sceneSize);
     let offset = 0;
@@ -948,18 +960,14 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangFallback = false
 
     try {
         for (let i = 0; i < sceneCount; i++) {
+            // コマごとに言語(ja/en)を切替＆シーンリストを再読み込み
+            if (enableLangToggle) {
+                const targetLang = (i % 2 === 1) ? "en" : "ja";
+                setGlobalLanguageAndRebuild(targetLang);
+            }
+
             scene = sceneList && sceneList.length > 0 ? i % sceneList.length : 0;
             typeScene = typeSceneList && typeSceneList.length > 0 ? i % typeSceneList.length : 0;
-
-            if (enableLangFallback) {
-                if (i % 2 === 1) {
-                    if (typeof lang !== "undefined") lang = "en";
-                    if (typeof typeLang !== "undefined") typeLang = "en";
-                } else {
-                    if (typeof lang !== "undefined") lang = "ja";
-                    if (typeof typeLang !== "undefined") typeLang = "ja";
-                }
-            }
 
             applyScene();
             applyTypeScene();
