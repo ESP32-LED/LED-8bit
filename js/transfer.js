@@ -724,7 +724,9 @@ function createESP32Packet() {
             if (config.hasNextFullScreen) areaLeft = 0;
             let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-            const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, scrollScenes.length);
+            // 背景シーン数と種別画面数（ja/en等）の最小公倍数でスクロール中の背景コマ数を計算
+            const rawScrollCount = lcm(scrollScenes.length, typeSceneList.length);
+            const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, rawScrollCount > 0 ? rawScrollCount : 1);
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
             const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true);
@@ -733,9 +735,9 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // ① スクロール実行中に背景として切り替えるシーン（案内・英語・次駅等）
+            // ① スクロール実行中に背景として切り替えるシーン（案内・英語・次駅・種別ja/en等）
             for (let i = 0; i < totalSceneCount - 1; i++) {
-                scene = i % scrollScenes.length;
+                scene = scrollScenes.length > 0 ? i % scrollScenes.length : 0;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
                 scrollId = true;
                 applyScene();
@@ -779,20 +781,32 @@ function createESP32Packet() {
         buildSceneList();
         buildTypeSceneList();
 
-        if (sceneList.length === 0 && typeSceneList.length === 0) return new Uint8Array();
+        const sCount = sceneList.length;
+        const tCount = typeSceneList.length;
+
+        if (sCount === 0 && tCount === 0) return new Uint8Array();
 
         const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
         let typeIsFull = false;
-        if (type && typeof isTypeFullScreen === "function") {
-            typeIsFull = isTypeFullScreen(type);
+        if (type) {
+            if (typeof isTypeFullScreen === "function") {
+                typeIsFull = isTypeFullScreen(type);
+            } else if (type.isFull || type.full || type.isFullScreen) {
+                typeIsFull = true;
+            }
+        }
+        if (sCount === 0 && tCount > 0) {
+            typeIsFull = true;
         }
 
-        const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
-        let rawSceneCount = lcm(sceneList.length, typeCount);
-
-        // 種別FULL時は種別シーン数（ja/en等）を使用
-        if (typeIsFull) {
-            rawSceneCount = typeCount;
+        // 行先シーン数と種別画面数の算出（FULL種別や行先なしの場合も確実に種別の全画面数を確保）
+        let rawSceneCount = 1;
+        if (sCount > 0 && tCount > 0) {
+            rawSceneCount = typeIsFull ? tCount : lcm(sCount, tCount);
+        } else if (tCount > 0) {
+            rawSceneCount = tCount;
+        } else if (sCount > 0) {
+            rawSceneCount = sCount;
         }
 
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
@@ -940,8 +954,15 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
     let typeIsFull = false;
-    if (type && typeof isTypeFullScreen === "function") {
-        typeIsFull = isTypeFullScreen(type);
+    if (type) {
+        if (typeof isTypeFullScreen === "function") {
+            typeIsFull = isTypeFullScreen(type);
+        } else if (type.isFull || type.full || type.isFullScreen) {
+            typeIsFull = true;
+        }
+    }
+    if ((!sceneList || sceneList.length === 0) && typeSceneList && typeSceneList.length > 0) {
+        typeIsFull = true;
     }
 
     header[0] = 0xaa;
@@ -970,6 +991,9 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
             const currentTypeScene = typeSceneList && typeSceneList.length > 0 ? typeSceneList[i % typeSceneList.length] : null;
 
             if (typeIsFull && currentTypeScene) {
+                if (currentTypeScene.lang === "ja") interval = jaTime;
+                else if (currentTypeScene.lang === "en") interval = enTime;
+            } else if (currentTypeScene && currentTypeScene.lang) {
                 if (currentTypeScene.lang === "ja") interval = jaTime;
                 else if (currentTypeScene.lang === "en") interval = enTime;
             } else if (currentScene) {
@@ -1091,6 +1115,7 @@ function gcd(a, b) {
 }
 
 function lcm(a, b) {
-    if (a === 0 || b === 0) return 0;
+    if (a === 0) return b;
+    if (b === 0) return a;
     return Math.abs((a / gcd(a, b)) * b);
 }
