@@ -152,24 +152,32 @@ button:focus-visible {
     display: none;
 }
 
-#vehiclePrefectureSearchArea {
-    margin: 12px 0;
+#vehiclePrefectureSearchArea,
+#vehicleSearchArea,
+#vehicleCompanySearchArea {
+    margin: 12px 0;
 }
 
-##vehiclePrefectureSearchArea[hidden] {
-    display: none!important;
+#vehiclePrefectureSearchArea[hidden],
+#vehicleSearchArea[hidden],
+#vehicleCompanySearchArea[hidden] {
+    display: none !important;
 }
 
-#vehiclePrefectureSearchInput {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
+#vehiclePrefectureSearchInput,
+#vehicleSearchInput,
+#vehicleCompanySearchInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
-#vehiclePrefectureSearchResults {
+#vehiclePrefectureSearchResults,
+#vehicleSearchResults,
+#vehicleCompanySearchResults {
     padding: 10px;
     margin-bottom: 10px;
     display: grid;
@@ -178,38 +186,48 @@ button:focus-visible {
     background: transparent;
 }
 
-#vehiclePrefectureSearchResults h3 {
-    margin: 4px 0 0;
-    font-size: 15px;
+#vehiclePrefectureSearchResults h3,
+#vehicleSearchResults h3,
+#vehicleCompanySearchResults h3 {
+    margin: 4px 0 0;
+    font-size: 15px;
 }
 
-#vehiclePrefectureSearchResults button {
-    width: 100%;
-    padding: 10px 12px;
-    text-align: left;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    color: #222;
-    cursor: pointer;
+#vehiclePrefectureSearchResults button,
+#vehicleSearchResults button,
+#vehicleCompanySearchResults button {
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    text-align: left;
+    gap: 8px;
 }
 
-#vehiclePrefectureSearchResults button:hover {
-    background: #f0f5fa;
+#vehiclePrefectureSearchResults button:hover,
+#vehicleSearchResults button:hover,
+#vehicleCompanySearchResults button:hover {
+    background: #f0f5fa;
 }
 
-#vehiclePrefectureSearchResults .vehicleIcons {
+#vehiclePrefectureSearchResults .vehicleIcons,
+#vehicleSearchResults .vehicleIcons,
+#vehicleCompanySearchResults .vehicleIcons {
     display: grid;
-    grid-template-columns: repeat(6,1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 4px;
     flex-shrink: 0;
 }
 
-#vehiclePrefectureSearchResults .vehicleIcon {
+#vehiclePrefectureSearchResults .vehicleIcon,
+#vehicleSearchResults .vehicleIcon,
+#vehicleCompanySearchResults .vehicleIcon {
     width: 28px;
     height: 28px;
     object-fit: contain;
