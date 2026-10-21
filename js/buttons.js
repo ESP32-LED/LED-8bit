@@ -18,6 +18,9 @@ function createTypeButtons() {
     normalBtn.textContent = "種別なし";
     normalBtn.addEventListener("click", () => {
         setSelected(container, normalBtn);
+        if (typeId === null) {
+            normalBtn.classList.add("selected");
+        }
         typeId = null;
         typeScroll = null;
         const typeLabel = document.getElementById("type");
@@ -41,6 +44,9 @@ function createTypeButtons() {
                 group.items.forEach(item => {
 
                     const btn = document.createElement("button");
+                    if (item.id === typeId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         item.view?.normal?.ja?.name ??
@@ -183,6 +189,9 @@ function createTypeButtons() {
             group.items.forEach(item => {
 
                 const btn = document.createElement("button");
+                if (item.id === typeId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     item.view?.normal?.ja?.name ??
@@ -311,6 +320,9 @@ function createTypeButtons() {
         category?.items.forEach(item => {
 
             const btn = document.createElement("button");
+            if (item.id === typeId) {
+                btn.classList.add("selected");
+            }
             const label =
                 item.view?.normal?.ja?.name ??
                 item.view?.normal?.en?.name ??
@@ -451,6 +463,9 @@ function createCarNumberButtons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (carNumberId === null) {
+            normalBtn.classList.add("selected");
+        }
         carNumberId = null;
         clickTypeBtn = false;
         const carNumberLabel = document.getElementById("carNumber");
@@ -474,6 +489,9 @@ function createCarNumberButtons() {
                 group.items.forEach(item => {
 
                     const btn = document.createElement("button");
+                    if (item.id === carNumberId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         item.view?.normal?.ja?.name ??
@@ -530,6 +548,9 @@ function createCarNumberButtons() {
             group.items.forEach(item => {
 
                 const btn = document.createElement("button");
+                if (item.id === carNumberId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     item.view?.normal?.ja?.name ??
@@ -537,7 +558,7 @@ function createCarNumberButtons() {
                     item.view?.full?.ja?.name ??
                     item.view?.full?.en?.name ??
                     item.name ??
-            "no-name";
+                    "no-name";
 
                 btn.textContent = label;
 
@@ -568,6 +589,9 @@ function createCarNumberButtons() {
         category?.items.forEach(item => {
 
             const btn = document.createElement("button");
+            if (item.id === carNumberId) {
+                btn.classList.add("selected");
+            }
             const label =
                 item.view?.normal?.ja?.name ??
                 item.view?.normal?.en?.name ??
@@ -617,6 +641,9 @@ function createDestinationButtons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (destinationId === null) {
+            normalBtn.classList.add("selected");
+        }
         destinationId = null;
         destinationScroll = null;
         clickTypeBtn = false;
@@ -641,6 +668,9 @@ function createDestinationButtons() {
                 group.items.forEach(dest => {
 
                     const btn = document.createElement("button");
+                    if (dest.id === destinationId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         dest.view?.normal?.ja?.name ??
@@ -787,6 +817,9 @@ function createDestinationButtons() {
             group.items.forEach(dest => {
 
                 const btn = document.createElement("button");
+                if (dest.id === destinationId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     dest.view?.normal?.ja?.name ??
@@ -919,6 +952,9 @@ function createDestinationButtons() {
         category?.items.forEach(dest => {
 
             const btn = document.createElement("button");
+            if (dest.id === destinationId) {
+                btn.classList.add("selected");
+            }
             const label =
                 dest.view?.normal?.ja?.name ??
                 dest.view?.normal?.en?.name ??
@@ -1062,6 +1098,9 @@ function createNextModeButtons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (nextId === null) {
+            normalBtn.classList.add("selected");
+        }
         displayMode = "normal";
         langIndex = 0;
         nextId = null;
@@ -1087,6 +1126,9 @@ function createNextModeButtons() {
                 group.items.forEach(item => {
 
                     const btn = document.createElement("button");
+                    if (item.id === nextId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         item.view?.normal?.ja?.name ??
@@ -1141,6 +1183,9 @@ function createNextModeButtons() {
             group.items.forEach(item => {
 
                 const btn = document.createElement("button");
+                if (item.id === nextId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     item.view?.normal?.ja?.name ??
@@ -1183,6 +1228,9 @@ function createNextModeButtons() {
         category?.items.forEach(item => {
 
             const btn = document.createElement("button");
+            if (item.id === nextId) {
+                btn.classList.add("selected");
+            }
             const label =
                 item.view?.normal?.ja?.name ??
                 item.view?.normal?.en?.name ??
@@ -1238,6 +1286,9 @@ function createInformationButtons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (informationId === null) {
+            normalBtn.classList.add("selected");
+        }
         informationId = null;
         clickTypeBtn = false;
         const informationLabel = document.getElementById("information");
@@ -1261,6 +1312,9 @@ function createInformationButtons() {
                 group.items.forEach(info => {
 
                     const btn = document.createElement("button");
+                    if (info.id === informationId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         info.view?.full?.ja?.name ??
@@ -1319,6 +1373,9 @@ function createInformationButtons() {
             group.items.forEach(info => {
 
                 const btn = document.createElement("button");
+                if (info.id === informationId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     info.view?.full?.ja?.name ??
@@ -1371,6 +1428,9 @@ function createInformationButtons() {
         category?.items.forEach(info => {
 
             const btn = document.createElement("button");
+            if (info.id === informationId) {
+                btn.classList.add("selected");
+            }
             const label =
                 info.view?.full?.ja?.name ??
                 info.view?.full?.en?.name ??
@@ -1434,6 +1494,9 @@ function createInformation2Buttons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (information2Id === null) {
+            normalBtn.classList.add("selected");
+        }
         information2Id = null;
         clickTypeBtn = false;
         const information2Label = document.getElementById("information2");
@@ -1457,6 +1520,9 @@ function createInformation2Buttons() {
                 group.items.forEach(info => {
 
                     const btn = document.createElement("button");
+                    if (info.id === imformation2Id) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         info.view?.full?.ja?.name ??
@@ -1515,6 +1581,9 @@ function createInformation2Buttons() {
             group.items.forEach(info => {
 
                 const btn = document.createElement("button");
+                if (info.id === imformation2Id) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     info.view?.full?.ja?.name ??
@@ -1559,6 +1628,9 @@ function createInformation2Buttons() {
         category?.items.forEach(info => {
 
             const btn = document.createElement("button");
+            if (info.id === imformation2Id) {
+                btn.classList.add("selected");
+            }
             const label =
                 info.view?.full?.ja?.name ??
                 info.view?.full?.en?.name ??
@@ -1614,6 +1686,9 @@ function createLineButtons() {
 
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
+        if (lineId === null) {
+            btn.classList.add("selected");
+        }
         lineId = null;
         clickTypeBtn = false;
         const lineLabel = document.getElementById("line");
@@ -1637,6 +1712,9 @@ function createLineButtons() {
                 group.items.forEach(info => {
 
                     const btn = document.createElement("button");
+                    if (info.id === lineId) {
+                        btn.classList.add("selected");
+                    }
 
                     const label =
                         info.view?.full?.ja?.name ??
@@ -1695,6 +1773,9 @@ function createLineButtons() {
             group.items.forEach(info => {
 
                 const btn = document.createElement("button");
+                if (info.id === lineId) {
+                    btn.classList.add("selected");
+                }
 
                 const label =
                     info.view?.full?.ja?.name ??
@@ -1739,6 +1820,9 @@ function createLineButtons() {
         category?.items.forEach(info => {
 
             const btn = document.createElement("button");
+            if (info.id === lineId) {
+                btn.classList.add("selected");
+            }
             const label =
                 info.view?.full?.ja?.name ??
                 info.view?.full?.en?.name ??

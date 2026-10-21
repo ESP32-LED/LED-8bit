@@ -109,6 +109,113 @@ async function startVehicle() {
         slideTransitionCanvas.width = sizeLed.width;
         slideTransitionCanvas.height = sizeLed.height;
 
+        if (config.hasType) {
+            const typeCategory = getCategory("type");
+            if (config.typeDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * typeCategory.groups.length);
+                const groups = typeCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                typeId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * typeCategory.items.length);
+                typeId = typeCategory.items[randomIndex].id;
+            }
+            const typeLabel = document.getElementById("type");
+            const typeName = getName("type", typeId);
+            typeLabel.textContent = "種別:" + typeName;
+        }
+        if (config.hasDestination) {
+            const destinationCategory = getCategory("destination");
+            if (config.destinationDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * destinationCategory.groups.length);
+                const groups = destinationCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                destinationId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * destinationCategory.items.length);
+                destinationId = destinationCategory.items[randomIndex].id;
+            }
+            const destinationLabel = document.getElementById("destination");
+            const destinationName = getName("destination", destinationId);
+            destinationLabel.textContent = "行先:" + destinationName;
+        }
+        if (config.hasCarNumber) {
+            const carNumberCategory = getCategory("carNumber");
+            if (config.carNumberDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * carNumberCategory.groups.length);
+                const groups = carNumberCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                carNumberId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * carNumberCategory.items.length);
+                carNumberId = carNumberCategory.items[randomIndex].id;
+            }
+            const carNumberLabel = document.getElementById("carNumber");
+            const carNumberName = getName("carNumber", carNumberId);
+            carNumberLabel.textContent = "号車:" + carNumberName;
+        }
+        if (config.hasInformation) {
+            const informationCategory = getCategory("information");
+            if (config.informationDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * informationCategory.groups.length);
+                const groups = informationCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                informationId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * informationCategory.items.length);
+                informationId = informationCategory.items[randomIndex].id;
+            }
+            console.log(informationId);
+            const informationLabel = document.getElementById("information");
+            const informationName = getName("information", informationId);
+            informationLabel.textContent = "案内:" + informationName;
+        }
+        if (config.hasInformation2) {
+            const information2Category = getCategory("information2");
+            if (config.information2Distinction) {
+                const randomIndexGroups = Math.floor(Math.random() * information2Category.groups.length);
+                const groups = information2Category.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                information2Id = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * information2Category.items.length);
+                information2Id = information2Category.items[randomIndex].id;
+            }
+            const information2Label = document.getElementById("information2");
+            const information2Name = getName("information2", information2Id);
+            information2Label.textContent = "案内2:" + information2Name;
+        }
+        if (config.hasNext) {
+            const nextCategory = getCategory("next");
+            if (config.nextModeDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * nextCategory.groups.length);
+                const groups = nextCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                nextId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * nextCategory.items.length);
+                nextId = nextCategory.items[randomIndex].id;
+            }
+            const nextLabel = document.getElementById("nextMode");
+            const nextName = getName("next", nextId);
+            nextLabel.textContent = "次駅:" + nextName;
+        }
+        if (config.hasLine) {
+            const lineCategory = getCategory("line");
+            if (config.lineDistinction) {
+                const randomIndexGroups = Math.floor(Math.random() * lineCategory.groups.length);
+                const groups = lineCategory.groups[randomIndexGroups];
+                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
+                lineId = groups.items[randomIndexItems].id;
+            } else {
+                const randomIndex = Math.floor(Math.random() * lineCategory.items.length);
+                lineId = lineCategory.items[randomIndex].id;
+            }
+            const lineLabel = document.getElementById("line");
+            const lineName = getName("line", lineId);
+            lineLabel.textContent = "路線名:" + lineName;
+        }
+
         resizeLed();
         setupVehicleUI();
         startRenderLoop();
