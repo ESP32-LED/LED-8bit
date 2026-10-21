@@ -166,10 +166,15 @@ button:focus-visible {
 }
 
 #vehiclePrefectureSearchResults {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
     margin-top: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+    background: transparent;
+    border-radius: 12px;
+    border: 2px solid var(--border);
 }
 
 #vehiclePrefectureSearchResults h3 {
