@@ -320,21 +320,24 @@ if (vehiclePrefectureSearchInput && vehiclePrefectureSearchResults) {
         );
 
         if (matchedVehicles.length > 0) {
-            const heading = document.createElement("h3");
-            heading.textContent = "車両";
-            vehiclePrefectureSearchResults.appendChild(heading);
+            
+        // 車両名で検索
+        const matchedVehicles = vehicles.filter(vehicle =>
+            (vehicle.name || "").toLowerCase().includes(query) ||
+            (vehicle.id || "").toLowerCase().includes(query)
+        );
 
-            matchedVehicles.forEach(vehicle => {
-                const vehicle = vehicles.find(
-                    vehicle => vehicle.name === vehicleName
-                );
-        
-                if (!vehicle) return;
-        
+        if (matchedVehicles.length > 0) {
+            const heading = document.createElement("h3");
+            heading.textContent = "車両";
+            vehiclePrefectureSearchResults.appendChild(heading);
+
+            matchedVehicles.forEach(vehicle => {
                 const button = document.createElement("button");
+
                 const iconContainer = document.createElement("div");
                 iconContainer.className = "vehicleIcons";
-        
+
                 (vehicle.icons || []).forEach(icon => {
                     const img = document.createElement("img");
                     img.src = icon;
@@ -342,19 +345,19 @@ if (vehiclePrefectureSearchInput && vehiclePrefectureSearchResults) {
                     img.alt = "";
                     iconContainer.appendChild(img);
                 });
-        
+
                 const span = document.createElement("span");
                 span.textContent = vehicle.name || vehicle.id || "車両";
-        
+
                 button.append(iconContainer, span);
-        
+
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
                 });
 
-                vehiclePrefectureSearchResults.appendChild(button);
-            });
-        }
+                vehiclePrefectureSearchResults.appendChild(button);
+            });
+        }
 
         // 都道府県名で検索
         const matchedPrefectures = prefectureData.filter(prefecture =>
