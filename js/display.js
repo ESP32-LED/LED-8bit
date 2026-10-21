@@ -1241,8 +1241,6 @@ function drawTypeDestinationScroll(state) {
     ctx.restore();
 }
 
-let typeScrollId = null;
-
 function startTypeScroll(lang) {
     const state = lang === "ja"
         ? typeJaScrollState

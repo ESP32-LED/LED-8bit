@@ -8,6 +8,8 @@ let information2Id = null;
 let lineId = null;
 let carNumberId = null;
 let scrollId = null;
+let typeScrollId = null;
+let destinationScrollId = null;
 
 let displayMode = "normal";
 let informationMode = "destination";
