@@ -748,6 +748,16 @@
         "site": "vehicles/so9000/site.json"
     },
     {
+        "id": "so12000",
+        "name": "相鉄12000系・10000系 (FC)",
+        "config": "vehicles/so12000/config.json",
+        "led": "vehicles/so12000/led.json",
+        "icons": [
+            "vehicles/so12000/icons/icon1.png"
+        ],
+        "site": "vehicles/so12000/site.json"
+    },
+    {
         "id": "toei10_300_3color",
         "name": "都営10-300形（1・2次車・3色LED）",
         "config": "vehicles/toei10_300_3color/config.json",
