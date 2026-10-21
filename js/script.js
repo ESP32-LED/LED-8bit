@@ -111,15 +111,32 @@ async function startVehicle() {
 
         if (config.hasType) {
             const typeCategory = getCategory("type");
-            if (config.typeDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * typeCategory.groups.length);
-                const groups = typeCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                typeId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * typeCategory.items.length);
-                typeId = typeCategory.items[randomIndex].id;
-            }
+            do {
+                if (config.typeDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * typeCategory.groups.length
+                    );
+                    const groups = typeCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    typeId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * typeCategory.items.length
+                    );
+                    typeId = typeCategory.items[randomIndex].id;
+                }
+            } while (
+                typeId === "null_type" &&
+                (
+                    config.typeDistinction
+                        ? typeCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_type")
+                        )
+                        : typeCategory.items.some(item => item.id !== "null_type")
+                )
+            );
             if (config.hasTypeScroll) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
