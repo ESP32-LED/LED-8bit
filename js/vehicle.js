@@ -418,3 +418,148 @@ if (vehiclePrefectureSearchInput && vehiclePrefectureSearchResults) {
         }
     });
 }
+
+// 車両名・車両IDで検索
+const vehicleSearchInput =
+    document.getElementById("vehicleSearchInput");
+
+const vehicleSearchResults =
+    document.getElementById("vehicleSearchResults");
+
+if (vehicleSearchInput && vehicleSearchResults) {
+    vehicleSearchInput.addEventListener("input", async () => {
+        const query = vehicleSearchInput.value.trim().toLowerCase();
+        vehicleSearchResults.replaceChildren();
+
+        if (!query) return;
+
+        try {
+            await window.vehiclesReady;
+
+            const matchedVehicles = vehicles.filter(vehicle =>
+                (vehicle.name || "").toLowerCase().includes(query) ||
+                (vehicle.id || "").toLowerCase().includes(query)
+            );
+
+            if (matchedVehicles.length === 0) {
+                const message = document.createElement("p");
+                message.textContent = "該当する車両がありません。";
+                vehicleSearchResults.appendChild(message);
+                return;
+            }
+
+            matchedVehicles.forEach(vehicle => {
+                const button = document.createElement("button");
+                button.type = "button";
+
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+
+                const span = document.createElement("span");
+                span.textContent = vehicle.name || vehicle.id || "車両";
+
+                button.append(iconContainer, span);
+
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
+
+                vehicleSearchResults.appendChild(button);
+            });
+        } catch (error) {
+            console.error("車両検索エラー:", error);
+
+            const message = document.createElement("p");
+            message.textContent = "車両データの読み込みに失敗しました。";
+            vehicleSearchResults.appendChild(message);
+        }
+    });
+}
+
+// 会社名で検索
+const vehicleCompanySearchInput =
+    document.getElementById("vehicleCompanySearchInput");
+
+const vehicleCompanySearchResults =
+    document.getElementById("vehicleCompanySearchResults");
+
+if (vehicleCompanySearchInput && vehicleCompanySearchResults) {
+    vehicleCompanySearchInput.addEventListener("input", async () => {
+        const query = vehicleCompanySearchInput.value.trim().toLowerCase();
+        vehicleCompanySearchResults.replaceChildren();
+
+        if (!query) return;
+
+        try {
+            await window.vehiclesReady;
+
+            if (companyData.length === 0) {
+                await loadCompanyData();
+            }
+
+            const matchedCompanies = companyData.filter(company =>
+                (company.name || "").toLowerCase().includes(query)
+            );
+
+            if (matchedCompanies.length === 0) {
+                const message = document.createElement("p");
+                message.textContent = "該当する会社がありません。";
+                vehicleCompanySearchResults.appendChild(message);
+                return;
+            }
+
+            matchedCompanies.forEach(company => {
+                const heading = document.createElement("h3");
+                heading.textContent = company.name;
+                vehicleCompanySearchResults.appendChild(heading);
+
+                (company.vehicles || []).forEach(vehicleName => {
+                    const vehicle = vehicles.find(
+                        item => item.name === vehicleName
+                    );
+
+                    if (!vehicle) return;
+
+                    const button = document.createElement("button");
+                    button.type = "button";
+
+                    const iconContainer = document.createElement("div");
+                    iconContainer.className = "vehicleIcons";
+
+                    (vehicle.icons || []).forEach(icon => {
+                        const img = document.createElement("img");
+                        img.src = icon;
+                        img.className = "vehicleIcon";
+                        img.alt = "";
+                        iconContainer.appendChild(img);
+                    });
+
+                    const span = document.createElement("span");
+                    span.textContent = vehicle.name || vehicle.id || "車両";
+
+                    button.append(iconContainer, span);
+
+                    button.addEventListener("click", async () => {
+                        await selectVehicle(vehicle);
+                    });
+
+                    vehicleCompanySearchResults.appendChild(button);
+                });
+            });
+        } catch (error) {
+            console.error("会社検索エラー:", error);
+
+            const message = document.createElement("p");
+            message.textContent = "会社データの読み込みに失敗しました。";
+            vehicleCompanySearchResults.appendChild(message);
+        }
+    });
+}
