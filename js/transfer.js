@@ -693,7 +693,6 @@ function hasEnglishView(item) {
     return false;
 }
 
-// 言語設定を強制変更し、Webアプリのシーン・種別リストを再構築する関数
 function setGlobalLanguageAndRebuild(targetLang) {
     if (typeof lang !== "undefined") lang = targetLang;
     if (typeof typeLang !== "undefined") typeLang = targetLang;
@@ -776,7 +775,6 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // ① スクロール実行中に背景として切り替えるシーン（ja/enを切り替えて描画）
             for (let i = 0; i < totalSceneCount - 1; i++) {
                 const targetLang = (i % 2 === 1 && (hasTypeEn || hasDestEn)) ? "en" : "ja";
                 setGlobalLanguageAndRebuild(targetLang);
@@ -793,7 +791,6 @@ function createESP32Packet() {
                 writeOffset += sceneSize;
             }
 
-            // ② スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾へ書き込み
             scrollId = null;
             if (typeof nextId !== "undefined") nextId = null;
             setGlobalLanguageAndRebuild("ja");
@@ -827,17 +824,32 @@ function createESP32Packet() {
         let sCount = sceneList ? sceneList.length : 0;
         let tCount = typeSceneList ? typeSceneList.length : 0;
 
-        let rawSceneCount = 1;
-        if (sCount > 0 && tCount > 0) {
-            rawSceneCount = lcm(sCount, tCount);
-        } else if (sCount > 0) {
-            rawSceneCount = sCount;
-        } else if (tCount > 0) {
-            rawSceneCount = tCount;
+        let typeIsFull = false;
+        if (typeItem) {
+            if (typeof isTypeFullScreen === "function") {
+                typeIsFull = isTypeFullScreen(typeItem);
+            } else if (typeItem.isFull || typeItem.full || typeItem.isFullScreen) {
+                typeIsFull = true;
+            }
         }
 
-        if ((hasTypeEn || hasDestEn) && rawSceneCount <= 1) {
-            rawSceneCount = 2;
+        let rawSceneCount = 1;
+
+        // 種別がFULL（全画面種別）の場合は案内や行先のコマ数を完全に無視し、種別のコマ数（2画面なら2コマ）だけに固定
+        if (typeIsFull) {
+            rawSceneCount = tCount > 0 ? tCount : (hasTypeEn ? 2 : 1);
+        } else {
+            if (sCount > 0 && tCount > 0) {
+                rawSceneCount = lcm(sCount, tCount);
+            } else if (sCount > 0) {
+                rawSceneCount = sCount;
+            } else if (tCount > 0) {
+                rawSceneCount = tCount;
+            }
+
+            if ((hasTypeEn || hasDestEn) && rawSceneCount <= 1) {
+                rawSceneCount = 2;
+            }
         }
 
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
@@ -852,15 +864,6 @@ function createESP32Packet() {
         const gam = getNumberValue("gammaCorrection", 2.5);
 
         const scrollData = createESP32ScrollData(br, gam);
-
-        let typeIsFull = false;
-        if (typeItem) {
-            if (typeof isTypeFullScreen === "function") {
-                typeIsFull = isTypeFullScreen(typeItem);
-            } else if (typeItem.isFull || typeItem.full || typeItem.isFullScreen) {
-                typeIsFull = true;
-            }
-        }
 
         let areaLeft = 48;
         if (scrollActive && typeIsFull) {
@@ -878,7 +881,7 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, hasTypeEn=${hasTypeEn}, hasDestEn=${hasDestEn}, 生成コマ数=${sceneCount}`);
+        console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, typeIsFull=${typeIsFull}, hasTypeEn=${hasTypeEn}, 生成コマ数=${sceneCount}`);
 
         const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
@@ -960,7 +963,6 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) 
 
     try {
         for (let i = 0; i < sceneCount; i++) {
-            // コマごとに言語(ja/en)を切替＆シーンリストを再読み込み
             if (enableLangToggle) {
                 const targetLang = (i % 2 === 1) ? "en" : "ja";
                 setGlobalLanguageAndRebuild(targetLang);
