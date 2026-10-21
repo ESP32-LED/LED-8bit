@@ -1520,7 +1520,7 @@ function createInformation2Buttons() {
                 group.items.forEach(info => {
 
                     const btn = document.createElement("button");
-                    if (info.id === imformation2Id) {
+                    if (info.id === information2Id) {
                         btn.classList.add("selected");
                     }
 
@@ -1581,7 +1581,7 @@ function createInformation2Buttons() {
             group.items.forEach(info => {
 
                 const btn = document.createElement("button");
-                if (info.id === imformation2Id) {
+                if (info.id === information2Id) {
                     btn.classList.add("selected");
                 }
 
@@ -1628,7 +1628,7 @@ function createInformation2Buttons() {
         category?.items.forEach(info => {
 
             const btn = document.createElement("button");
-            if (info.id === imformation2Id) {
+            if (info.id === information2Id) {
                 btn.classList.add("selected");
             }
             const label =
