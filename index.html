@@ -32,7 +32,7 @@
 			<!-- ホーム画面用 Bluetooth設定UI -->
 			<div class="esp32Setting" style="margin-bottom: 20px; padding: 15px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;">
 				<h2 style="margin-top: 0; color: #007bff; font-size: 16px;">Bluetooth (ESP32) 接続設定</h2>
-				<button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Bluetooth接続</button>
+				<button type="button" class="btConnectBtn" onclick="connectBluetooth()" style="width: 100%; padding: 12px; font-size: 15px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Bluetooth接続</button>
 				<p class="transferStatus" style="margin-top: 10px; margin-bottom: 0; font-size: 13px; font-weight: bold; color: #333;"></p>
 			</div>
 
@@ -85,8 +85,9 @@
 			<div id="companyList" hidden></div>
 
 			<!-- LED設定UI -->
-			<div id="ledSettings">
-				<h3 style="margin-top: 0;">LED設定</h3>
+			<button type="button" id="toggleLedSettingsBtn" style="width: 100%; padding: 10px; margin-top: 15px; font-weight: bold; cursor: pointer;">LED設定を開く</button>
+			<div id="ledSettings" hidden>
+				<h3 style="margin-top: 10px;">LED設定</h3>
 				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 					<label>
 						LEDの物理幅
@@ -232,7 +233,7 @@
 					<!-- シミュレーター画面用 Bluetooth設定UI -->
 					<div class="esp32Setting" style="margin-top: 15px; margin-bottom: 15px; padding: 12px; background: #eef6ff; border: 1px solid #007bff; border-radius: 8px;">
 						<h2 style="margin-top: 0; font-size: 14px; color: #007bff;">Bluetooth設定</h2>
-						<button type="button" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
+						<button type="button" class="btConnectBtn" onclick="connectBluetooth()" style="width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Bluetooth接続</button>
 						<p class="transferStatus" style="margin-top: 8px; margin-bottom: 0; font-size: 12px; font-weight: bold; color: #333;"></p>
 					</div>
 
