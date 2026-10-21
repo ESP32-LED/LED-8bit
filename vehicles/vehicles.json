@@ -607,6 +607,19 @@
         "site": "vehicles/2020/site.json"
     },
     {
+        "id": "tokyu5080",
+        "name": "東急3000系・5080系（FC）",
+        "config": "vehicles/tokyu5080/config.json",
+        "led": "vehicles/tokyu5080/led.json",
+        "icons": [
+            "vehicles/tokyu5080/icons/icon1.png",
+            "vehicles/tokyu5080/icons/icon2.png",
+            "vehicles/tokyu5080/icons/icon3.png",
+            "vehicles/tokyu5080/icons/icon4.png"
+        ],
+        "site": "vehicles/tokyu5080/site.json"
+    },
+    {
         "id": "3020",
         "name": "東急3020系",
         "config": "vehicles/3020/config.json",
