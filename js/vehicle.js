@@ -149,6 +149,8 @@ async function loadCompanyData() {
     );
 }
 
+const vehiclePrefectureSearchArea = document.getElementById("vehiclePrefectureSearchArea");
+
 // 車両選択方法を変更
 vehicleSelectMethod.addEventListener("change", async () => {
     if (vehicleSelectMethod.value === "grid") {
@@ -156,6 +158,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
         mapElement.hidden = false;
         prefectureList.hidden = true;
         companyList.hidden = true;
+        vehiclePrefectureSearchArea.hidden = true;
 
         await window.vehiclesReady;
         await loadRailwayLines();
@@ -171,11 +174,13 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = false;
         prefectureList.hidden = true;
         companyList.hidden = true;
+        vehiclePrefectureSearchArea.hidden = true;
     } else if (vehicleSelectMethod.value === "prefecture") {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
         companyList.hidden = true;
+        vehiclePrefectureSearchArea.hidden = false;
 
         await loadPrefectureData();
 
@@ -234,6 +239,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = true;
         prefectureList.hidden = true;
         companyList.hidden = false;
+        vehiclePrefectureSearchArea.hidden = true;
         await loadCompanyData();
 
         companyList.replaceChildren();
