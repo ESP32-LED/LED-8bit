@@ -217,15 +217,32 @@ async function startVehicle() {
         }
         if (config.hasDestination) {
             const destinationCategory = getCategory("destination");
-            if (config.destinationDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * destinationCategory.groups.length);
-                const groups = destinationCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                destinationId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * destinationCategory.items.length);
-                destinationId = destinationCategory.items[randomIndex].id;
-            }
+            do {
+                if (config.destinationDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * destinationCategory.groups.length
+                    );
+                    const groups = destinationCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    destinationId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * destinationCategory.items.length
+                    );
+                    destinationId = destinationCategory.items[randomIndex].id;
+                }
+            } while (
+                destinationId === "null_destination" &&
+                (
+                    config.destinationDistinction
+                        ? destinationCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_destination")
+                        )
+                        : destinationCategory.items.some(item => item.id !== "null_destination")
+                )
+            );
             if (config.hasDestinationScroll) {
                 const typeData = getItem("type", typeId);
                 const destinationData = getItem("destination", destinationId);
@@ -310,30 +327,64 @@ async function startVehicle() {
         }
         if (config.hasCarNumber) {
             const carNumberCategory = getCategory("carNumber");
-            if (config.carNumberDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * carNumberCategory.groups.length);
-                const groups = carNumberCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                carNumberId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * carNumberCategory.items.length);
-                carNumberId = carNumberCategory.items[randomIndex].id;
-            }
+            do {
+                if (config.carNumberDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * carNumberCategory.groups.length
+                    );
+                    const groups = carNumberCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    carNumberId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * carNumberCategory.items.length
+                    );
+                    carNumberId = carNumberCategory.items[randomIndex].id;
+                }
+            } while (
+                carNumberId === "null_carNumber" &&
+                (
+                    config.carNumberDistinction
+                        ? carNumberCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_carNumber")
+                        )
+                        : carNumberCategory.items.some(item => item.id !== "null_carNumber")
+                )
+            );
             const carNumberLabel = document.getElementById("carNumber");
             const carNumberName = getName("carNumber", carNumberId);
             carNumberLabel.textContent = "号車:" + carNumberName;
         }
         if (config.hasInformation) {
             const informationCategory = getCategory("information");
-            if (config.informationDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * informationCategory.groups.length);
-                const groups = informationCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                informationId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * informationCategory.items.length);
-                informationId = informationCategory.items[randomIndex].id;
-            }
+            do {
+                if (config.informationDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * informationCategory.groups.length
+                    );
+                    const groups = informationCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    informationId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * informationCategory.items.length
+                    );
+                    informationId = informationCategory.items[randomIndex].id;
+                }
+            } while (
+                informationId === "null_information" &&
+                (
+                    config.informationDistinction
+                        ? informationCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_information")
+                        )
+                        : informationCategory.items.some(item => item.id !== "null_information")
+                )
+            );
             console.log(informationId);
             const informationLabel = document.getElementById("information");
             const informationName = getName("information", informationId);
@@ -341,45 +392,96 @@ async function startVehicle() {
         }
         if (config.hasInformation2) {
             const information2Category = getCategory("information2");
-            if (config.information2Distinction) {
-                const randomIndexGroups = Math.floor(Math.random() * information2Category.groups.length);
-                const groups = information2Category.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                information2Id = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * information2Category.items.length);
-                information2Id = information2Category.items[randomIndex].id;
-            }
+            do {
+                if (config.information2Distinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * information2Category.groups.length
+                    );
+                    const groups = information2Category.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    information2Id = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * information2Category.items.length
+                    );
+                    information2Id = information2Category.items[randomIndex].id;
+                }
+            } while (
+                information2Id === "null_information2" &&
+                (
+                    config.information2Distinction
+                        ? information2Category.groups.some(group =>
+                            group.items.some(item => item.id !== "null_information2")
+                        )
+                        : information2Category.items.some(item => item.id !== "null_information2")
+                )
+            );
             const information2Label = document.getElementById("information2");
             const information2Name = getName("information2", information2Id);
             information2Label.textContent = "案内2:" + information2Name;
         }
         if (config.hasNext) {
-            const nextCategory = getCategory("next");
-            if (config.nextModeDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * nextCategory.groups.length);
-                const groups = nextCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                nextId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * nextCategory.items.length);
-                nextId = nextCategory.items[randomIndex].id;
-            }
+            const nextCategory = getCategory("nextMode");
+            do {
+                if (config.nextModeDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * nextCategory.groups.length
+                    );
+                    const groups = nextCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    nextId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * nextCategory.items.length
+                    );
+                    nextId = nextCategory.items[randomIndex].id;
+                }
+            } while (
+                nextId === "null_next" &&
+                (
+                    config.nextModeDistinction
+                        ? nextCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_next")
+                        )
+                        : nextCategory.items.some(item => item.id !== "null_next")
+                )
+            );
             const nextLabel = document.getElementById("nextMode");
             const nextName = getName("next", nextId);
             nextLabel.textContent = "次駅:" + nextName;
         }
         if (config.hasLine) {
             const lineCategory = getCategory("line");
-            if (config.lineDistinction) {
-                const randomIndexGroups = Math.floor(Math.random() * lineCategory.groups.length);
-                const groups = lineCategory.groups[randomIndexGroups];
-                const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                lineId = groups.items[randomIndexItems].id;
-            } else {
-                const randomIndex = Math.floor(Math.random() * lineCategory.items.length);
-                lineId = lineCategory.items[randomIndex].id;
-            }
+            do {
+                if (config.lineDistinction) {
+                    const randomIndexGroups = Math.floor(
+                        Math.random() * lineCategory.groups.length
+                    );
+                    const groups = lineCategory.groups[randomIndexGroups];
+                    const randomIndexItems = Math.floor(
+                        Math.random() * groups.items.length
+                    );
+                    lineId = groups.items[randomIndexItems].id;
+                } else {
+                    const randomIndex = Math.floor(
+                        Math.random() * lineCategory.items.length
+                    );
+                    lineId = lineCategory.items[randomIndex].id;
+                }
+            } while (
+                lineId === "null_line" &&
+                (
+                    config.lineDistinction
+                        ? lineCategory.groups.some(group =>
+                            group.items.some(item => item.id !== "null_line")
+                        )
+                        : lineCategory.items.some(item => item.id !== "null_line")
+                )
+            );
             const lineLabel = document.getElementById("line");
             const lineName = getName("line", lineId);
             lineLabel.textContent = "路線名:" + lineName;
