@@ -149,6 +149,8 @@ async function loadCompanyData() {
     );
 }
 
+const vehicleSearchArea = document.getElementById("vehicleSearchArea");
+const vehicleCompanySearchArea = document.getElementById("vehicleCompanySearchArea");
 const vehiclePrefectureSearchArea = document.getElementById("vehiclePrefectureSearchArea");
 
 // 車両選択方法を変更
@@ -158,6 +160,8 @@ vehicleSelectMethod.addEventListener("change", async () => {
         mapElement.hidden = false;
         prefectureList.hidden = true;
         companyList.hidden = true;
+        vehicleSearchArea.hidden = true;
+        vehicleCompanySearchArea.hidden = true;
         vehiclePrefectureSearchArea.hidden = true;
 
         await window.vehiclesReady;
@@ -174,12 +178,16 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = false;
         prefectureList.hidden = true;
         companyList.hidden = true;
+        vehicleSearchArea.hidden = false;
+        vehicleCompanySearchArea.hidden = true;
         vehiclePrefectureSearchArea.hidden = true;
     } else if (vehicleSelectMethod.value === "prefecture") {
         mapElement.hidden = true;
         vehicleSelect.hidden = true;
         prefectureList.hidden = false;
         companyList.hidden = true;
+        vehicleSearchArea.hidden = true;
+        vehicleCompanySearchArea.hidden = true;
         vehiclePrefectureSearchArea.hidden = false;
 
         await loadPrefectureData();
@@ -239,6 +247,8 @@ vehicleSelectMethod.addEventListener("change", async () => {
         vehicleSelect.hidden = true;
         prefectureList.hidden = true;
         companyList.hidden = false;
+        vehicleSearchArea.hidden = true;
+        vehicleCompanySearchArea.hidden = false;
         vehiclePrefectureSearchArea.hidden = true;
         await loadCompanyData();
 
