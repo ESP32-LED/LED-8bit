@@ -169,7 +169,6 @@ button:focus-visible {
 #vehicleCompanySearchInput {
     -webkit-appearance: searchfield;
     appearance: auto;
-    width: 100%;
     box-sizing: border-box;
     margin-left: 10px;
     margin-right: 10px;
