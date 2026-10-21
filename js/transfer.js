@@ -682,17 +682,40 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     return packet;
 }
 
+// 強化版：アイテムオブジェクト全体を走査して英語（en）データが存在するか判定
 function hasEnglishView(item) {
     if (!item) return false;
+
+    // 1. 基本フラグ・プロパティチェック
+    if (item.hasEn || item.hasEnglish || item.isMultiLang || item.multiLang) return true;
+    if (item.en || item.nameEn || item.textEn || item.english) return true;
+
+    // 2. view構造のチェック
     if (item.view) {
-        if (item.view.normal && (item.view.normal.en || item.view.normal.English)) return true;
-        if (item.view.full && (item.view.full.en || item.view.full.English)) return true;
-        if (item.view.en) return true;
+        if (item.view.en || item.view.English || item.view.EN) return true;
+        if (item.view.normal) {
+            if (item.view.normal.en || item.view.normal.English || item.view.normal.EN) return true;
+            if (Object.keys(item.view.normal).length > 1) return true;
+        }
+        if (item.view.full) {
+            if (item.view.full.en || item.view.full.English || item.view.full.EN) return true;
+            if (Object.keys(item.view.full).length > 1) return true;
+        }
+        if (Object.keys(item.view).length > 1) return true;
     }
-    if (item.en || item.nameEn || item.textEn) return true;
+
+    // 3. 全文文字列走査による検出
+    try {
+        const jsonStr = JSON.stringify(item);
+        if (/"en"|"en_|_en"|"English"|"english"|"nameEn"|"textEn"/i.test(jsonStr)) {
+            return true;
+        }
+    } catch (e) {}
+
     return false;
 }
 
+// 言語設定を強制変更し、Webアプリのシーン・種別リストを再構築する関数
 function setGlobalLanguageAndRebuild(targetLang) {
     if (typeof lang !== "undefined") lang = targetLang;
     if (typeof typeLang !== "undefined") typeLang = targetLang;
@@ -712,6 +735,23 @@ function setGlobalLanguageAndRebuild(targetLang) {
     if (typeof buildTypeSceneList === "function") {
         try { buildTypeSceneList(); } catch(e){}
     }
+}
+
+// 動的に 'en' 言語にビルドを試みて英語が存在するかダブルチェック
+function detectTypeHasEn(typeItem) {
+    if (hasEnglishView(typeItem)) return true;
+
+    let hasEn = false;
+    try {
+        setGlobalLanguageAndRebuild("en");
+        if (typeSceneList && typeSceneList.length > 0) {
+            hasEn = true;
+        }
+    } catch (e) {
+    } finally {
+        setGlobalLanguageAndRebuild("ja");
+    }
+    return hasEn;
 }
 
 function createESP32Packet() {
@@ -737,7 +777,7 @@ function createESP32Packet() {
     const typeItem = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
     const destItem = typeof getItem === "function" && typeof destinationId !== "undefined" ? getItem("destination", destinationId) : null;
 
-    const hasTypeEn = hasEnglishView(typeItem);
+    const hasTypeEn = detectTypeHasEn(typeItem);
     const hasDestEn = hasEnglishView(destItem);
 
     try {
@@ -835,9 +875,9 @@ function createESP32Packet() {
 
         let rawSceneCount = 1;
 
-        // 種別がFULL（全画面種別）の場合は案内や行先のコマ数を完全に無視し、種別のコマ数（2画面なら2コマ）だけに固定
+        // 種別がFULL（全画面種別）の場合は案内や行先のコマ数を完全に無視し、英語が存在すれば確実に2コマ（ja/en）に固定
         if (typeIsFull) {
-            rawSceneCount = tCount > 0 ? tCount : (hasTypeEn ? 2 : 1);
+            rawSceneCount = hasTypeEn ? 2 : (tCount > 0 ? tCount : 1);
         } else {
             if (sCount > 0 && tCount > 0) {
                 rawSceneCount = lcm(sCount, tCount);
