@@ -693,7 +693,10 @@ function getTypeWidth(type, used, view) {
         }
     }
 
-    let currentView = view
+    let currentView = normal;
+    if (view) {
+        currentView = view;
+    }
     if (isTypeFullScreen(type)) {
         currentView = "full";
     }
