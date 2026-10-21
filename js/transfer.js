@@ -682,6 +682,18 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     return packet;
 }
 
+// アイテムに英語表示データ(en)が存在するか判定
+function hasEnglishView(item) {
+    if (!item) return false;
+    if (item.view) {
+        if (item.view.normal && (item.view.normal.en || item.view.normal.English)) return true;
+        if (item.view.full && (item.view.full.en || item.view.full.English)) return true;
+        if (item.view.en) return true;
+    }
+    if (item.en || item.nameEn || item.textEn) return true;
+    return false;
+}
+
 function createESP32Packet() {
     if (
         typeof buildSceneList !== "function" ||
@@ -701,6 +713,12 @@ function createESP32Packet() {
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
     const oldNextId = typeof nextId !== "undefined" ? nextId : null;
+
+    const typeItem = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
+    const destItem = typeof getItem === "function" && typeof destinationId !== "undefined" ? getItem("destination", destinationId) : null;
+
+    const hasTypeEn = hasEnglishView(typeItem);
+    const hasDestEn = hasEnglishView(destItem);
 
     try {
         const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
@@ -724,9 +742,12 @@ function createESP32Packet() {
             if (config.hasNextFullScreen) areaLeft = 0;
             let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-            // 背景シーン数と種別画面数（ja/en等）の最小公倍数でスクロール中の背景コマ数を計算
-            const rawScrollCount = lcm(scrollScenes.length, typeSceneList.length);
-            const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, rawScrollCount > 0 ? rawScrollCount : 1);
+            let rawScrollCount = lcm(scrollScenes.length, typeSceneList.length);
+            if (rawScrollCount <= 1 && (hasTypeEn || hasDestEn)) {
+                rawScrollCount = 2;
+            }
+
+            const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, Math.max(1, rawScrollCount));
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
             const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true);
@@ -735,11 +756,20 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // ① スクロール実行中に背景として切り替えるシーン（案内・英語・次駅・種別ja/en等）
+            // ① スクロール実行中に背景として切り替えるシーン
             for (let i = 0; i < totalSceneCount - 1; i++) {
                 scene = scrollScenes.length > 0 ? i % scrollScenes.length : 0;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
                 scrollId = true;
+
+                if (i % 2 === 1 && (hasTypeEn || hasDestEn)) {
+                    if (typeof lang !== "undefined") lang = "en";
+                    if (typeof typeLang !== "undefined") typeLang = "en";
+                } else {
+                    if (typeof lang !== "undefined") lang = "ja";
+                    if (typeof typeLang !== "undefined") typeLang = "ja";
+                }
+
                 applyScene();
                 applyTypeScene();
                 const matrix = createDisplayMatrix();
@@ -781,32 +811,22 @@ function createESP32Packet() {
         buildSceneList();
         buildTypeSceneList();
 
-        const sCount = sceneList.length;
-        const tCount = typeSceneList.length;
+        let sCount = sceneList ? sceneList.length : 0;
+        let tCount = typeSceneList ? typeSceneList.length : 0;
 
-        if (sCount === 0 && tCount === 0) return new Uint8Array();
-
-        const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
-        let typeIsFull = false;
-        if (type) {
-            if (typeof isTypeFullScreen === "function") {
-                typeIsFull = isTypeFullScreen(type);
-            } else if (type.isFull || type.full || type.isFullScreen) {
-                typeIsFull = true;
-            }
-        }
-        if (sCount === 0 && tCount > 0) {
-            typeIsFull = true;
-        }
-
-        // 行先シーン数と種別画面数の算出（FULL種別や行先なしの場合も確実に種別の全画面数を確保）
+        // 画面数（コマ数）の適正計算
         let rawSceneCount = 1;
         if (sCount > 0 && tCount > 0) {
-            rawSceneCount = typeIsFull ? tCount : lcm(sCount, tCount);
-        } else if (tCount > 0) {
-            rawSceneCount = tCount;
+            rawSceneCount = lcm(sCount, tCount);
         } else if (sCount > 0) {
             rawSceneCount = sCount;
+        } else if (tCount > 0) {
+            rawSceneCount = tCount;
+        }
+
+        // 種別や行先に英語が存在するのに1コマしか計算されなかった場合の補正（最低2コマ化）
+        if ((hasTypeEn || hasDestEn) && rawSceneCount <= 1) {
+            rawSceneCount = 2;
         }
 
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
@@ -822,8 +842,16 @@ function createESP32Packet() {
 
         const scrollData = createESP32ScrollData(br, gam);
 
-        let areaLeft = 48;
+        let typeIsFull = false;
+        if (typeItem) {
+            if (typeof isTypeFullScreen === "function") {
+                typeIsFull = isTypeFullScreen(typeItem);
+            } else if (typeItem.isFull || typeItem.full || typeItem.isFullScreen) {
+                typeIsFull = true;
+            }
+        }
 
+        let areaLeft = 48;
         if (scrollActive && typeIsFull) {
             scrollData.tw = 0;
             scrollData.sbuf = new Uint8Array(0);
@@ -839,10 +867,10 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        const speedVal = transferScrollSpeed;
+        console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, hasTypeEn=${hasTypeEn}, hasDestEn=${hasDestEn}, 生成コマ数=${sceneCount}`);
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff, false);
-        const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
+        const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
         packet.set(header, 0);
@@ -910,7 +938,7 @@ function frameToUint8Array(frame, hw) {
     return sceneBuf;
 }
 
-function createAllESP32Scenes(sceneCount, hw, margin) {
+function createAllESP32Scenes(sceneCount, hw, margin, enableLangFallback = false) {
     const sceneSize = 8 * 16 * hw;
     const allData = new Uint8Array(sceneCount * sceneSize);
     let offset = 0;
@@ -920,8 +948,18 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
 
     try {
         for (let i = 0; i < sceneCount; i++) {
-            scene = sceneList.length > 0 ? i % sceneList.length : 0;
-            typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
+            scene = sceneList && sceneList.length > 0 ? i % sceneList.length : 0;
+            typeScene = typeSceneList && typeSceneList.length > 0 ? i % typeSceneList.length : 0;
+
+            if (enableLangFallback) {
+                if (i % 2 === 1) {
+                    if (typeof lang !== "undefined") lang = "en";
+                    if (typeof typeLang !== "undefined") typeLang = "en";
+                } else {
+                    if (typeof lang !== "undefined") lang = "ja";
+                    if (typeof typeLang !== "undefined") typeLang = "ja";
+                }
+            }
 
             applyScene();
             applyTypeScene();
@@ -952,19 +990,6 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
-    const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
-    let typeIsFull = false;
-    if (type) {
-        if (typeof isTypeFullScreen === "function") {
-            typeIsFull = isTypeFullScreen(type);
-        } else if (type.isFull || type.full || type.isFullScreen) {
-            typeIsFull = true;
-        }
-    }
-    if ((!sceneList || sceneList.length === 0) && typeSceneList && typeSceneList.length > 0) {
-        typeIsFull = true;
-    }
-
     header[0] = 0xaa;
 
     let slideModeVal = getSlideMode();
@@ -990,10 +1015,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
             const currentScene = sceneList && sceneList.length > 0 ? sceneList[i % sceneList.length] : null;
             const currentTypeScene = typeSceneList && typeSceneList.length > 0 ? typeSceneList[i % typeSceneList.length] : null;
 
-            if (typeIsFull && currentTypeScene) {
-                if (currentTypeScene.lang === "ja") interval = jaTime;
-                else if (currentTypeScene.lang === "en") interval = enTime;
-            } else if (currentTypeScene && currentTypeScene.lang) {
+            if (currentTypeScene && currentTypeScene.lang) {
                 if (currentTypeScene.lang === "ja") interval = jaTime;
                 else if (currentTypeScene.lang === "en") interval = enTime;
             } else if (currentScene) {
@@ -1009,6 +1031,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
                     if (currentScene.lang === "ja") interval = jaTime;
                     if (currentScene.lang === "en") interval = enTime;
                 }
+            } else {
+                interval = (i % 2 === 1) ? enTime : jaTime;
             }
         }
         const time = Math.max(0, Math.min(65535, Math.round(interval)));
