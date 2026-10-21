@@ -156,6 +156,10 @@ button:focus-visible {
     margin: 12px 0;
 }
 
+##vehiclePrefectureSearchArea[hidden] {
+    display: none!important;
+}
+
 #vehiclePrefectureSearchInput {
     width: 100%;
     box-sizing: border-box;
