@@ -152,6 +152,46 @@ button:focus-visible {
     display: none;
 }
 
+#vehiclePrefectureSearchArea {
+    margin: 12px 0;
+}
+
+#vehiclePrefectureSearchInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#vehiclePrefectureSearchResults {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+#vehiclePrefectureSearchResults h3 {
+    margin: 10px 0 2px;
+    font-size: 15px;
+}
+
+#vehiclePrefectureSearchResults button {
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
+}
+
+#vehiclePrefectureSearchResults button:hover {
+    background: #f0f5fa;
+}
+
 #companyList {
    padding: 10px;
    margin-bottom: 10px;
