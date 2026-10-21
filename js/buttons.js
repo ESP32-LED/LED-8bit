@@ -18,7 +18,7 @@ function createTypeButtons() {
     normalBtn.textContent = "種別なし";
     normalBtn.addEventListener("click", () => {
         setSelected(container, normalBtn);
-        if (selectedVehicle.name?.includes("E233") && selectedVehicle.name != "E233系3000番台") {
+        if (selectedVehicle.name === "E233系0番台") {
             const randomIndex = Math.floor(Math.random() * 9) + 1
             if (randomIndex === 1) {
                 typeId = null
