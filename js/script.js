@@ -137,6 +137,12 @@ async function startVehicle() {
                         : typeCategory.items.some(item => item.id !== "null_type")
                 )
             );
+            if (selectedVehicle.name === "E233系0番台") {
+                const randomIndex = Math.floor(Math.random() * 9) + 1
+                if (randomIndex === 1) {
+                    typeId = null
+                }
+            }
             if (config.hasTypeScroll) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
