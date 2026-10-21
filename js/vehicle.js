@@ -369,18 +369,31 @@ if (vehiclePrefectureSearchInput && vehiclePrefectureSearchResults) {
             // 都道府県に登録されている車両を表示
             (prefecture.vehicles || []).forEach(vehicleName => {
                 const vehicle = vehicles.find(
-                    item => item.name === vehicleName
-                );
-
-                if (!vehicle) return;
-
-                const button = document.createElement("button");
-                button.type = "button";
-                button.textContent = vehicle.name || vehicle.id;
-
-                button.addEventListener("click", async () => {
-                    await selectVehicle(vehicle);
-                });
+                    vehicle => vehicle.name === vehicleName
+                );
+        
+                if (!vehicle) return;
+        
+                const button = document.createElement("button");
+                const iconContainer = document.createElement("div");
+                iconContainer.className = "vehicleIcons";
+        
+                (vehicle.icons || []).forEach(icon => {
+                    const img = document.createElement("img");
+                    img.src = icon;
+                    img.className = "vehicleIcon";
+                    img.alt = "";
+                    iconContainer.appendChild(img);
+                });
+        
+                const span = document.createElement("span");
+                span.textContent = vehicle.name || vehicle.id || "車両";
+        
+                button.append(iconContainer, span);
+        
+                button.addEventListener("click", async () => {
+                    await selectVehicle(vehicle);
+                });
 
                 vehiclePrefectureSearchResults.appendChild(button);
             });
