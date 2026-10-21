@@ -167,6 +167,8 @@ button:focus-visible {
 #vehiclePrefectureSearchInput,
 #vehicleSearchInput,
 #vehicleCompanySearchInput {
+    width: calc(100% - 20px);
+    position: relative;
     -webkit-appearance: searchfield;
     appearance: auto;
     box-sizing: border-box;
