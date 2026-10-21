@@ -171,6 +171,8 @@ button:focus-visible {
     appearance: auto;
     width: 100%;
     box-sizing: border-box;
+    margin-left: 10px;
+    margin-right: 10px;
     padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -198,13 +200,7 @@ button:focus-visible {
 #vehiclePrefectureSearchResults button,
 #vehicleSearchResults button,
 #vehicleCompanySearchResults button {
-    width: 100%;
-    padding: 10px 12px;
     text-align: left;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    color: #222;
     cursor: pointer;
     display: flex;
     align-items: center;
