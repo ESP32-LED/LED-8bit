@@ -170,7 +170,6 @@ button:focus-visible {
 }
 
 #vehiclePrefectureSearchResults {
-    margin-top: 8px;
     padding: 10px;
     margin-bottom: 10px;
     display: grid;
@@ -180,7 +179,7 @@ button:focus-visible {
 }
 
 #vehiclePrefectureSearchResults h3 {
-    margin: 10px 0 2px;
+    margin: 4px 0 0;
     font-size: 15px;
 }
 
