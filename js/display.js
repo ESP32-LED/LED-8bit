@@ -714,7 +714,7 @@ function getTypeWidth(type, used, view) {
 
         return (
             type.view?.[currentView]?.[lang]?.width
-            ?? type.view?.[currentview]?.ja?.width
+            ?? type.view?.[currentView]?.ja?.width
             ?? 0
         );
     }
