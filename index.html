@@ -43,6 +43,15 @@
 				<option value="company">会社から選択</option>
 				<option value="grid">地図上から選択</option>
 			</select>
+			<div id="vehicleSearchArea">
+    <input
+        type="search"
+        id="vehicleSearchInput"
+        placeholder="🔍車両名で検索"
+        autocomplete="off"
+    >
+    <div id="vehicleSearchResults"></div>
+</div>
 			<div id="vehicleSelect" class="selectGroup"></div>
 			<div id="map" hidden>
 				<div id="linePanel" hidden>
@@ -60,16 +69,6 @@
         autocomplete="off"
     >
     <div id="vehiclePrefectureSearchResults"></div>
-</div>
-			<!-- 車両検索 -->
-<div id="vehicleSearchArea">
-    <input
-        type="search"
-        id="vehicleSearchInput"
-        placeholder="🔍車両名で検索"
-        autocomplete="off"
-    >
-    <div id="vehicleSearchResults"></div>
 </div>
 
 <!-- 会社検索 -->
