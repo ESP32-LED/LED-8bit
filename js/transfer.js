@@ -748,7 +748,7 @@ function createESP32Packet() {
 
             // ② スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾へ書き込み
             scrollId = null;
-            if (typeof nextId !== "undefined") nextId = null; // 次駅IDを無効化して次駅表示を完全に除去
+            if (typeof nextId !== "undefined") nextId = null;
             buildSceneList();
             buildTypeSceneList();
             scene = 0;
@@ -769,7 +769,7 @@ function createESP32Packet() {
             return packet;
         }
 
-        // 2. スクロールOFF時、または通常車両の時（スクロールがoffのときは特殊スクロールのない普通の車両として扱う）
+        // 2. スクロールOFF時、または通常車両の時
         if (scrollActive) {
             scrollId = true;
         } else {
@@ -779,7 +779,7 @@ function createESP32Packet() {
         buildSceneList();
         buildTypeSceneList();
 
-        if (sceneList.length === 0) return new Uint8Array();
+        if (sceneList.length === 0 && typeSceneList.length === 0) return new Uint8Array();
 
         const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
         let typeIsFull = false;
@@ -790,8 +790,9 @@ function createESP32Packet() {
         const typeCount = typeSceneList.length > 0 ? typeSceneList.length : 1;
         let rawSceneCount = lcm(sceneList.length, typeCount);
 
+        // 種別FULL時は種別シーン数（ja/en等）を使用
         if (typeIsFull) {
-            rawSceneCount = 1;
+            rawSceneCount = typeCount;
         }
 
         const sceneCount = Math.min(rawSceneCount, ESP32_MAX_SCENES);
@@ -826,7 +827,6 @@ function createESP32Packet() {
 
         const speedVal = transferScrollSpeed;
 
-        // スクロールOFF時は isSpecialScrollMode を false に設定
         const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
 
@@ -906,7 +906,7 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
 
     try {
         for (let i = 0; i < sceneCount; i++) {
-            scene = i % sceneList.length;
+            scene = sceneList.length > 0 ? i % sceneList.length : 0;
             typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
 
             applyScene();
@@ -936,33 +936,12 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
 
 function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
-    let times;
-
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
-    if (config.setSwitchingTime) {
-        const jaTime = getNumberValue("jaTime", 3) * 1000;
-        const enTime = getNumberValue("enTime", 3) * 1000;
-        const infoTime = getNumberValue("infoTime", 3) * 1000;
-        const carNumberTime = getNumberValue("carNumberTime", 3) * 1000;
-
-        times = sceneList.slice(0, ESP32_MAX_SCENES).map((currentScene) => {
-            if (
-                currentScene.information === "carNumber" ||
-                currentScene.information === "carNumber_normal" ||
-                currentScene.information === "carNumber_destination"
-            ) {
-                return carNumberTime;
-            }
-            if (currentScene.information === "information") return infoTime;
-            if (currentScene.information === "destination") {
-                if (currentScene.lang === "ja") return jaTime;
-                if (currentScene.lang === "en") return enTime;
-            }
-            return defaultInterval;
-        });
-    } else {
-        times = Array(6).fill(defaultInterval);
+    const type = typeof getItem === "function" && typeof typeId !== "undefined" ? getItem("type", typeId) : null;
+    let typeIsFull = false;
+    if (type && typeof isTypeFullScreen === "function") {
+        typeIsFull = isTypeFullScreen(type);
     }
 
     header[0] = 0xaa;
@@ -980,7 +959,35 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[6] = xOff & 0xff;
 
     for (let i = 0; i < 6; i++) {
-        const time = Math.max(0, Math.min(65535, Math.round(times[i] ?? defaultInterval)));
+        let interval = defaultInterval;
+        if (config.setSwitchingTime) {
+            const jaTime = getNumberValue("jaTime", 3) * 1000;
+            const enTime = getNumberValue("enTime", 3) * 1000;
+            const infoTime = getNumberValue("infoTime", 3) * 1000;
+            const carNumberTime = getNumberValue("carNumberTime", 3) * 1000;
+
+            const currentScene = sceneList && sceneList.length > 0 ? sceneList[i % sceneList.length] : null;
+            const currentTypeScene = typeSceneList && typeSceneList.length > 0 ? typeSceneList[i % typeSceneList.length] : null;
+
+            if (typeIsFull && currentTypeScene) {
+                if (currentTypeScene.lang === "ja") interval = jaTime;
+                else if (currentTypeScene.lang === "en") interval = enTime;
+            } else if (currentScene) {
+                if (
+                    currentScene.information === "carNumber" ||
+                    currentScene.information === "carNumber_normal" ||
+                    currentScene.information === "carNumber_destination"
+                ) {
+                    interval = carNumberTime;
+                } else if (currentScene.information === "information") {
+                    interval = infoTime;
+                } else if (currentScene.information === "destination") {
+                    if (currentScene.lang === "ja") interval = jaTime;
+                    if (currentScene.lang === "en") interval = enTime;
+                }
+            }
+        }
+        const time = Math.max(0, Math.min(65535, Math.round(interval)));
         header[7 + i * 2] = time & 0xff;
         header[8 + i * 2] = (time >> 8) & 0xff;
     }
