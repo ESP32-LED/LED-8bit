@@ -156,10 +156,10 @@ function compressTypeDestRLE(uint8Array) {
 }
 
 function updateBluetoothUIButtonState(connected) {
-    const btBtns = document.querySelectorAll(".btConnectBtn");
-    btBtns.forEach((btn) => {
-        if (btn) {
-            btn.style.display = connected ? "none" : "block";
+    const btSettings = document.querySelectorAll(".esp32Setting");
+    btSettings.forEach((el) => {
+        if (el) {
+            el.style.display = connected ? "none" : "block";
         }
     });
 }
