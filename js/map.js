@@ -22,7 +22,7 @@ async function loadRailwayLines() {
 }
 
 const RAILWAY_OVERLAP_TOLERANCE = 2.5;
-const RAILWAY_OVERLAP_MIN_LENGTH = 3;
+const RAILWAY_OVERLAP_MIN_LENGTH = 0.5;
 const RAILWAY_OFFSET_SPACING_PX = 8;
 const RAILWAY_OVERLAP_ANGLE = 12;
 
@@ -260,6 +260,9 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     const smoothingDistance = 28;
     const sampleStep = 4;
     const tangentWindow = 24;
+
+    // 短い判定漏れを補う最大距離（画面上のピクセル）
+    const maxMissingGapPx = 24;
     const projected = coordinates.map(p => railwayMap.project(p, zoom));
     const lengths = [];
     const groundLengths = [];
@@ -326,6 +329,30 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     const allPeers = new Set(peersBySegment.flatMap(set => [...set]));
     const MIN_CONTINUOUS_OVERLAP_METERS = 30;
 
+    // 同じ路線との重複判定が、短い区間だけ途切れた場合に補完する
+    for (const peer of allPeers) {
+        let previousMatch = -1;
+
+        for (let i = 0; i < peersBySegment.length; i++) {
+            if (!peersBySegment[i].has(peer)) {
+                continue;
+            }
+
+            if (previousMatch >= 0 && i > previousMatch + 1) {
+                const gapStart = previousMatch + 1;
+                const gapPixels = cumulative[i] - cumulative[gapStart];
+
+                if (gapPixels <= maxMissingGapPx) {
+                    for (let j = gapStart; j < i; j++) {
+                        peersBySegment[j].add(peer);
+                    }
+                }
+            }
+
+            previousMatch = i;
+        }
+    }
+
     for (const peer of allPeers) {
         let i = 0;
 
@@ -343,7 +370,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
                 i++;
             }
 
-            if (i - start >= 2 && overlapMeters >= MIN_CONTINUOUS_OVERLAP_METERS) {
+            if (overlapMeters >= MIN_CONTINUOUS_OVERLAP_METERS) {
                 for (let j = start; j < i; j++) {
                     persistentPeers[j].add(peer);
                 }
@@ -382,9 +409,14 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
             if (t1 - t0 < 1e-8) continue;
 
             const mid = (t0 + t1) / 2;
-            const otherLines = [...new Set(matches
+            let otherLines = [...new Set(matches
                 .filter(m => mid > m.start - 1e-8 && mid < m.end + 1e-8)
                 .map(m => m.otherLine))];
+
+            // 短い区間で重複判定が途切れても、前後の重複関係を維持する
+            if (!otherLines.length && lengths[i] <= maxMissingGapPx) {
+                otherLines = [...persistentPeers[i]];
+            }
 
             let offset = 0;
 
