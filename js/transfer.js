@@ -701,17 +701,14 @@ function createESP32Packet() {
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
 
-    if (scrollActive) scrollId = true;
-
     try {
         const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
 
         if (isSpecialScroll && scrollActive) {
             scrollId = true;
             buildSceneList();
-            const scrollScenes = [...sceneList];
-
             buildTypeSceneList();
+            const scrollScenes = [...sceneList];
 
             const hw = getHardwareWidth();
             const pw = Number(config.ledWidth);
@@ -728,13 +725,13 @@ function createESP32Packet() {
             const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, scrollScenes.length);
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
-            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff);
+            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true);
 
             const sceneSize = 8 * 16 * hw;
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // 1. スクロール中に背景として切り替えるシーン
+            // 1. スクロール中に背景として切り替えるシーン（案内・次駅等）を正確に書き込み
             for (let i = 0; i < totalSceneCount - 1; i++) {
                 scene = i % scrollScenes.length;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
@@ -747,10 +744,12 @@ function createESP32Packet() {
                 writeOffset += sceneSize;
             }
 
-            // 2. スクロール終了後に単体表示する「種別＋行先単体」シーンを末尾(totalSceneCount - 1)へ書き込み
+            // 2. スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾(totalSceneCount - 1)へ書き込み
+            scrollId = null;
+            buildSceneList();
+            buildTypeSceneList();
             scene = 0;
             typeScene = 0;
-            scrollId = null;
             applyScene();
             applyTypeScene();
             const matrix = createDisplayMatrix();
@@ -765,6 +764,14 @@ function createESP32Packet() {
             packet.set(allSceneData, header.length + scrollData.sbuf.length);
 
             return packet;
+        }
+
+        // スクロールOFF時または通常車両時のシーン構築
+        if (isSpecialScroll) {
+            // 特殊スクロール車両でスクロールOFFの場合も、案内や次駅を含めた全シーンを取得
+            scrollId = true;
+        } else {
+            if (scrollActive) scrollId = true;
         }
 
         buildSceneList();
@@ -817,7 +824,8 @@ function createESP32Packet() {
 
         const speedVal = isSpecialScroll ? transferSpecialScrollSpeed : transferScrollSpeed;
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff);
+        // isSpecialScroll 且つ scrollActive が ON の時のみ 0x80 (特殊スクロールフラグ) をセット
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff, isSpecialScroll && scrollActive);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -923,7 +931,7 @@ function createAllESP32Scenes(sceneCount, hw, margin) {
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     let times;
 
@@ -957,8 +965,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[0] = 0xaa;
 
     let slideModeVal = getSlideMode();
-    const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
-    if (isSpecialScroll) {
+    if (isSpecialScrollMode) {
         slideModeVal |= 0x80;
     }
 
