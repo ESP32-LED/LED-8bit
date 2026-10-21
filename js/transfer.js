@@ -700,10 +700,12 @@ function createESP32Packet() {
     const scrollText = getScrollText();
     const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
+    const oldNextId = typeof nextId !== "undefined" ? nextId : null;
 
     try {
         const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
 
+        // 1. 特殊スクロール車両で、かつスクロールがONの場合
         if (isSpecialScroll && scrollActive) {
             scrollId = true;
             buildSceneList();
@@ -731,7 +733,7 @@ function createESP32Packet() {
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
             let writeOffset = 0;
 
-            // 1. スクロール中に背景として切り替えるシーン（案内・次駅等）を正確に書き込み
+            // ① スクロール実行中に背景として切り替えるシーン（案内・英語・次駅等）
             for (let i = 0; i < totalSceneCount - 1; i++) {
                 scene = i % scrollScenes.length;
                 typeScene = typeSceneList.length > 0 ? i % typeSceneList.length : 0;
@@ -744,8 +746,9 @@ function createESP32Packet() {
                 writeOffset += sceneSize;
             }
 
-            // 2. スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾(totalSceneCount - 1)へ書き込み
+            // ② スクロール終了後に静止表示する「次駅表示なし・種別＋行先単体」シーンを末尾へ書き込み
             scrollId = null;
+            if (typeof nextId !== "undefined") nextId = null; // 次駅IDを無効化して次駅表示を完全に除去
             buildSceneList();
             buildTypeSceneList();
             scene = 0;
@@ -766,12 +769,11 @@ function createESP32Packet() {
             return packet;
         }
 
-        // スクロールOFF時または通常車両時のシーン構築
-        if (isSpecialScroll) {
-            // 特殊スクロール車両でスクロールOFFの場合も、案内や次駅を含めた全シーンを取得
+        // 2. スクロールOFF時、または通常車両の時（スクロールがoffのときは特殊スクロールのない普通の車両として扱う）
+        if (scrollActive) {
             scrollId = true;
         } else {
-            if (scrollActive) scrollId = true;
+            scrollId = null;
         }
 
         buildSceneList();
@@ -822,10 +824,10 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        const speedVal = isSpecialScroll ? transferSpecialScrollSpeed : transferScrollSpeed;
+        const speedVal = transferScrollSpeed;
 
-        // isSpecialScroll 且つ scrollActive が ON の時のみ 0x80 (特殊スクロールフラグ) をセット
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff, isSpecialScroll && scrollActive);
+        // スクロールOFF時は isSpecialScrollMode を false に設定
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, speedVal, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -838,6 +840,7 @@ function createESP32Packet() {
         return packet;
     } finally {
         if (typeof scrollId !== "undefined") scrollId = oldScrollId;
+        if (typeof nextId !== "undefined") nextId = oldNextId;
     }
 }
 
