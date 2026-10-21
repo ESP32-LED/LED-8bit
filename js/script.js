@@ -1632,3 +1632,16 @@ displayLog.addEventListener("click", () => {
     debugConsole.hidden = !isDisplayLog;
     displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
 });
+
+// ===== LED設定の開閉トグル処理 =====
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleLedSettingsBtn = document.getElementById("toggleLedSettingsBtn");
+    const ledSettings = document.getElementById("ledSettings");
+    if (toggleLedSettingsBtn && ledSettings) {
+        toggleLedSettingsBtn.addEventListener("click", () => {
+            const isHidden = ledSettings.hidden;
+            ledSettings.hidden = !isHidden;
+            toggleLedSettingsBtn.textContent = isHidden ? "LED設定を閉じる" : "LED設定を開く";
+        });
+    }
+});
