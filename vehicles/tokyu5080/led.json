@@ -1231,8 +1231,8 @@
       "name": "案内",
       "groups": [
         {
-          "id": "__ungrouped__",
-          "name": "グループ外",
+          "id": "t",
+          "name": "東急線",
           "items": [
             {
               "id": "information_新横浜方面",
@@ -1246,7 +1246,13 @@
                   }
                 }
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "so",
+          "name": "相鉄線",
+          "items": [
             {
               "id": "information_東急目黒線直通",
               "view": {
