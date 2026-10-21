@@ -191,10 +191,27 @@ button:focus-visible {
     background: #fff;
     color: #222;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
 }
 
 #vehiclePrefectureSearchResults button:hover {
     background: #f0f5fa;
+}
+
+#vehiclePrefectureSearchResults .vehicleIcons {
+    display: grid;
+    grid-template-columns: repeat(6,1fr);
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+#vehiclePrefectureSearchResults .vehicleIcon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
 }
 
 #companyList {
