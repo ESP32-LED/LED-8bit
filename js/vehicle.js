@@ -72,18 +72,14 @@ async function selectVehicle(vehicle) {
         
         if (vehicleSelector) vehicleSelector.hidden = true;
         if (simulator) simulator.hidden = false;
-        mobileLog("a");
 
         await loadConfig();
-        mobileLog("loadConfig");
 
         if (config && config.hasScroll) {
             await loadFont();
         }
 
-        mobileLog("b")
         await startVehicle();
-        mobileLog("startVehicle");
         
         if (typeof setExplanation === "function") setExplanation();
 
