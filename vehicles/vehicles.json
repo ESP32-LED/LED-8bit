@@ -7,7 +7,8 @@
         "icons": [
             "vehicles/H100/icons/icon1.png"
         ],
-        "site": "vehicles/H100/site.json"
+        "site": "vehicles/H100/site.json",
+        "description": "北海道の路線"
     },
     {
         "id": "E129",
@@ -19,7 +20,7 @@
         ],
         "site": "vehicles/E129/site.json",
         "font": "fonts/font_E233.json",
-        "description": "新潟各線"
+        "description": "新潟地区の路線"
     },
     {
         "id": "E131-0",
