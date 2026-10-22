@@ -2,6 +2,7 @@
     "name": "TRC",
 
     "explanation": "筑駒鉄研にお越しくださりありがとうございます！ここでは、部員が心を込めてドット打ちしたものを使っております。お楽しみください、",
+    "hasExplanation": "true",
 
     "hasType": true,
     "hasDestination": true,
