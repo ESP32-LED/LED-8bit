@@ -241,8 +241,17 @@ vehicleSelectMethod.addEventListener("change", async () => {
         
                 const span = document.createElement("span");
                 span.textContent = vehicle.name || vehicle.id || "車両";
-        
-                button.append(iconContainer, span);
+
+                const description = document.createElement("small");
+                description.className = "vehicleDescription";
+                description.textContent = vehicle.description || "";
+
+                const textContainer = document.createElement("div");
+                textContainer.className = "vehicleText";
+
+                textContainer.append(span, description);
+
+                btn.append(iconContainer, textContainer);
         
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
@@ -302,7 +311,16 @@ vehicleSelectMethod.addEventListener("change", async () => {
                 const span = document.createElement("span");
                 span.textContent = vehicle.name || vehicle.id || "車両";
         
-                button.append(iconContainer, span);
+                const description = document.createElement("small");
+                description.className = "vehicleDescription";
+                description.textContent = vehicle.description || "";
+
+                const textContainer = document.createElement("div");
+                textContainer.className = "vehicleText";
+
+                textContainer.append(span, description);
+
+                btn.append(iconContainer, textContainer);
         
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);

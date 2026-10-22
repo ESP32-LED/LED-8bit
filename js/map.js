@@ -720,7 +720,17 @@ function createMap() {
 
                 const span = document.createElement("span");
                 span.textContent = vehicle.name;
-                button.append(iconContainer, span);
+                
+                const description = document.createElement("small");
+                description.className = "vehicleDescription";
+                description.textContent = vehicle.description || "";
+
+                const textContainer = document.createElement("div");
+                textContainer.className = "vehicleText";
+
+                textContainer.append(span, description);
+
+                button.append(iconContainer, textContainer);
 
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);

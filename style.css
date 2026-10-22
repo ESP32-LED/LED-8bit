@@ -124,7 +124,7 @@ button:focus-visible {
 
 .prefectureGroupButtons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
 }
 
@@ -277,7 +277,7 @@ button:focus-visible {
 
 .companyGroupButtons {
    display: grid;
-   grid-template-columns: repeat(4, 1fr);
+   grid-template-columns: repeat(3, 1fr);
    gap: 8px;
 }
 
@@ -464,7 +464,7 @@ textarea {
 
 #vehicleSelect {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     background: transparent;
     border: 2px solid var(--border);
@@ -508,7 +508,7 @@ textarea {
 }
 
 .vehicleDescription {
-    font-size: 0.8em;
+    font-size: 0.5em;
     color: #666;
     margin-top: 3px;
 }
