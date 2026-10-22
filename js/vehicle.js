@@ -72,14 +72,18 @@ async function selectVehicle(vehicle) {
         
         if (vehicleSelector) vehicleSelector.hidden = true;
         if (simulator) simulator.hidden = false;
+        mobileLog("a");
 
         await loadConfig();
+        mobileLog("loadConfig");
 
         if (config && config.hasScroll) {
             await loadFont();
         }
 
+        mobileLog("b")
         await startVehicle();
+        mobileLog("startVehicle");
         
         if (typeof setExplanation === "function") setExplanation();
 
@@ -109,10 +113,11 @@ async function selectVehicle(vehicle) {
 
     } catch (error) {
         console.error("車両選択エラー:", error);
-        mobileLog(
-            "[車両選択エラー]",
-            error?.stack || error?.message || String(error)
-        );
+        mobileLog("[車両選択エラー]");
+        mobileLog("名前:", error?.name);
+        mobileLog("メッセージ:", error?.message);
+        mobileLog("スタック:", error?.stack);
+        mobileLog("エラー全体:", error);
         alert(
             "車両データの読み込みに失敗しました: " +
             (error?.message || error)
