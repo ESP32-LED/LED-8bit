@@ -1807,6 +1807,8 @@ function returnToVehicleSelector() {
     clickTypeBtn = false;
     typeScroll = false;
     destinationScroll = false;
+    typeScrollId = null;
+    destinationScrollId = null;
     scrollSpeed = 450;
 
     typeDestinationScrollAnimationId = null;
