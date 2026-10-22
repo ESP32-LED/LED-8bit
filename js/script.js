@@ -1845,7 +1845,11 @@ function resetDestinationCycle() {
 }
 
 function setExplanation() {
-    document.getElementById("explanation").hidden = false;
+    if (config.hasExplanation) {
+        document.getElementById("explanation").hidden = false;
+    } else {
+        document.getElementById("explanation").hidden = true;
+    }
     const explanationLabel = document.getElementById("explanationLabel");
     const label = document.createElement("label");
     label.textContent = config.explanation;
