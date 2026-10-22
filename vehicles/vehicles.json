@@ -1,5 +1,16 @@
 [
     {
+        "id": "TRC",
+        "name": "筑駒鉄研0形",
+        "config": "vehicles/TRC/config.json",
+        "led": "vehicles/TRC/led.json",
+        "icons": [
+            "vehicles/TRC/icons/icon1.png"
+        ],
+        "site": "vehicles/TRC/site.json",
+        "description": "筑駒鉄研"
+    },
+    {
         "id": "H100",
         "name": "H100形",
         "config": "vehicles/H100/config.json",
