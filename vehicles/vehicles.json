@@ -7,8 +7,7 @@
         "icons": [
             "vehicles/TRC/icons/icon1.png"
         ],
-        "site": "vehicles/TRC/site.json",
-        "description": "筑駒鉄研"
+        "site": "vehicles/TRC/site.json"
     },
     {
         "id": "H100",
