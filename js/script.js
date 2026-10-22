@@ -20,63 +20,81 @@
         display: "none"
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-        document.body.appendChild(errorBox);
-    });
-
-    function showError(message) {
+    function attachErrorBox() {
         if (!errorBox.isConnected && document.body) {
             document.body.appendChild(errorBox);
         }
+    }
+
+    if (document.body) {
+        attachErrorBox();
+    } else {
+        document.addEventListener("DOMContentLoaded", attachErrorBox, {
+            once: true
+        });
+    }
+
+    function showError(message) {
+        attachErrorBox();
 
         errorBox.style.display = "block";
         errorBox.textContent += message + "\n\n";
+        errorBox.scrollTop = errorBox.scrollHeight;
     }
+
+    // エラー表示欄に記録
+    window.mobileLog = function (...args) {
+        const message = args.map(arg => {
+            if (arg instanceof Error) {
+                return arg.stack || `${arg.name}: ${arg.message}`;
+            }
+
+            if (typeof arg === "object" && arg !== null) {
+                try {
+                    return JSON.stringify(arg, null, 2);
+                } catch {
+                    return String(arg);
+                }
+            }
+
+            return String(arg);
+        }).join(" ");
+
+        showError(message);
+    };
 
     // 通常のJavaScriptエラー
     window.addEventListener("error", event => {
-        showError(
-            `エラー: ${event.message}\n` +
-            `ファイル: ${event.filename}\n` +
-            `行: ${event.lineno}, 列: ${event.colno}`
-        );
-    });
-
-    // async関数などで処理されなかったエラー
-    window.addEventListener("unhandledrejection", event => {
-        showError(
-            "未処理の非同期エラー:\n" +
-            String(event.reason?.stack || event.reason)
-        );
-    });
-})();
-
-function mobileLog(...args) {
-    const log = document.getElementById("debugLog");
-    if (!log) return;
-
-    log.textContent += args.map(arg => {
-        if (arg instanceof Error) return arg.stack || arg.message;
-        if (typeof arg === "object" && arg !== null) {
-            try {
-                return JSON.stringify(arg, null, 2);
-            } catch {
-                return String(arg);
-            }
+        // リソース読み込みエラーの場合も記録する
+        if (event instanceof ErrorEvent) {
+            showError(
+                `[JavaScriptエラー]\n` +
+                `メッセージ: ${event.message}\n` +
+                `ファイル: ${event.filename || "(不明)"}\n` +
+                `行: ${event.lineno || "(不明)"}, ` +
+                `列: ${event.colno || "(不明)"}\n` +
+                `スタック:\n${event.error?.stack || "(取得できません)"}`
+            );
+        } else {
+            showError(
+                `[リソース読み込みエラー]\n` +
+                `対象: ${event.target?.src || event.target?.href || "(不明)"}`
+            );
         }
-        return String(arg);
-    }).join(" ") + "\n";
+    }, true);
 
-    log.parentElement.scrollTop = log.parentElement.scrollHeight;
-}
+    // async関数などの未処理エラー
+    window.addEventListener("unhandledrejection", event => {
+        const reason = event.reason;
 
-window.addEventListener("error", event => {
-    mobileLog("エラー:", event.message, event.filename, event.lineno);
-});
+        showError(
+            `[未処理の非同期エラー]\n` +
+            `メッセージ: ${reason?.message || String(reason)}\n` +
+            `スタック:\n${reason?.stack || "(取得できません)"}`
+        );
+    });
 
-window.addEventListener("unhandledrejection", event => {
-    mobileLog("Promiseエラー:", event.reason);
-});
+})();
 
 async function startVehicle() {
     clearInterval(scrollTimer);
