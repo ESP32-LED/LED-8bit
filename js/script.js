@@ -382,7 +382,7 @@ async function startVehicle() {
             if (!config.hasCarNumberSmall) {
                 const randomIndex = Math.floor(Math.random() * 9) + 1;
                 if (randomIndex === 1) {
-                    destinationId = null
+                    carNumberId = null
                 }
             }
             const carNumberLabel = document.getElementById("carNumber");
@@ -423,6 +423,10 @@ async function startVehicle() {
                     )
                 );
             }
+            const randomIndex = Math.floor(Math.random() * 9) + 1;
+            if (randomIndex === 1) {
+                informationId = null
+            }
             const informationLabel = document.getElementById("information");
             if (informationId != null) {
                 const informationName = getName("information", informationId);
@@ -460,6 +464,10 @@ async function startVehicle() {
                             : information2Category.items.some(item => item.id !== "null_information2")
                     )
                 );
+            }
+            const randomIndex = Math.floor(Math.random() * 9) + 1;
+            if (randomIndex === 1) {
+                information2Id = null
             }
             const information2Label = document.getElementById("information2");
             if (information2Id != null) {
@@ -499,6 +507,10 @@ async function startVehicle() {
                     )
                 );
             }
+            const randomIndex = Math.floor(Math.random() * 9) + 1;
+            if (randomIndex === 1) {
+                nextId = null
+            }
             const nextLabel = document.getElementById("nextMode");
             if (nextId != null) {
                 const nextName = getName("next", nextId);
@@ -536,6 +548,10 @@ async function startVehicle() {
                             : lineCategory.items.some(item => item.id !== "null_line")
                     )
                 );
+            }
+            const randomIndex = Math.floor(Math.random() * 9) + 1;
+            if (randomIndex === 1) {
+                lineId = null
             }
             const lineLabel = document.getElementById("line");
             if (lineId != null) {
