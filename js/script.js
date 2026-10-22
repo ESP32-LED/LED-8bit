@@ -34,6 +34,7 @@
         });
     }
 
+    // 赤いエラー画面に表示する関数
     function showError(message) {
         attachErrorBox();
 
@@ -42,8 +43,10 @@
         errorBox.scrollTop = errorBox.scrollHeight;
     }
 
-    // エラー表示欄に記録
+    // モバイルログ（debugLog）に表示する関数
     window.mobileLog = function (...args) {
+        const log = document.getElementById("debugLog");
+
         const message = args.map(arg => {
             if (arg instanceof Error) {
                 return arg.stack || `${arg.name}: ${arg.message}`;
@@ -60,26 +63,39 @@
             return String(arg);
         }).join(" ");
 
-        showError(message);
+        if (!log) {
+            console.warn("[mobileLog] debugLog が見つかりません:", message);
+            return;
+        }
+
+        log.textContent += message + "\n";
+        log.scrollTop = log.scrollHeight;
     };
 
     // 通常のJavaScriptエラー
     window.addEventListener("error", event => {
-        // リソース読み込みエラーの場合も記録する
         if (event instanceof ErrorEvent) {
-            showError(
+            const message =
                 `[JavaScriptエラー]\n` +
                 `メッセージ: ${event.message}\n` +
                 `ファイル: ${event.filename || "(不明)"}\n` +
                 `行: ${event.lineno || "(不明)"}, ` +
                 `列: ${event.colno || "(不明)"}\n` +
-                `スタック:\n${event.error?.stack || "(取得できません)"}`
-            );
+                `スタック:\n${event.error?.stack || "(取得できません)"}`;
+
+            // 従来の赤いエラー画面
+            showError(message);
+
+            // モバイルログにも記録
+            mobileLog(message);
+
         } else {
-            showError(
+            const message =
                 `[リソース読み込みエラー]\n` +
-                `対象: ${event.target?.src || event.target?.href || "(不明)"}`
-            );
+                `対象: ${event.target?.src || event.target?.href || "(不明)"}`;
+
+            showError(message);
+            mobileLog(message);
         }
     }, true);
 
@@ -87,11 +103,16 @@
     window.addEventListener("unhandledrejection", event => {
         const reason = event.reason;
 
-        showError(
+        const message =
             `[未処理の非同期エラー]\n` +
             `メッセージ: ${reason?.message || String(reason)}\n` +
-            `スタック:\n${reason?.stack || "(取得できません)"}`
-        );
+            `スタック:\n${reason?.stack || "(取得できません)"}`;
+
+        // 赤いエラー画面
+        showError(message);
+
+        // モバイルログにも記録
+        mobileLog(message);
     });
 
 })();
