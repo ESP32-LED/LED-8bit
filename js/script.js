@@ -218,8 +218,12 @@ async function startVehicle() {
                 }
             }
             const typeLabel = document.getElementById("type");
-            const typeName = getName("type", typeId);
-            typeLabel.textContent = "種別:" + typeName;
+            if (typeId != null) {
+                const typeName = getName("type", typeId);
+                typeLabel.textContent = "種別:" + typeName;
+            } else {
+                typeLabel.textContent = "種別:なし";
+            }
         }
         if (config.hasDestination) {
             const destinationCategory = getCategory("destination");
