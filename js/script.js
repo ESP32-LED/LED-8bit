@@ -137,9 +137,9 @@ async function startVehicle() {
                         : typeCategory.items.some(item => item.id !== "null_type")
                 )
             );
-            mobileLog(selectedVehicle.name);
             if (selectedVehicle.name === "E233系0番台") {
-                const randomIndex = Math.floor(Math.random() * 9) + 1
+                const randomIndex = Math.floor(Math.random() * 9) + 1;
+                mobileLog(randomIndex);
                 if (randomIndex === 1) {
                     typeId = null
                 }
