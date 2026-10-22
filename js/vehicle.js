@@ -109,7 +109,14 @@ async function selectVehicle(vehicle) {
 
     } catch (error) {
         console.error("車両選択エラー:", error);
-        alert("車両データの読み込みに失敗しました: " + (error?.message || error));
+        mobileLog(
+            "[車両選択エラー]",
+            error?.stack || error?.message || String(error)
+        );
+        alert(
+            "車両データの読み込みに失敗しました: " +
+            (error?.message || error)
+        );
     }
 }
 
