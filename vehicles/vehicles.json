@@ -7,7 +7,8 @@
         "icons": [
             "vehicles/TRC/icons/icon1.png"
         ],
-        "site": "vehicles/TRC/site.json"
+        "site": "vehicles/TRC/site.json",
+        "font": "fonts/font_E233.json"
     },
     {
         "id": "H100",
