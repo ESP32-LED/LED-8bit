@@ -8,7 +8,7 @@
             "vehicles/H100/icons/icon1.png"
         ],
         "site": "vehicles/H100/site.json",
-        "description": "北海道の路線"
+        "description": "北海道ローカル線各線"
     },
     {
         "id": "E129",
@@ -20,7 +20,7 @@
         ],
         "site": "vehicles/E129/site.json",
         "font": "fonts/font_E233.json",
-        "description": "新潟地区の路線"
+        "description": "新潟地区の各線"
     },
     {
         "id": "E131-0",
@@ -30,7 +30,8 @@
         "icons": [
             "vehicles/E131-0/icons/icon1.png"
         ],
-        "site": "vehicles/E131-0/site.json"
+        "site": "vehicles/E131-0/site.json",
+        "description": "外房線・内房線（上総一ノ宮〜安房鴨川〜木更津）など房総地区末端区間"
     },
     {
         "id": "E131-200",
@@ -41,7 +42,8 @@
             "vehicles/E131-200/icons/icon1.png"
         ],
         "site": "vehicles/E131-200/site.json",
-        "font": "fonts/font_E131.json"
+        "font": "fonts/font_E131.json",
+        "description": "中央本線など甲府・長野地区"
     },
     {
         "id": "E131-500",
@@ -51,7 +53,8 @@
         "icons": [
             "vehicles/E131-500/icons/icon1.png"
         ],
-        "site": "vehicles/E131-500/site.json"
+        "site": "vehicles/E131-500/site.json",
+        "description": "相模線"
     },
     {
         "id": "E131-600",
@@ -62,7 +65,8 @@
             "vehicles/E131-600/icons/icon1.png"
         ],
         "site": "vehicles/E131-600/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "宇都宮線の末端・日光線"
     },
     {
         "id": "E131-800",
@@ -72,7 +76,8 @@
         "icons": [
             "vehicles/E131-800/icons/icon1.png"
         ],
-        "site": "vehicles/E131-800/site.json"
+        "site": "vehicles/E131-800/site.json",
+        "description": "仙石線"
     },
     {
         "id": "e131-1000",
@@ -82,7 +87,8 @@
         "icons": [
             "vehicles/e131-1000/icons/icon1.png"
         ],
-        "site": "vehicles/e131-1000/site.json"
+        "site": "vehicles/e131-1000/site.json",
+        "description": "鶴見線"
     },
     {
         "id": "E233-0",
@@ -93,7 +99,8 @@
             "vehicles/E233-0/icons/icon1.png"
         ],
         "site": "vehicles/E233-0/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "中央線快速・青梅線・五日市線・富士急行線"
     },
     {
         "id": "E233-1000",
@@ -104,7 +111,8 @@
             "vehicles/E233-1000/icons/icon1.png"
         ],
         "site": "vehicles/E233-1000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "京浜東北・根岸線"
     },
     {
         "id": "E233-3000",
@@ -115,7 +123,8 @@
             "vehicles/E233-3000/icons/icon1.png"
         ],
         "site": "vehicles/E233-3000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "東海道本線・宇都宮線・高崎線系統"
     },
     {
         "id": "E233-5000",
@@ -126,7 +135,8 @@
             "vehicles/E233-5000/icons/icon1.png"
         ],
         "site": "vehicles/E233-5000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "京葉線・外房線・内房線・東金線"
     },
     {
         "id": "E233-6000",
@@ -137,7 +147,8 @@
             "vehicles/E233-6000/icons/icon1.png"
         ],
         "site": "vehicles/E233-6000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "横浜線・根岸線"
     },
     {
         "id": "E233-7000",
@@ -148,7 +159,8 @@
             "vehicles/E233-7000/icons/icon1.png"
         ],
         "site": "vehicles/E233-7000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "埼京線・りんかい線・相鉄線"
     },
     {
         "id": "E233-8000",
@@ -159,7 +171,8 @@
             "vehicles/E233-8000/icons/icon1.png"
         ],
         "site": "vehicles/E233-8000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "南武線"
     },
     {
         "id": "E233-8500",
@@ -170,7 +183,8 @@
             "vehicles/E233-8500/icons/icon1.png"
         ],
         "site": "vehicles/E233-8500/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "南武線"
     },
     {
         "id": "mari_E233",
@@ -180,7 +194,8 @@
         "icons": [
             "vehicles/mari_E233/icons/icon1.png"
         ],
-        "site": "vehicles/mari_E233/site.json"
+        "site": "vehicles/mari_E233/site.json",
+        "description": "千葉地区"
     },
     {
         "id": "E235-0",
@@ -190,7 +205,8 @@
         "icons": [
             "vehicles/E235-0/icons/icon1.png"
         ],
-        "site": "vehicles/E235-0/site.json"
+        "site": "vehicles/E235-0/site.json",
+        "description": "山手線"
     },
     {
         "id": "EV-E301",
@@ -200,7 +216,8 @@
         "icons": [
             "vehicles/EV-E301/icons/icon1.png"
         ],
-        "site": "vehicles/EV-E301/site.json"
+        "site": "vehicles/EV-E301/site.json",
+        "description": "烏山線・宇都宮線"
     },
     {
         "id": "HB-E210",
@@ -210,7 +227,8 @@
         "icons": [
             "vehicles/HB-E210/icons/icon1.png"
         ],
-        "site": "vehicles/HB-E210/site.json"
+        "site": "vehicles/HB-E210/site.json",
+        "description": "仙石東北ライン"
     },
     {
         "id": "HB-E220",
@@ -220,7 +238,8 @@
         "icons": [
             "vehicles/HB-E220/icons/icon1.png"
         ],
-        "site": "vehicles/HB-E220/site.json"
+        "site": "vehicles/HB-E220/site.json",
+        "description": "釜石線・東北本線"
     },
     {
         "id": "HB-E220(2)",
@@ -230,7 +249,8 @@
         "icons": [
             "vehicles/HB-E220(2)/icons/icon1.png"
         ],
-        "site": "vehicles/HB-E220(2)/site.json"
+        "site": "vehicles/HB-E220(2)/site.json",
+        "description": "八高線"
     },
     {
         "id": "HB-E300",
@@ -303,7 +323,8 @@
             "vehicles/GV-E400/icons/icon1.png",
             "vehicles/GV-E400/icons/icon2.png"
         ],
-        "site": "vehicles/GV-E400/site.json"
+        "site": "vehicles/GV-E400/site.json",
+        "description": "主に東北地方日本海側の非電化路線"
     },
     {
         "id": "hybari",
@@ -327,7 +348,7 @@
     },
     {
         "id": "101",
-        "name": "キハ101形 左沢線",
+        "name": "キハ101形　左沢線",
         "config": "vehicles/101/config.json",
         "led": "vehicles/101/led.json",
         "icons": [
@@ -343,7 +364,8 @@
         "icons": [
             "vehicles/E130-500/icons/icon1.png"
         ],
-        "site": "vehicles/E130-500/site.json"
+        "site": "vehicles/E130-500/site.json",
+        "description": "八戸線"
     },
     {
         "id": "E200",
@@ -353,7 +375,8 @@
         "icons": [
             "vehicles/E200/icons/icon1.png"
         ],
-        "site": "vehicles/E200/site.json"
+        "site": "vehicles/E200/site.json",
+        "description": "小海線"
     },
     {
         "id": "E26",
@@ -364,7 +387,8 @@
             "vehicles/E26/icons/icon1.png",
             "vehicles/E26/icons/icon2.png"
         ],
-        "site": "vehicles/E26/site.json"
+        "site": "vehicles/E26/site.json",
+        "description": "寝台特急カシオペア"
     },
     {
         "id": "E993",
@@ -374,7 +398,8 @@
         "icons": [
             "vehicles/E993/icons/icon1.png"
         ],
-        "site": "vehicles/E993/site.json"
+        "site": "vehicles/E993/site.json",
+        "description": "ACトレイン"
     },
     {
         "id": "360",
