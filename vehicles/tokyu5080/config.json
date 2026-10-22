@@ -29,12 +29,12 @@
     "typeSwitching": true,
 
     "sceneInterval": 3000,
-    "languageSwitching": false,
+    "languageSwitching": true,
     "carNumberLanguageSwitching": false,
-    "destinationLanguageSwitching": false,
+    "destinationLanguageSwitching": true,
     "informationLanguageSwitching": false,
     "ledWidth": 144,
-    "ledHeight": 32,
+    "ledHeight": 24,
     "pixelSize": 8.5,
     "ledSize": 6.5,
     "ledGap": 2,
@@ -45,6 +45,7 @@
     "setSwitchingTime": true,
     "jaTime": 9,
     "enTime": 4,
+    "infotime": 4,
 
     "next_normal": false,
     "nextPosition": 16,
