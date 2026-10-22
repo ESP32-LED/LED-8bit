@@ -1,4 +1,4 @@
-const CACHE_NAME = "led-simulator-v2.1.5";
+const CACHE_NAME = "led-simulator-v3.1.1";
 
 
 // ========================================
