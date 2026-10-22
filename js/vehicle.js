@@ -251,7 +251,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
 
                 textContainer.append(span, description);
 
-                btn.append(iconContainer, textContainer);
+                button.append(iconContainer, textContainer);
         
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
@@ -320,7 +320,7 @@ vehicleSelectMethod.addEventListener("change", async () => {
 
                 textContainer.append(span, description);
 
-                btn.append(iconContainer, textContainer);
+                button.append(iconContainer, textContainer);
         
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
