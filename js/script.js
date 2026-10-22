@@ -253,6 +253,16 @@ async function startVehicle() {
                         : destinationCategory.items.some(item => item.id !== "null_destination")
                 )
             );
+            if (typeId != null) {
+                const type = getItem("type", typeId);
+                const typeHasFull = !!type.view?.full;
+                if (typeHasFull) {
+                    const randomIndex = Math.floor(Math.random() * 9) + 1;
+                    if (randomIndex === 1) {
+                        destinationId = null
+                    }
+                }
+            }
             if (config.hasDestinationScroll) {
                 const typeData = getItem("type", typeId);
                 const destinationData = getItem("destination", destinationId);
@@ -332,169 +342,208 @@ async function startVehicle() {
                 }
             }
             const destinationLabel = document.getElementById("destination");
-            const destinationName = getName("destination", destinationId);
-            destinationLabel.textContent = "行先:" + destinationName;
+            if (destinationId != null) {
+                const destinationName = getName("destination", destinationId);
+                destinationLabel.textContent = "行先:" + destinationName;
+            } else {
+                destinationLabel.textContent = "行先:なし";
+            }
         }
         if (config.hasCarNumber) {
-            const carNumberCategory = getCategory("carNumber");
-            do {
-                if (config.carNumberDistinction) {
-                    const randomIndexGroups = Math.floor(
-                        Math.random() * carNumberCategory.groups.length
-                    );
-                    const groups = carNumberCategory.groups[randomIndexGroups];
-                    const randomIndexItems = Math.floor(
-                        Math.random() * groups.items.length
-                    );
-                    carNumberId = groups.items[randomIndexItems].id;
-                } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * carNumberCategory.items.length
-                    );
-                    carNumberId = carNumberCategory.items[randomIndex].id;
-                }
-            } while (
-                carNumberId === "null_carNumber" &&
-                (
-                    config.carNumberDistinction
-                        ? carNumberCategory.groups.some(group =>
-                            group.items.some(item => item.id !== "null_carNumber")
-                        )
-                        : carNumberCategory.items.some(item => item.id !== "null_carNumber")
-                )
-            );
+            if (destinationId != null || config.hasCarNumberSmall) {
+                const carNumberCategory = getCategory("carNumber");
+                do {
+                    if (config.carNumberDistinction) {
+                        const randomIndexGroups = Math.floor(
+                            Math.random() * carNumberCategory.groups.length
+                        );
+                        const groups = carNumberCategory.groups[randomIndexGroups];
+                        const randomIndexItems = Math.floor(
+                            Math.random() * groups.items.length
+                        );
+                        carNumberId = groups.items[randomIndexItems].id;
+                    } else {
+                        const randomIndex = Math.floor(
+                            Math.random() * carNumberCategory.items.length
+                        );
+                        carNumberId = carNumberCategory.items[randomIndex].id;
+                    }
+                } while (
+                    carNumberId === "null_carNumber" &&
+                    (
+                        config.carNumberDistinction
+                            ? carNumberCategory.groups.some(group =>
+                                group.items.some(item => item.id !== "null_carNumber")
+                            )
+                            : carNumberCategory.items.some(item => item.id !== "null_carNumber")
+                    )
+                );
+            }
+            if (!config.hasCarNumberSmall) {
+                const randomIndex = Math.floor(Math.random() * 9) + 1;
+                if (randomIndex === 1) {
+                    destinationId = null
+                }
+            }
             const carNumberLabel = document.getElementById("carNumber");
-            const carNumberName = getName("carNumber", carNumberId);
-            carNumberLabel.textContent = "号車:" + carNumberName;
+            if (carNumberId != null) {
+                const carNumberName = getName("carNumber", carNumberId);
+                carNumberLabel.textContent = "号車:" + carNumberName;
+            } else {
+                carNumberLabel.textContent = "号車:なし";
+            }
         }
         if (config.hasInformation) {
-            const informationCategory = getCategory("information");
-            do {
-                if (config.informationDistinction) {
-                    const randomIndexGroups = Math.floor(
-                        Math.random() * informationCategory.groups.length
-                    );
-                    const groups = informationCategory.groups[randomIndexGroups];
-                    const randomIndexItems = Math.floor(
-                        Math.random() * groups.items.length
-                    );
-                    informationId = groups.items[randomIndexItems].id;
-                } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * informationCategory.items.length
-                    );
-                    informationId = informationCategory.items[randomIndex].id;
-                }
-            } while (
-                informationId === "null_information" &&
-                (
-                    config.informationDistinction
-                        ? informationCategory.groups.some(group =>
-                            group.items.some(item => item.id !== "null_information")
-                        )
-                        : informationCategory.items.some(item => item.id !== "null_information")
-                )
-            );
-            console.log(informationId);
+            if (destinationId != null) {
+                const informationCategory = getCategory("information");
+                do {
+                    if (config.informationDistinction) {
+                        const randomIndexGroups = Math.floor(
+                            Math.random() * informationCategory.groups.length
+                        );
+                        const groups = informationCategory.groups[randomIndexGroups];
+                        const randomIndexItems = Math.floor(
+                            Math.random() * groups.items.length
+                        );
+                        informationId = groups.items[randomIndexItems].id;
+                    } else {
+                        const randomIndex = Math.floor(
+                            Math.random() * informationCategory.items.length
+                        );
+                        informationId = informationCategory.items[randomIndex].id;
+                    }
+                } while (
+                    informationId === "null_information" &&
+                    (
+                        config.informationDistinction
+                            ? informationCategory.groups.some(group =>
+                                group.items.some(item => item.id !== "null_information")
+                            )
+                            : informationCategory.items.some(item => item.id !== "null_information")
+                    )
+                );
+            }
             const informationLabel = document.getElementById("information");
-            const informationName = getName("information", informationId);
-            informationLabel.textContent = "案内:" + informationName;
+            if (informationId != null) {
+                const informationName = getName("information", informationId);
+                informationLabel.textContent = "案内:" + informationName;
+            } else {
+                informationLabel.textContent = "案内:なし";
+            }
         }
         if (config.hasInformation2) {
-            const information2Category = getCategory("information2");
-            do {
-                if (config.information2Distinction) {
-                    const randomIndexGroups = Math.floor(
-                        Math.random() * information2Category.groups.length
-                    );
-                    const groups = information2Category.groups[randomIndexGroups];
-                    const randomIndexItems = Math.floor(
-                        Math.random() * groups.items.length
-                    );
-                    information2Id = groups.items[randomIndexItems].id;
-                } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * information2Category.items.length
-                    );
-                    information2Id = information2Category.items[randomIndex].id;
-                }
-            } while (
-                information2Id === "null_information2" &&
-                (
-                    config.information2Distinction
-                        ? information2Category.groups.some(group =>
-                            group.items.some(item => item.id !== "null_information2")
-                        )
-                        : information2Category.items.some(item => item.id !== "null_information2")
-                )
-            );
+            if (destinationId != null) {
+                const information2Category = getCategory("information2");
+                do {
+                    if (config.information2Distinction) {
+                        const randomIndexGroups = Math.floor(
+                            Math.random() * information2Category.groups.length
+                        );
+                        const groups = information2Category.groups[randomIndexGroups];
+                        const randomIndexItems = Math.floor(
+                            Math.random() * groups.items.length
+                        );
+                        information2Id = groups.items[randomIndexItems].id;
+                    } else {
+                        const randomIndex = Math.floor(
+                            Math.random() * information2Category.items.length
+                        );
+                        information2Id = information2Category.items[randomIndex].id;
+                    }
+                } while (
+                    information2Id === "null_information2" &&
+                    (
+                        config.information2Distinction
+                            ? information2Category.groups.some(group =>
+                                group.items.some(item => item.id !== "null_information2")
+                            )
+                            : information2Category.items.some(item => item.id !== "null_information2")
+                    )
+                );
+            }
             const information2Label = document.getElementById("information2");
-            const information2Name = getName("information2", information2Id);
-            information2Label.textContent = "案内2:" + information2Name;
+            if (information2Id != null) {
+                const information2Name = getName("information2", information2Id);
+                information2Label.textContent = "案内2:" + information2Name;
+            } else {
+                information2Label.textContent = "案内2:なし";
+            }
         }
         if (config.hasNext) {
-            const nextCategory = getCategory("next");
-            do {
-                if (config.nextModeDistinction) {
-                    const randomIndexGroups = Math.floor(
-                        Math.random() * nextCategory.groups.length
-                    );
-                    const groups = nextCategory.groups[randomIndexGroups];
-                    const randomIndexItems = Math.floor(
-                        Math.random() * groups.items.length
-                    );
-                    nextId = groups.items[randomIndexItems].id;
-                } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * nextCategory.items.length
-                    );
-                    nextId = nextCategory.items[randomIndex].id;
-                }
-            } while (
-                nextId === "null_next" &&
-                (
-                    config.nextModeDistinction
-                        ? nextCategory.groups.some(group =>
-                            group.items.some(item => item.id !== "null_next")
-                        )
-                        : nextCategory.items.some(item => item.id !== "null_next")
-                )
-            );
+            if (destinationId != null) {
+                const nextCategory = getCategory("next");
+                do {
+                    if (config.nextModeDistinction) {
+                        const randomIndexGroups = Math.floor(
+                            Math.random() * nextCategory.groups.length
+                        );
+                        const groups = nextCategory.groups[randomIndexGroups];
+                        const randomIndexItems = Math.floor(
+                            Math.random() * groups.items.length
+                        );
+                        nextId = groups.items[randomIndexItems].id;
+                    } else {
+                        const randomIndex = Math.floor(
+                            Math.random() * nextCategory.items.length
+                        );
+                        nextId = nextCategory.items[randomIndex].id;
+                    }
+                } while (
+                    nextId === "null_next" &&
+                    (
+                        config.nextModeDistinction
+                            ? nextCategory.groups.some(group =>
+                                group.items.some(item => item.id !== "null_next")
+                            )
+                            : nextCategory.items.some(item => item.id !== "null_next")
+                    )
+                );
+            }
             const nextLabel = document.getElementById("nextMode");
-            const nextName = getName("next", nextId);
-            nextLabel.textContent = "次駅:" + nextName;
+            if (nextId != null) {
+                const nextName = getName("next", nextId);
+                nextLabel.textContent = "次駅:" + nextName;
+            } else {
+                nextLabel.textContent = "次駅:なし";
+            }
         }
         if (config.hasLine) {
-            const lineCategory = getCategory("line");
-            do {
-                if (config.lineDistinction) {
-                    const randomIndexGroups = Math.floor(
-                        Math.random() * lineCategory.groups.length
-                    );
-                    const groups = lineCategory.groups[randomIndexGroups];
-                    const randomIndexItems = Math.floor(
-                        Math.random() * groups.items.length
-                    );
-                    lineId = groups.items[randomIndexItems].id;
-                } else {
-                    const randomIndex = Math.floor(
-                        Math.random() * lineCategory.items.length
-                    );
-                    lineId = lineCategory.items[randomIndex].id;
-                }
-            } while (
-                lineId === "null_line" &&
-                (
-                    config.lineDistinction
-                        ? lineCategory.groups.some(group =>
-                            group.items.some(item => item.id !== "null_line")
-                        )
-                        : lineCategory.items.some(item => item.id !== "null_line")
-                )
-            );
+            if (destinationId != null) {
+                const lineCategory = getCategory("line");
+                do {
+                    if (config.lineDistinction) {
+                        const randomIndexGroups = Math.floor(
+                            Math.random() * lineCategory.groups.length
+                        );
+                        const groups = lineCategory.groups[randomIndexGroups];
+                        const randomIndexItems = Math.floor(
+                            Math.random() * groups.items.length
+                        );
+                        lineId = groups.items[randomIndexItems].id;
+                    } else {
+                        const randomIndex = Math.floor(
+                            Math.random() * lineCategory.items.length
+                        );
+                        lineId = lineCategory.items[randomIndex].id;
+                    }
+                } while (
+                    lineId === "null_line" &&
+                    (
+                        config.lineDistinction
+                            ? lineCategory.groups.some(group =>
+                                group.items.some(item => item.id !== "null_line")
+                            )
+                            : lineCategory.items.some(item => item.id !== "null_line")
+                    )
+                );
+            }
             const lineLabel = document.getElementById("line");
-            const lineName = getName("line", lineId);
-            lineLabel.textContent = "路線名:" + lineName;
+            if (lineId != null) {
+                const lineName = getName("line", lineId);
+                lineLabel.textContent = "路線名:" + lineName;
+            } else {
+                lineLabel.textContent = "路線名:なし";
+            }
         }
 
         resizeLed();
