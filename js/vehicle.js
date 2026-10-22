@@ -36,7 +36,10 @@ function createVehicleButtons() {
         const span = document.createElement("span");
         span.textContent = vehicle.name || vehicle.id || "車両";
 
-        btn.append(iconContainer, span);
+        const description = document.createElement("small");
+        description.textContent = vehicle.description || "";
+
+        btn.append(iconContainer, span, description);
 
         btn.addEventListener("click", async () => {
             await selectVehicle(vehicle);
