@@ -32,7 +32,7 @@
     "lineDistinction": false,
     "carNumberDistinction": false,
 
-    "typeSwitching": false,
+    "typeSwitching": true,
 
     "sceneInterval": 3000,
     "languageSwitching": true,
