@@ -19,7 +19,7 @@
             "vehicles/H100/icons/icon1.png"
         ],
         "site": "vehicles/H100/site.json",
-        "description": "北海道ローカル線各線"
+        "description": "北海道内の各線"
     },
     {
         "id": "E129",
@@ -31,7 +31,7 @@
         ],
         "site": "vehicles/E129/site.json",
         "font": "fonts/font_E233.json",
-        "description": "新潟地区の各線"
+        "description": "信越本線（直江津〜新潟）・上越線（水上〜宮内）・白新線・越後線など"
     },
     {
         "id": "E131-0",
@@ -42,7 +42,7 @@
             "vehicles/E131-0/icons/icon1.png"
         ],
         "site": "vehicles/E131-0/site.json",
-        "description": "外房線・内房線（上総一ノ宮〜安房鴨川〜木更津）など房総地区末端区間"
+        "description": "外房線（上総一ノ宮〜安房鴨川）・内房線（木更津〜安房鴨川）・鹿島線・成田線（成田〜香取）"
     },
     {
         "id": "E131-200",
@@ -54,7 +54,7 @@
         ],
         "site": "vehicles/E131-200/site.json",
         "font": "fonts/font_E131.json",
-        "description": "中央本線など甲府・長野地区"
+        "description": "中央本線・篠ノ井線・信越本線（篠ノ井〜長野）など"
     },
     {
         "id": "E131-500",
@@ -77,7 +77,7 @@
         ],
         "site": "vehicles/E131-600/site.json",
         "font": "fonts/font_E233.json",
-        "description": "宇都宮線の末端・日光線"
+        "description": "宇都宮線（小山〜黒磯）・日光線"
     },
     {
         "id": "E131-800",
@@ -147,7 +147,7 @@
         ],
         "site": "vehicles/E233-5000/site.json",
         "font": "fonts/font_E233.json",
-        "description": "京葉線・外房線・内房線・東金線"
+        "description": "京葉線・外房線（千葉〜上総一ノ宮）・内房線（蘇我〜君津）・東金線"
     },
     {
         "id": "E233-6000",
@@ -206,7 +206,7 @@
             "vehicles/mari_E233/icons/icon1.png"
         ],
         "site": "vehicles/mari_E233/site.json",
-        "description": "千葉地区"
+        "description": "千葉地区の各線"
     },
     {
         "id": "E235-0",
@@ -335,7 +335,7 @@
             "vehicles/GV-E400/icons/icon2.png"
         ],
         "site": "vehicles/GV-E400/site.json",
-        "description": "主に東北地方日本海側の非電化路線"
+        "description": "磐越西線・羽越本線・五能線など"
     },
     {
         "id": "hybari",
@@ -435,7 +435,8 @@
         "icons": [
             "vehicles/225-100/icons/icon1.png"
         ],
-        "site": "vehicles/225-100/site.json"
+        "site": "vehicles/225-100/site.json",
+        "description": "JR琵琶湖線・JR京都線・JR神戸線・湖西線など"
     },
     {
         "id": "225-5100",
@@ -445,7 +446,8 @@
         "icons": [
             "vehicles/225-5100/icons/icon1.png"
         ],
-        "site": "vehicles/225-5100/site.json"
+        "site": "vehicles/225-5100/site.json",
+        "description": "阪和線・関西空港線"
     },
     {
         "id": "227-0",
