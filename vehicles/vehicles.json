@@ -1,7 +1,7 @@
 [
     {
         "id": "TRC",
-        "name": "筑駒鉄研0形",
+        "name": "TRC-T1系",
         "config": "vehicles/TRC/config.json",
         "led": "vehicles/TRC/led.json",
         "icons": [
