@@ -425,7 +425,8 @@
             "vehicles/360/icons/icon5.png",
             "vehicles/360/icons/icon6.png"
         ],
-        "site": "vehicles/360/site.json"
+        "site": "vehicles/360/site.json",
+        "description": "FASTECH 360S"
     },
     {
         "id": "225-100",
