@@ -448,7 +448,7 @@
             "vehicles/225-5100/icons/icon1.png"
         ],
         "site": "vehicles/225-5100/site.json",
-        "description": "阪和線・関西空港線"
+        "description": "大阪環状線・阪和線・関西空港線・紀勢本線"
     },
     {
         "id": "227-0",
@@ -458,7 +458,8 @@
         "icons": [
             "vehicles/227-0/icons/icon1.png"
         ],
-        "site": "vehicles/227-0/site.json"
+        "site": "vehicles/227-0/site.json",
+        "description": "山陽本線（福山〜新山口）・呉線・可部線"
     },
     {
         "id": "227-500_urara",
