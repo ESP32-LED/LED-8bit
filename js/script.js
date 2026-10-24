@@ -1006,7 +1006,7 @@ function buildSceneList() {
         }
 
         if(nextId != null) {
-            if (config.hasDestinationInformationCombined) {
+            if (config.hasDestinationInformationCombined && informationId != null) {
                 sceneList.push({
                     lang: "ja",
                     information: "destination_information",
@@ -1072,12 +1072,14 @@ function buildSceneList() {
             if (hasEnglishType()) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        if (config.hasDestinationInformationCombined && hasEnglishInformation()) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination_information",
-                                next: true
-                            });
+                        if (informationId != null && config.hasDestinationInformationCombined) {
+                            if (hasEnglishInformation()) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination_information",
+                                    next: true
+                                });
+                            }
                         } else {
                             sceneList.push({
                                 lang: "en",
@@ -1113,12 +1115,14 @@ function buildSceneList() {
             if (typeId === null) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        if (config.hasDestinationInformationCombined && hasEnglishInformation()) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination_information",
-                                next: true
-                            });
+                        if (informationId != null && config.hasDestinationInformationCombined) {
+                            if (hasEnglishInformation()) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination_information",
+                                    next: true
+                                });
+                            }
                         } else {
                             sceneList.push({
                                 lang: "en",
@@ -1155,12 +1159,14 @@ function buildSceneList() {
                 if (!hasEnglishType()) {
                     if (nextId != null) {
                         if (!config.nextJaOnly) {
-                            if (config.hasDestinationInformationCombined && hasEnglishInformation()) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination_information",
-                                    next: true
-                                });
+                            if (informationId != null && config.hasDestinationInformationCombined) {
+                                if (hasEnglishInformation()) {
+                                    sceneList.push({
+                                        lang: "en",
+                                        information: "destination_information",
+                                        next: true
+                                    });
+                                }
                             } else {
                                 sceneList.push({
                                     lang: "en",
@@ -1175,12 +1181,14 @@ function buildSceneList() {
         } else {
             if (nextId != null || scrollId != null) {
                 if (!config.nextJaOnly) {
-                    if (config.hasDestinationInformationCombined && hasEnglishInformation()) {
-                        sceneList.push({
-                            lang: "en",
-                            information: "destination_information",
-                            next: true
-                        });
+                    if (informationId != null && config.hasDestinationInformationCombined) {
+                        if (hasEnglishInformation()) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination_information",
+                                next: true
+                            });
+                        }
                     } else {
                         sceneList.push({
                             lang: "en",

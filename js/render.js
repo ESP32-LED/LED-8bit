@@ -149,7 +149,7 @@ function createDisplayMatrix() {
                     }
                     if (!useSmallDestination) {
                         if (next) {
-                            if (informationMode === "destination" || (informationMode === "information" && info?.view?.small)) {
+                            if (informationMode === "destination" || (informationMode === "information" && info?.view?.small) || (informationMode === "destination_information" && info?.view?.small)) {
                                 drawNext(next, matrix);
                             }
                         }
