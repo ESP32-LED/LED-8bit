@@ -853,7 +853,8 @@
             "vehicles/sr1/icons/icon1.png",
             "vehicles/sr1/icons/icon2.png"
         ],
-        "site": "vehicles/sr1/site.json"
+        "site": "vehicles/sr1/site.json",
+        "font": "fonts/font_E233.json"
     },
     {
         "id": "AB900",
