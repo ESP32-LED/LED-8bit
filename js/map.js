@@ -260,7 +260,7 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     // オフセットが変化する範囲（画面上のピクセル）
     // 大きくすると、より長い距離を使って緩やかに変化する
-    const smoothingDistance = 40;
+    const smoothingDistance = 100;
 
     const sampleStep = 4;
     const tangentWindow = 24;
@@ -463,45 +463,70 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     if (!offsetRuns.length) return coordinates;
 
+        // オフセットの変化を滑らかにする距離（画面上のpx）
+    // 既存の smoothingDistance = 40 を 100 に変更する
     function smoothStep(t) {
         t = Math.max(0, Math.min(1, t));
         return t * t * (3 - 2 * t);
     }
 
-    function getSmoothOffset(distance) {
-        const start = Math.max(
-            0,
-            distance - smoothingDistance
-        );
+    // 指定位置における、補間前のオフセットを取得
+    function getRawOffset(distance) {
+        let low = 0;
+        let high = offsetRuns.length - 1;
 
-        const end = Math.min(
-            totalDistance,
-            distance + smoothingDistance
-        );
+        while (low < high) {
+            const mid = Math.floor((low + high) / 2);
 
-        if (end - start < 0.001) {
+            if (offsetRuns[mid].end < distance) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+
+        const run = offsetRuns[low];
+
+        if (!run || distance < run.start || distance > run.end) {
             return 0;
         }
 
-        function offsetIntegral(d) {
-            let total = 0;
+        return run.offset;
+    }
 
-            for (const run of offsetRuns) {
-                const from = Math.max(start, run.start);
-                const to = Math.min(d, run.end);
+    // 周辺のオフセットを滑らかに平均する
+    function getSmoothOffset(distance) {
+        const radius = smoothingDistance;
+        const sampleCount = 40;
 
-                if (to > from) {
-                    total += (to - from) * run.offset;
-                }
+        let weightedOffset = 0;
+        let totalWeight = 0;
+
+        for (let i = 0; i <= sampleCount; i++) {
+            const t = i / sampleCount;
+            const sampleDistance =
+                distance - radius + 2 * radius * t;
+
+            if (
+                sampleDistance < 0 ||
+                sampleDistance > totalDistance
+            ) {
+                continue;
             }
 
-            return total;
+            // 中央ほど重く、端に近づくほど軽くする
+            const weight =
+                0.5 + 0.5 * Math.cos(2 * Math.PI * (t - 0.5));
+
+            weightedOffset +=
+                getRawOffset(sampleDistance) * weight;
+
+            totalWeight += weight;
         }
 
-        return (
-            offsetIntegral(end) -
-            offsetIntegral(start)
-        ) / (end - start);
+        return totalWeight > 0
+            ? weightedOffset / totalWeight
+            : getRawOffset(distance);
     }
 
     function getPointAtDistance(distance) {
