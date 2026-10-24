@@ -88,15 +88,25 @@
 			<button type="button" id="toggleLedSettingsBtn" style="width: 100%; padding: 10px; margin-top: 15px; font-weight: bold; cursor: pointer;">LED設定を開く</button>
 			<div id="ledSettings" hidden>
 				<h3 style="margin-top: 10px;">LED設定</h3>
-				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
 					<label>
 						LEDの物理幅
 						<input type="number" id="hardwareWidth" value="192" min="64" max="256" style="width: 100%; padding: 6px; box-sizing: border-box;" onchange="if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer()">
 					</label>
-					<label>
-						表示位置 (幅不足時): <span id="val-align">右寄せ</span>
-						<input type="range" id="displayAlign" min="0" max="1" step="1" value="1" style="width: 100%;" oninput="document.getElementById('val-align').innerText = (this.value == '1' ? '右寄せ' : '中央寄せ'); if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer();">
-					</label>
+					
+					<!-- 「位置」切り替え用トグルスイッチ（OFF: 中央 / ON: 右） -->
+					<div class="setting-row">
+						<span class="setting-label">位置</span>
+						<div class="toggle-switch-container">
+							<span class="toggle-text">中央</span>
+							<label class="switch">
+								<input type="checkbox" id="displayAlignToggle" checked onchange="if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer();">
+								<span class="slider round"></span>
+							</label>
+							<span class="toggle-text">右</span>
+						</div>
+					</div>
+
 					<label>
 						LED全体の明るさ: <span id="val-hw-bright">20</span>
 						<input type="range" id="hwBrightness" min="1" max="50" step="1" value="20" style="width: 100%;" oninput="document.getElementById('val-hw-bright').innerText=this.value; if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer();">
