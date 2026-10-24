@@ -594,7 +594,13 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
 
 function createESP32TypeDestinationScrollPacket(br, gam) {
     const states = getESP32TypeDestinationScrollStates();
-    const hw = getHardwareWidth(); // 物理LED幅 (例: 192)
+
+    const hw = getHardwareWidth();
+    const pw =
+        typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))
+            ? Number(config.ledWidth)
+            : 160;
+    const margin = getDisplayMargin(hw, pw);
 
     const descriptors = [];
     const bitmaps = [];
@@ -636,26 +642,12 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                // 元のスクロール領域の幅（例: 160 - 48 = 112px）
-                const rawLeft = Math.round(info.state.areaLeft);
-                const rawRight = Math.round(info.state.areaRight);
-                const areaW = Math.max(1, rawRight - rawLeft);
+                // info.state の座標範囲を基準表示幅(pw)内に収めてから margin を加算
+                const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft)));
+                const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight)));
 
-                // 位置設定（トグルスイッチ：OFF=中央 / ON=右）
-                const alignToggle = document.getElementById("displayAlignToggle");
-                const isRight = alignToggle ? alignToggle.checked : true;
-
-                let calcLeft = 0;
-                if (isRight) {
-                    // 右揃え：右端(hw)からエリア幅分左へ
-                    calcLeft = hw - areaW;
-                } else {
-                    // 中央揃え：(hw - エリア幅) / 2
-                    calcLeft = Math.floor((hw - areaW) / 2);
-                }
-
-                descriptor.areaLeft = Math.max(0, calcLeft);
-                descriptor.areaRight = Math.min(hw, calcLeft + areaW);
+                descriptor.areaLeft = Math.min(hw, Math.max(0, rawLeft + margin));
+                descriptor.areaRight = Math.min(hw, Math.max(0, rawRight + margin));
                 descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop));
                 descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom));
                 descriptor.dataLength = created.sbuf.length;
