@@ -23,6 +23,16 @@ const transferScrollSpeed = 15;
 const transferSpecialScrollSpeed = 13;
 const transferTypeDestinationScrollSpeed = 14;
 
+function getDisplayMargin(hw, pw) {
+    if (hw <= pw) return 0;
+    const alignInput = document.getElementById("displayAlign");
+    const alignVal = alignInput ? alignInput.value : "1";
+    if (alignVal === "0") {
+        return Math.floor((hw - pw) / 2); // 中央寄せ
+    }
+    return hw - pw; // 右寄せ
+}
+
 function compressLZ4(input) {
     const srcLen = input.length;
     if (srcLen === 0) return new Uint8Array(0);
@@ -342,7 +352,8 @@ document.addEventListener("click", (e) => {
         e.target.id === "choppyScrollCheck" ||
         e.target.id === "isLedAging" ||
         e.target.id === "ledAgingLebel" ||
-        e.target.id === "ledAgingLevel"
+        e.target.id === "ledAgingLevel" ||
+        e.target.id === "displayAlign"
     ) {
         if (e.target.id === "isLedAging" || e.target.id === "ledAgingLebel" || e.target.id === "ledAgingLevel") {
             ledAging = null;
@@ -359,6 +370,7 @@ document.addEventListener("input", (e) => {
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
+        e.target.id === "displayAlign" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
         e.target.id === "hwBrightness" ||
@@ -385,6 +397,7 @@ document.addEventListener("change", (e) => {
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
+        e.target.id === "displayAlign" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
         e.target.id === "hwBrightness" ||
@@ -576,7 +589,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))
             ? Number(config.ledWidth)
             : 160;
-    const margin = Math.max(0, hw - pw);
+    const margin = getDisplayMargin(hw, pw);
 
     const descriptors = [];
     const bitmaps = [];
@@ -791,7 +804,7 @@ function createESP32Packet() {
 
             const hw = getHardwareWidth();
             const pw = Number(config.ledWidth);
-            const margin = Math.max(0, hw - pw);
+            const margin = getDisplayMargin(hw, pw);
             const br = getNumberValue("softBrightness", 1.0);
             const gam = getNumberValue("gammaCorrection", 2.5);
             const scrollData = createESP32ScrollData(br, gam);
@@ -899,7 +912,7 @@ function createESP32Packet() {
             throw new Error("config.ledWidth が正しくありません");
         }
 
-        const margin = Math.max(0, hw - pw);
+        const margin = getDisplayMargin(hw, pw);
         const br = getNumberValue("softBrightness", 1.0);
         const gam = getNumberValue("gammaCorrection", 2.5);
 
