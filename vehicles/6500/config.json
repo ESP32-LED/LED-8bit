@@ -19,6 +19,7 @@
     "informationPosition": "normal",
     "destinationPosition": "normal",
     "hasNextFullScreen": false,
+    "hasNextEnFullScreen": true,
     "hasScrollFullScreen": false,
     "information_ja_en": false,
 
@@ -52,6 +53,7 @@
 
     "next_normal": true,
     "nextPosition": 16,
+    "enNextPosition": 19,
 
     "hasReferenceSite": false,
 
