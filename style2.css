@@ -1,6 +1,701 @@
+/* 追加UI用の色設定 */
+:root {
+    color-scheme: light;
+    --text: #30383d;
+    --page-bg: #f5f5f3;
+    --surface: #ffffff;
+    --surface-soft: #f7f7f5;
+    --text-muted: #70777b;
+    --border: #d9dddf;
+    --border-strong: #c5cbcd;
+    --accent: #39758c;
+    --accent-hover: #2e5e70;
+    --accent-soft: #eaf1f2;
+    --ui-font: "Yu Gothic UI", "Yu Gothic", "Meiryo", "Noto Sans JP", sans-serif;
+}
+
+
+
+
+/* LED用のドットフォントはゴシック体への変更対象にしない */
+@font-face {
+    font-family: "KH Kagurazaka 16";
+    src: url("fonts/KH-Dot-Kagurazaka-16.ttf") format("truetype");
+}
+
+/* style2 に不足していた検索・地域選択・設定UIのスタイル */
+#tittle {
+    display: flex;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 2;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    color: #193653;
+    box-shadow: 0 2px 8px rgba(28, 52, 84, 0.035);
+    transition: background-color 0.16s ease;
+    width: 100%;
+}
+
+#vehicleSelectMethod:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+    outline: 3px solid rgba(40, 120, 208, 0.25);
+    outline-offset: 2px;
+}
+
+#closeLinePanel {
+    margin: 0;
+    padding: 0;
+    border-radius: 8px;
+    font-family: var(--ui-font);
+}
+
+#closeLinePanel:hover {
+    color: #9f2929;
+    background: #fff1f1;
+}
+
+#prefectureList {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+    background: transparent;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+}
+
+#prefectureList[hidden] {
+    display: none !important;
+}
+
+.prefectureGroupHeader {
+    padding: 11.5px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    background: rgb(227, 225, 225);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--ui-font);
+    font-size: 18px;
+    transition: 0.05s;
+}
+
+.prefectureGroupHeader:hover {
+    background: #e9e8e8;
+}
+
+.prefectureGroupHeader:active {
+    transform: scale(0.98);
+}
+
+.prefectureGroupButtons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.prefectureGroupButtons button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.prefectureGroupButtons .vehicleIcons {
+    display: grid;
+    grid-template-columns: repeat(6,1fr);
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.prefectureGroupButtons .vehicleIcon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.prefectureGroupButtons[hidden] {
+    display: none;
+}
+
+#vehiclePrefectureSearchArea,
+#vehicleSearchArea,
+#vehicleCompanySearchArea {
+    margin: 12px 0;
+}
+
+#vehiclePrefectureSearchArea[hidden],
+#vehicleSearchArea[hidden],
+#vehicleCompanySearchArea[hidden] {
+    display: none !important;
+}
+
+#vehiclePrefectureSearchInput,
+#vehicleSearchInput,
+#vehicleCompanySearchInput {
+    width: calc(100% - 20px);
+    position: relative;
+    -webkit-appearance: searchfield;
+    appearance: auto;
+    box-sizing: border-box;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#vehiclePrefectureSearchResults,
+#vehicleSearchResults,
+#vehicleCompanySearchResults {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+    background: transparent;
+}
+
+#vehiclePrefectureSearchResults h3,
+#vehicleSearchResults h3,
+#vehicleCompanySearchResults h3 {
+    margin: 4px 0 0;
+    font-size: 24px;
+}
+
+#vehiclePrefectureSearchResults button,
+#vehicleSearchResults button,
+#vehicleCompanySearchResults button {
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+#vehiclePrefectureSearchResults button:hover,
+#vehicleSearchResults button:hover,
+#vehicleCompanySearchResults button:hover {
+    background: #f0f5fa;
+}
+
+#vehiclePrefectureSearchResults .vehicleIcons,
+#vehicleSearchResults .vehicleIcons,
+#vehicleCompanySearchResults .vehicleIcons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+#vehiclePrefectureSearchResults .vehicleIcon,
+#vehicleSearchResults .vehicleIcon,
+#vehicleCompanySearchResults .vehicleIcon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+#companyList {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 8px;
+    background: transparent;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+}
+
+#companyList[hidden] {
+    display: none !important;
+}
+
+.companyGroupHeader {
+    padding: 11.5px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    background: rgb(227, 225, 225);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--ui-font);
+    font-size: 18px;
+    transition: 0.05s;
+}
+
+.companyGroupHeader:hover {
+    background: #e9e8e8;
+}
+
+.companyGroupHeader:active {
+    transform: scale(0.98);
+}
+
+.companyGroupButtons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.companyGroupButtons button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.companyGroupButtons .vehicleIcons {
+    display: grid;
+    grid-template-columns: repeat(6,1fr);
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.companyGroupButtons .vehicleIcon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.companyGroupButtons[hidden] {
+    display: none;
+}
+
+body {
+    background: var(--page-bg);
+}
+
+button:hover {
+    background: #f2f2ef;
+    border-color: #c9cecf;
+}
+
+#vehicleSelectMethodLabel {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--text);
+}
+
+#vehicleSelectMethod,
+select,
+input,
+textarea {
+    font: inherit;
+}
+
+#vehicleSelectMethod {
+    width: min(100%, 380px);
+    margin: 0 0 18px;
+    color: var(--text);
+    min-height: 42px;
+    background: #fff;
+    border: 2px solid var(--border-strong);
+    cursor: pointer;
+}
+
+#vehicleSelect {
+    background: transparent;
+    border: 2px solid var(--border);
+}
+
+.vehicleText {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    min-width: 0;
+}
+
+.vehicleDescription {
+    font-size: 0.7em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.displayLabel {
+    color: var(--text);
+}
+
+.buttonGroup button.selected {
+    border-color: var(--accent);
+}
+
+.selectGroup button.selected {
+    border-color: var(--accent);
+}
+
+.numberInput {
+    color: var(--text);
+}
+
+.numberInput input {
+    color: var(--text);
+}
+
+.numberInput button {
+    min-height: 30px;
+    color: var(--text);
+}
+
+#scroll label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 650;
+}
+
+#scroll input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
+#scrollText {
+    font-weight: 400 !important;
+}
+
+#startScrollBtn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-family: var(--ui-font);
+    font-weight: 500 !important;
+}
+
+#startScrollBtn:hover {
+    background: var(--accent-hover);
+}
+
+#referenceSite {
+    display: grid;
+}
+
+#referenceSite label {
+    font-family: var(--ui-font);
+}
+
+#explanation {
+    color: var(--text);
+}
+
+#referenceSite {
+    color: var(--text);
+}
+
+#vehicleSelectButton {
+    margin-top: 16px;
+    color: var(--accent-hover);
+    background: #fff;
+    border: 1px solid #a9c9ed;
+    font-family: var(--ui-font);
+    font-weight: 500 !important;
+}
+
+#vehicleSelectButton:hover {
+    background: var(--accent-soft);
+}
+
+#scrollCanvas {
+    display: none;
+}
+
+#esp32Ip {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+#ledSettings {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+#verticalSlide {
+    display: grid;
+}
+
+#verticalSlideLabel1 {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#verticalSlideLabel2 {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#choppyScrollLabel {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#verticalSlide[hidden] {
+    display: none !important;
+}
+
+#cacheNotice {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: #222;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    box-shadow: 0 4px 12px #0003;
+}
+
+#cacheNotice[hidden] {
+    display: none !important;
+}
+
+#verticalSlideLabel1[hidden] {
+    display: none !important;
+}
+
+#verticalSlideLabel2[hidden] {
+    display: none !important;
+}
+
+#verticalSlideCheckbox {
+    margin-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    background-color: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+}
+
+#verticalSlideCheckbox[hidden] {
+    display: none !important;
+}
+
+#ledAgingLabel {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#ledAgingLebelLabel {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#setLedAgingLebel[hidden] {
+    display: none !important;
+}
+
+#debugConsole {
+    display: block !important;
+    position: relative;
+    z-index: 99999;
+    background: #111;
+    color: #00ff00;
+    padding: 10px;
+    margin: 10px;
+    font: 12px monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#debugConsole[hidden] {
+    display: none !important;
+}
+
+#debugConsole button {
+    color: #000;
+    background: #fff;
+    padding: 6px;
+}
+
+#debugLog {
+    color: #00ff00;
+    white-space: pre-wrap;
+}
+
+.vehicle-route-label {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #666;
+    border-radius: 3px;
+    box-shadow: none;
+    color: #111;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 2px 4px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.vehicle-route-label::before {
+    display: none;
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 12px 0;
+}
+
+.setting-label {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    font-size: 14px;
+}
+
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #2b9389;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .ledFrame {
+        border-radius: 10px;
+    }
+
+    #prefectureList {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 8px;
+    }
+
+    .prefectureGroupButtons {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    #companyList {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 8px;
+    }
+
+    .companyGroupButtons {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
+
+/* ===== style2.css の元のスタイル（ゴシック体に変更） ===== */
 #tittle {
     cursor: pointer;
-    width: 430px;
     font-weight: 700;
 }
 
@@ -42,7 +737,7 @@
     border: none;
     font-size: 18px;
     cursor: pointer;
-    background:red;
+    background: #b83b3b;
     color:white;
 }
 
@@ -51,7 +746,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    font-family: sans-serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .container {
@@ -126,7 +821,7 @@ button {
     border-radius: 8px;
     box-shadow: -3px 3px 8px rgba(0,0,0,0.25);
     cursor: pointer;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
     letter-spacing: -0.03em;
     font-size: 16px;
     font-weight: 100;
@@ -158,12 +853,12 @@ button.tap {
 }
 
 #vehicleSelectMethodLabel {
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
     font-size: 20px;
 }
 
 #vehicleSelectMethod {
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
     font-size: 16px;
     margin-bottom: 10px;
     padding: 6px;
@@ -207,7 +902,7 @@ button.tap {
 
 .displayLabel {
     font-size: 24px;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .buttonGroup {
@@ -225,7 +920,7 @@ button.tap {
 }
 
 .buttonGroup button.selected {
-    background: #0078d7;
+    background: #39758c;
     color: white;
 }
 
@@ -239,7 +934,7 @@ button.tap {
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
     font-size: 18px;
     transition: 0.05s;
 }
@@ -288,7 +983,7 @@ button.tap {
 }
 
 .selectGroup button.selected {
-    background: #0078d7;
+    background: #39758c;
     color: white;
     font-weight: 700;
 }
@@ -311,7 +1006,7 @@ button.tap {
     border-radius: 6px;
     overflow: hidden;
     background: white;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .numberInput input {
@@ -321,7 +1016,7 @@ button.tap {
     outline: none;
     text-align: center;
     font-size: 16px;
-    font-family: "Times New Roman", "BIZ UDMincho", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .numberInput button {
@@ -421,7 +1116,7 @@ input[type="number"]::-webkit-outer-spin-button {
     height: 150px;
     box-sizing: border-box;
     resize: vertical;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
     font-size: 16px;
     border: 1px solid #000000;
     border-radius: 4px;
@@ -463,7 +1158,7 @@ input[type="number"]::-webkit-outer-spin-button {
     outline: none;
     text-align: center;
     font-size: 16px;
-    font-family: "Times New Roman", "BIZ UDMincho", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 #explanation {
@@ -480,7 +1175,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 #explanationLabel {
     font-size: 16px;
-    font-family: "BIZ UDMincho", "Yu Mincho", "游明朝", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 @keyframes loadingDots {
@@ -630,5 +1325,40 @@ input[type="number"]::-webkit-outer-spin-button {
     border: 1px solid #000000;
     border-radius: 4px;
     font-size: 16px;
-    font-family: "Times New Roman", "BIZ UDMincho", serif;
+    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+/* 色の切り替わりを滑らかにする。配置・サイズ・LED描画には影響しない */
+button {
+    font-weight: 500;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        outline-color 0.2s ease;
+}
+
+.numberInput button {
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+#tittle,
+#resizer,
+#closeLinePanel,
+#vehicleSelectMethod,
+select,
+input,
+textarea,
+a,
+#vehicleSelectButton,
+.slider {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, outline-color 0.2s ease;
+}
+
+.groupHeader,
+.prefectureGroupHeader,
+.companyGroupHeader {
+    transition: transform 0.15s ease, color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
