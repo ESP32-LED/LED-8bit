@@ -25,6 +25,14 @@ const transferTypeDestinationScrollSpeed = 14;
 
 function getDisplayMargin(hw, pw) {
     if (hw <= pw) return 0;
+    
+    // 「位置」トグルスイッチ（OFF: 中央 / ON: 右）
+    const alignToggle = document.getElementById("displayAlignToggle");
+    if (alignToggle) {
+        return alignToggle.checked ? (hw - pw) : Math.floor((hw - pw) / 2);
+    }
+    
+    // 互換性フォールバック（旧スライダー）
     const alignInput = document.getElementById("displayAlign");
     const alignVal = alignInput ? alignInput.value : "1";
     if (alignVal === "0") {
@@ -353,7 +361,8 @@ document.addEventListener("click", (e) => {
         e.target.id === "isLedAging" ||
         e.target.id === "ledAgingLebel" ||
         e.target.id === "ledAgingLevel" ||
-        e.target.id === "displayAlign"
+        e.target.id === "displayAlign" ||
+        e.target.id === "displayAlignToggle"
     ) {
         if (e.target.id === "isLedAging" || e.target.id === "ledAgingLebel" || e.target.id === "ledAgingLevel") {
             ledAging = null;
@@ -371,6 +380,7 @@ document.addEventListener("input", (e) => {
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
         e.target.id === "displayAlign" ||
+        e.target.id === "displayAlignToggle" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
         e.target.id === "hwBrightness" ||
@@ -398,6 +408,7 @@ document.addEventListener("change", (e) => {
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
         e.target.id === "displayAlign" ||
+        e.target.id === "displayAlignToggle" ||
         e.target.id === "softBrightness" ||
         e.target.id === "gammaCorrection" ||
         e.target.id === "hwBrightness" ||
@@ -695,15 +706,12 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
     return packet;
 }
 
-// 強化版：アイテムオブジェクト全体を走査して英語（en）データが存在するか判定
 function hasEnglishView(item) {
     if (!item) return false;
 
-    // 1. 基本フラグ・プロパティチェック
     if (item.hasEn || item.hasEnglish || item.isMultiLang || item.multiLang) return true;
     if (item.en || item.nameEn || item.textEn || item.english) return true;
 
-    // 2. view構造のチェック
     if (item.view) {
         if (item.view.en || item.view.English || item.view.EN) return true;
         if (item.view.normal) {
@@ -717,7 +725,6 @@ function hasEnglishView(item) {
         if (Object.keys(item.view).length > 1) return true;
     }
 
-    // 3. 全文文字列走査による検出
     try {
         const jsonStr = JSON.stringify(item);
         if (/"en"|"en_|_en"|"English"|"english"|"nameEn"|"textEn"/i.test(jsonStr)) {
@@ -728,7 +735,6 @@ function hasEnglishView(item) {
     return false;
 }
 
-// 言語設定を強制変更し、Webアプリのシーン・種別リストを再構築する関数
 function setGlobalLanguageAndRebuild(targetLang) {
     if (typeof lang !== "undefined") lang = targetLang;
     if (typeof typeLang !== "undefined") typeLang = targetLang;
@@ -750,7 +756,6 @@ function setGlobalLanguageAndRebuild(targetLang) {
     }
 }
 
-// 動的に 'en' 言語にビルドを試みて英語が存在するかダブルチェック
 function detectTypeHasEn(typeItem) {
     if (hasEnglishView(typeItem)) return true;
 
@@ -796,7 +801,6 @@ function createESP32Packet() {
     try {
         const isSpecialScroll = typeof config !== "undefined" && config && config.hasScroll === true && config.scroll_normal === true;
 
-        // 1. 特殊スクロール車両で、かつスクロールがONの場合
         if (isSpecialScroll && scrollActive) {
             scrollId = true;
             setGlobalLanguageAndRebuild("ja");
@@ -865,7 +869,6 @@ function createESP32Packet() {
             return packet;
         }
 
-        // 2. スクロールOFF時、または通常車両の時
         if (scrollActive) {
             scrollId = true;
         } else {
@@ -888,7 +891,6 @@ function createESP32Packet() {
 
         let rawSceneCount = 1;
 
-        // 種別がFULL（全画面種別）の場合は案内や行先のコマ数を完全に無視し、英語が存在すれば確実に2コマ（ja/en）に固定
         if (typeIsFull) {
             rawSceneCount = hasTypeEn ? 2 : (tCount > 0 ? tCount : 1);
         } else {
