@@ -440,45 +440,97 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
         return coordinates;
     }
 
-    const prefixArea = [0];
+    // 同じオフセットが続く区間をひとつにまとめる
+    const offsetRuns = [];
 
     for (const span of spans) {
-        prefixArea.push(
-            prefixArea[prefixArea.length - 1] +
-            Math.max(0, span.end - span.start) * span.offset
-        );
+        const previous = offsetRuns[offsetRuns.length - 1];
+
+        if (
+            previous &&
+            Math.abs(previous.end - span.start) < 0.01 &&
+            Math.abs(previous.offset - span.offset) < 0.001
+        ) {
+            previous.end = span.end;
+        } else {
+            offsetRuns.push({ ...span });
+        }
     }
 
-    function offsetIntegral(distance) {
-        if (distance <= 0) return 0;
+    if (!offsetRuns.length) return coordinates;
 
-        if (distance >= totalDistance) {
-            return prefixArea[prefixArea.length - 1];
-        }
+    function smoothStep(t) {
+        t = Math.max(0, Math.min(1, t));
+        return t * t * (3 - 2 * t);
+    }
 
+    function getSmoothOffset(distance) {
         let low = 0;
-        let high = spans.length - 1;
+        let high = offsetRuns.length - 1;
 
         while (low < high) {
             const mid = Math.floor((low + high) / 2);
 
-            if (spans[mid].end < distance) low = mid + 1;
-            else high = mid;
+            if (offsetRuns[mid].end < distance) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
         }
 
-        const span = spans[low];
+        const index = low;
+        const current = offsetRuns[index];
 
-        if (distance <= span.start) return prefixArea[low];
+        // 実際にオフセット量が変化する境界だけを滑らかにつなぐ
+        if (index > 0) {
+            const previous = offsetRuns[index - 1];
 
-        return prefixArea[low] +
-            Math.min(distance - span.start, span.end - span.start) * span.offset;
-    }
+            if (Math.abs(previous.offset - current.offset) > 0.001) {
+                const boundary = current.start;
+                const width = Math.min(
+                    28,
+                    (previous.end - previous.start) / 2,
+                    (current.end - current.start) / 2
+                );
 
-    function getSmoothOffset(distance) {
-        return (
-            offsetIntegral(distance + smoothingDistance) -
-            offsetIntegral(distance - smoothingDistance)
-        ) / (2 * smoothingDistance);
+                if (
+                    width > 0.01 &&
+                    distance >= boundary - width &&
+                    distance <= boundary + width
+                ) {
+                    const t = (distance - boundary + width) / (2 * width);
+
+                    return previous.offset +
+                        (current.offset - previous.offset) * smoothStep(t);
+                }
+            }
+        }
+
+        if (index + 1 < offsetRuns.length) {
+            const next = offsetRuns[index + 1];
+
+            if (Math.abs(current.offset - next.offset) > 0.001) {
+                const boundary = current.end;
+                const width = Math.min(
+                    28,
+                    (current.end - current.start) / 2,
+                    (next.end - next.start) / 2
+                );
+
+                if (
+                    width > 0.01 &&
+                    distance >= boundary - width &&
+                    distance <= boundary + width
+                ) {
+                    const t = (distance - boundary + width) / (2 * width);
+
+                    return current.offset +
+                        (next.offset - current.offset) * smoothStep(t);
+                }
+            }
+        }
+
+        return current.offset;
     }
 
     function getPointAtDistance(distance) {
@@ -615,6 +667,113 @@ function getRailwayPolylineMidpoint(coordinates) {
     return coordinates[coordinates.length - 1];
 }
 
+function mergeConnectedRailwayParts(inputParts) {
+    const isPoint = p =>
+        Array.isArray(p) &&
+        p.length >= 2 &&
+        Number.isFinite(p[0]) &&
+        Number.isFinite(p[1]);
+
+    const parts = inputParts
+        .filter(part =>
+            Array.isArray(part) &&
+            part.length >= 2 &&
+            part.every(isPoint)
+        )
+        .map(part => part.map(p => [p[0], p[1]]));
+
+    const endpointMap = new Map();
+    const visited = new Set();
+
+    const pointKey = p => `${p[0]},${p[1]}`;
+
+    function addEndpoint(key, item) {
+        if (!endpointMap.has(key)) {
+            endpointMap.set(key, []);
+        }
+        endpointMap.get(key).push(item);
+    }
+
+    parts.forEach((part, index) => {
+        addEndpoint(pointKey(part[0]), {
+            partIndex: index,
+            side: 0
+        });
+
+        addEndpoint(pointKey(part[part.length - 1]), {
+            partIndex: index,
+            side: 1
+        });
+    });
+
+    function getDegree(point) {
+        return (endpointMap.get(pointKey(point)) || []).length;
+    }
+
+    function buildChain(startIndex, startSide) {
+        let currentIndex = startIndex;
+        let chain = startSide === 0
+            ? parts[startIndex].slice()
+            : parts[startIndex].slice().reverse();
+
+        visited.add(startIndex);
+
+        while (true) {
+            const endKey = pointKey(chain[chain.length - 1]);
+            const connected = endpointMap.get(endKey) || [];
+
+            // 分岐点では別の経路へ勝手につながない
+            if (connected.length !== 2) break;
+
+            const next = connected.find(item =>
+                item.partIndex !== currentIndex &&
+                !visited.has(item.partIndex)
+            );
+
+            if (!next) break;
+
+            const nextPart = next.side === 0
+                ? parts[next.partIndex]
+                : parts[next.partIndex].slice().reverse();
+
+            for (let i = 1; i < nextPart.length; i++) {
+                chain.push(nextPart[i]);
+            }
+
+            visited.add(next.partIndex);
+            currentIndex = next.partIndex;
+        }
+
+        return chain;
+    }
+
+    const result = [];
+
+    // 分岐点や路線の端点から、連続した経路を組み立てる
+    for (let i = 0; i < parts.length; i++) {
+        if (visited.has(i)) continue;
+
+        const startDegree = getDegree(parts[i][0]);
+        const endDegree = getDegree(parts[i][parts[i].length - 1]);
+
+        if (startDegree === 2 && endDegree === 2) {
+            continue;
+        }
+
+        const startSide = startDegree !== 2 ? 0 : 1;
+        result.push(buildChain(i, startSide));
+    }
+
+    // 閉じた経路など、まだ処理されていないパーツも回収する
+    for (let i = 0; i < parts.length; i++) {
+        if (!visited.has(i)) {
+            result.push(buildChain(i, 0));
+        }
+    }
+
+    return result;
+}
+
 // 地図を作成
 function createMap() {
     if (railwayMap !== null) return;
@@ -647,7 +806,9 @@ function createMap() {
                 isPoint(part[0])
             );
 
-        parts.forEach((part, partIndex) => {
+        const mergedParts = mergeConnectedRailwayParts(parts);
+
+        mergedParts.forEach((part, partIndex) => {
             if (part.length < 2) return;
 
             renderLines.push({
@@ -720,17 +881,7 @@ function createMap() {
 
                 const span = document.createElement("span");
                 span.textContent = vehicle.name;
-                
-                const description = document.createElement("small");
-                description.className = "vehicleDescription";
-                description.textContent = vehicle.description || "";
-
-                const textContainer = document.createElement("div");
-                textContainer.className = "vehicleText";
-
-                textContainer.append(span, description);
-
-                button.append(iconContainer, textContainer);
+                button.append(iconContainer, span);
 
                 button.addEventListener("click", async () => {
                     await selectVehicle(vehicle);
