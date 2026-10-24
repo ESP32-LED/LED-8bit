@@ -393,6 +393,9 @@ function drawDestinationSmall(dest, matrix) {
     const type = getItem("type", typeId)
     if (usedSmall) {
         typewidth = getTypeWidth(type, usedSmall);
+        if (config.hasDestinationInformationCombined) {
+            typeWidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+        }
     } else {
         typewidth = 0;
     }
@@ -858,6 +861,35 @@ function getCarNumberWidth(carNumber, used) {
     } else {
         return 0;
     }
+}
+
+function getInformationWidth(info, used) {
+
+    if(!info) {
+        if(used) {
+            return (
+                getItem("information", "null_information").view?.normal?.ja?.width
+                ?? getItem("information", "null_information").view?.small?.ja?.width
+            )
+        } else {
+            return 0;
+        }
+    }
+
+    const view = isInformationFullScreen(info)
+        ? "full"
+        : "normal";
+
+    const lang = getLangForPart();
+    return (
+        info.view?.[view]?.[lang]?.width
+        ?? info.view?.[view]?.ja?.width
+        ?? info.view?.normal?.[lang]?.width
+        ?? info.view?.normal?.ja?.width
+        ?? info.view?.small?.[lang]?.width
+        ?? info.view?.small?.ja?.width
+        ?? 0
+    );
 }
 
 function isTypeFullScreen(type) {

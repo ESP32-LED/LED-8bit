@@ -119,6 +119,14 @@ function createDisplayMatrix() {
                     if (informationMode === "information2") {
                         if (information2Id != null) drawInformation2(info2, matrix);
                     }
+                    if (informationMode === "destination_information") {
+                        if (destinationId != null) drawDestinationSmall(dest, matrix);
+                        if (info?.view?.small) {
+                            if (informationId != null) drawInformationSmall(info, matrix);
+                        } else {
+                            if (informationId != null) drawInformation(info, matrix);
+                        }
+                    }
                     if (informationMode === "line") {
                         if (lineId != null) drawLine(line, matrix);
                     }
