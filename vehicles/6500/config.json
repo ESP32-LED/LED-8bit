@@ -3,6 +3,7 @@
 
     "explanation": "筑駒鉄研にお越しくださりありがとうございます！ここでは、部員が心を込めてドット打ちしたものを使っております。お楽しみください、",
 
+    "hasExplanation": "true",
     "hasType": true,
     "hasDestination": true,
     "hasInformation": false,
@@ -18,10 +19,11 @@
     "carNumber": null,
     "informationPosition": "normal",
     "destinationPosition": "normal",
+    "information_ja_en": false,
+
     "hasNextFullScreen": false,
     "hasNextEnFullScreen": true,
     "hasScrollFullScreen": false,
-    "information_ja_en": false,
 
     "hasInformationCombined": false,
 

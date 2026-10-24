@@ -634,7 +634,7 @@ function drawNext(next, matrix) {
         view = "full"
     }
     if (lang === "en") {
-        if (config.hasTypeEnFullScreen) {
+        if (config.hasNextEnFullScreen) {
             view = "full"
         }
     }
