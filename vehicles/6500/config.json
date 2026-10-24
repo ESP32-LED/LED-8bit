@@ -51,6 +51,8 @@
     "enAhead": false,
     "informationAhead": false,
 
+    "destinationInformationCombined": true,
+
     "setSwitchingTime": false,
 
     "next_normal": true,
