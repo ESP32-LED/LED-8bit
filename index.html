@@ -94,6 +94,10 @@
 						<input type="number" id="hardwareWidth" value="192" min="64" max="256" style="width: 100%; padding: 6px; box-sizing: border-box;" onchange="if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer()">
 					</label>
 					<label>
+						表示位置 (幅不足時): <span id="val-align">右寄せ</span>
+						<input type="range" id="displayAlign" min="0" max="1" step="1" value="1" style="width: 100%;" oninput="document.getElementById('val-align').innerText = (this.value == '1' ? '右寄せ' : '中央寄せ'); if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer();">
+					</label>
+					<label>
 						LED全体の明るさ: <span id="val-hw-bright">20</span>
 						<input type="range" id="hwBrightness" min="1" max="50" step="1" value="20" style="width: 100%;" oninput="document.getElementById('val-hw-bright').innerText=this.value; if(typeof triggerAutoTransfer === 'function') triggerAutoTransfer();">
 					</label>
