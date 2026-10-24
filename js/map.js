@@ -905,7 +905,7 @@ function createMap() {
             interactive: false
         })
             .setLatLng(midpoint)
-            .setContent(vehicleNames.join(" / "))
+            .setContent(line.name)
             .addTo(railwayMap);
 
         vehicleRouteLabels.push(label);
