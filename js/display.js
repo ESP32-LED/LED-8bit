@@ -1609,6 +1609,10 @@ function drawScroll() {
         isTypeFull = false;
         areaLeft = config.hasScrollFullScreen ? -1 : 48;
     }
+    
+    if(selectedVehicle.id === "TRC") {
+        areaLeft = 30;
+    }
 
     if (config.hasNextFullScreen && !destinationCycleActive) {
         areaLeft = -1;
