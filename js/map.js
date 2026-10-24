@@ -257,7 +257,11 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     const zoom = railwayMap.getZoom();
     const spacing = RAILWAY_OFFSET_SPACING_PX;
-    const smoothingDistance = 28;
+
+    // オフセットが変化する範囲（画面上のピクセル）
+    // 大きくすると、より長い距離を使って緩やかに変化する
+    const smoothingDistance = 40;
+
     const sampleStep = 4;
     const tangentWindow = 24;
 
@@ -465,72 +469,39 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
     }
 
     function getSmoothOffset(distance) {
-        let low = 0;
-        let high = offsetRuns.length - 1;
+        const start = Math.max(
+            0,
+            distance - smoothingDistance
+        );
 
-        while (low < high) {
-            const mid = Math.floor((low + high) / 2);
+        const end = Math.min(
+            totalDistance,
+            distance + smoothingDistance
+        );
 
-            if (offsetRuns[mid].end < distance) {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
+        if (end - start < 0.001) {
+            return 0;
         }
 
-        const index = low;
-        const current = offsetRuns[index];
+        function offsetIntegral(d) {
+            let total = 0;
 
-        // 実際にオフセット量が変化する境界だけを滑らかにつなぐ
-        if (index > 0) {
-            const previous = offsetRuns[index - 1];
+            for (const run of offsetRuns) {
+                const from = Math.max(start, run.start);
+                const to = Math.min(d, run.end);
 
-            if (Math.abs(previous.offset - current.offset) > 0.001) {
-                const boundary = current.start;
-                const width = Math.min(
-                    28,
-                    (previous.end - previous.start) / 2,
-                    (current.end - current.start) / 2
-                );
-
-                if (
-                    width > 0.01 &&
-                    distance >= boundary - width &&
-                    distance <= boundary + width
-                ) {
-                    const t = (distance - boundary + width) / (2 * width);
-
-                    return previous.offset +
-                        (current.offset - previous.offset) * smoothStep(t);
+                if (to > from) {
+                    total += (to - from) * run.offset;
                 }
             }
+
+            return total;
         }
 
-        if (index + 1 < offsetRuns.length) {
-            const next = offsetRuns[index + 1];
-
-            if (Math.abs(current.offset - next.offset) > 0.001) {
-                const boundary = current.end;
-                const width = Math.min(
-                    28,
-                    (current.end - current.start) / 2,
-                    (next.end - next.start) / 2
-                );
-
-                if (
-                    width > 0.01 &&
-                    distance >= boundary - width &&
-                    distance <= boundary + width
-                ) {
-                    const t = (distance - boundary + width) / (2 * width);
-
-                    return current.offset +
-                        (next.offset - current.offset) * smoothStep(t);
-                }
-            }
-        }
-
-        return current.offset;
+        return (
+            offsetIntegral(end) -
+            offsetIntegral(start)
+        ) / (end - start);
     }
 
     function getPointAtDistance(distance) {
