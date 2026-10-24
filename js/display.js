@@ -77,6 +77,7 @@ function drawType(type, matrix) {
     if (isTypeFullScreen(type)) {
         view = "full";
     }
+    console.log(view);
 
     let data = null;
     const typeHasJaEn = !!getItem ("type", typeId).view?.normal?.ja_en; 
