@@ -73,8 +73,9 @@ function drawType(type, matrix) {
     }
 
     let data = null;
+    const typeHasJaEn = !!getItem ("type", typeId).view?.normal?.ja_en; 
     
-    if (config.languageSwitching) {
+    if (config.languageSwitching && !typeHasJaEn) {
         if (typeHasNormal) {
             data =
                 type.view?.[view]?.[typeLang]
