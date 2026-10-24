@@ -50,7 +50,7 @@
 
     "setSwitchingTime": false,
 
-    "next_normal": false,
+    "next_normal": true,
     "nextPosition": 16,
 
     "hasReferenceSite": false,
