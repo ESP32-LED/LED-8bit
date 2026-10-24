@@ -40,6 +40,12 @@ function drawType(type, matrix) {
     let carNumberWidth;
     let typeLang = lang;
     let view = "normal";
+    if (showNext === "true") {
+        const hasSmallType = !!type.view?.small;
+        if (hasSmallType) {
+            view = "small";
+        }
+    }
     if (typeMode === "information") {
         typeLang = "information";
     }
