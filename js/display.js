@@ -633,6 +633,11 @@ function drawNext(next, matrix) {
     if (config.hasNextFullScreen) {
         view = "full"
     }
+    if (lang === "en") {
+        if (config.hasTypeEnFullScreen) {
+            view = "full"
+        }
+    }
 
     let data =
         next?.view?.[view]?.[lang]
@@ -655,7 +660,12 @@ function drawNext(next, matrix) {
     } else {
         typewidth = 0;
     }
-    const nextPosition = config.nextPosition
+    let nextPosition = config.nextPosition
+    if (lang === "en") {
+        if (config.enNextPosition) {
+            nextPosition = config.enNextPosition
+        }
+    }
 
     drawImage(data, typewidth, nextPosition, matrix);
 }
