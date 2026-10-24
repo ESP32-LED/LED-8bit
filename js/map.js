@@ -925,7 +925,7 @@ function createMap() {
     }
 
     function updateVehicleRouteLabels() {
-        const showLabels = railwayMap.getZoom() >= 7;
+        const showLabels = railwayMap.getZoom() >= 8;
 
         vehicleRouteLabels.forEach(label => {
             const element = label.getElement();
