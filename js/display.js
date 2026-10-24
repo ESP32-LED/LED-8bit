@@ -68,7 +68,7 @@ function drawType(type, matrix) {
             view = "normal3";
         }
     }
-    if (showNext === "true") {
+    if (showNext === true) {
         const hasSmallType = !!type.view?.small;
         console.log(hasSmallType);
         if (hasSmallType) {
