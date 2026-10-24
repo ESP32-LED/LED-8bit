@@ -11,6 +11,16 @@
         "font": "fonts/font_E233.json"
     },
     {
+        "id": "6500",
+        "name": "6500",
+        "config": "vehicles/6500/config.json",
+        "led": "vehicles/6500/led.json",
+        "icons": [
+            "vehicles/6500/icons/icon1.png"
+        ],
+        "site": "vehicles/TRC/site.json"
+    },
+    {
         "id": "H100",
         "name": "H100形",
         "config": "vehicles/H100/config.json",
