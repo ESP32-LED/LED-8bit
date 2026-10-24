@@ -1067,12 +1067,12 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
         slideModeVal |= 0x80;
     }
 
-    // ★【配置フラグの設定】(0x20: 右寄せならON、中央揃えならOFF)
+    // 配置フラグの設定 (0x20: 右寄せならON、中央揃えならOFF)
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
     if (hw > pw) {
         const rightMargin = hw - pw;
         if (margin === rightMargin) {
-            slideModeVal |= 0x20; // 右寄せフラグ(0x20) ON
+            slideModeVal |= 0x20; // 右寄せフラグON
         }
     }
 
