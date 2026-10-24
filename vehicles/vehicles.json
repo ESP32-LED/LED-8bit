@@ -16,7 +16,7 @@
         "config": "vehicles/6500/config.json",
         "led": "vehicles/6500/led.json",
         "icons": [
-            "vehicles/6500/icons/icon1.png"
+            "vehicles/icons/icon1.png"
         ],
         "site": "vehicles/TRC/site.json"
     },
