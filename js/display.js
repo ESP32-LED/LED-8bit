@@ -70,6 +70,7 @@ function drawType(type, matrix) {
     }
     if (showNext === "true") {
         const hasSmallType = !!type.view?.small;
+        console.log(hasSmallType);
         if (hasSmallType) {
             view = "small";
         }
@@ -77,7 +78,7 @@ function drawType(type, matrix) {
     if (isTypeFullScreen(type)) {
         view = "full";
     }
-    console.log(view);
+    console.log(showNext, view);
 
     let data = null;
     const typeHasJaEn = !!getItem ("type", typeId).view?.normal?.ja_en; 
