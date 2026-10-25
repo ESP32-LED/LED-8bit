@@ -1587,3 +1587,7 @@ a,
     max-height: none;
     flex-shrink: 0;
 }
+
+#messageBoard body {
+    padding: 10px;
+}

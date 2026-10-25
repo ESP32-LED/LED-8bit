@@ -2585,7 +2585,9 @@ const mbTextCanvas = document.createElement("canvas");
 mbTextCanvas.width = MB_WIDTH;
 mbTextCanvas.height = MB_HEIGHT;
 
-const mbTextContext = mbTextCanvas.getContext("2d");
+const mbTextContext = mbTextCanvas.getContext("2d", {
+    willReadFrequently: true
+});
 
 const mbBackgroundCanvas = document.createElement("canvas");
 
@@ -2725,7 +2727,9 @@ function createMessageBoardScrollCanvas() {
     const height = hasClock ? 16 : 24;
     const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
-    let ctx = mbScrollSourceCanvas.getContext("2d");
+    let ctx = mbScrollSourceCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
 
     ctx.font = font;
 
@@ -2736,7 +2740,9 @@ function createMessageBoardScrollCanvas() {
     mbScrollSourceCanvas.width = Math.max(1, textWidth);
     mbScrollSourceCanvas.height = MB_HEIGHT;
 
-    ctx = mbScrollSourceCanvas.getContext("2d");
+    ctx = mbScrollSourceCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
     ctx.clearRect(0, 0, textWidth, MB_HEIGHT);
     ctx.font = font;
     ctx.textAlign = "left";
