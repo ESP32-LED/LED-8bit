@@ -2408,9 +2408,9 @@ function startMessageBoard() {
     }
 }
 
-const clockCheck = document.getElementById("clockCheck");
-clockCheck.addEventListener("change", () => {
-    if (clockCheck === "checked") {
+const timeCheck = document.getElementById("timeCheck");
+timeCheck.addEventListener("change", () => {
+    if (timeCheck === "checked") {
         if (messageBoardScroll) {
             drawTimeSmall();
         } else {
