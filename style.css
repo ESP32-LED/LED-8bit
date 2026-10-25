@@ -311,6 +311,16 @@ textarea {
     cursor: pointer;
 }
 
+#vehicleSelectTop {
+    display: flex;
+}
+
+#messageBoard {
+    display: block;
+    margin-left: auto;
+    width: 200px;
+}
+
 #vehicleSelect {
     background: transparent;
     border: 2px solid var(--border);
