@@ -62,82 +62,79 @@ async function loadConfig() {
 }
 
 // 車両選択時のメイン処理
+// 車両選択時のメイン処理
 async function selectVehicle(vehicle) {
     try {
         const vehicleSelector = document.getElementById("vehicleSelector");
         const simulator = document.getElementById("simulator");
 
-        // 車両選択画面を滑らかに消す
-        if (vehicleSelector) {
-            vehicleSelector.hidden = true;
-            vehicleSelector.classList.remove("screen-transition-out");
+        if (!vehicleSelector || !simulator) {
+            console.error("車両選択画面またはシミュレーターが見つかりません");
+            return;
         }
+
+        // 二重実行を防ぐ
+        if (simulator.dataset.loadingVehicle === "true") return;
+        simulator.dataset.loadingVehicle = "true";
 
         document.body.classList.add("simulatorMode");
         selectedVehicle = vehicle;
 
-        // 画面を切り替える
-        if (vehicleSelector) {
-            vehicleSelector.hidden = true;
-            vehicleSelector.classList.remove("screen-transition-out");
-        }
+        try {
+            // 車両選択画面からシミュレーターへ滑らかに切り替える
+            await showScreenSmoothly(simulator, vehicleSelector);
 
-        if (simulator) {
-            simulator.hidden = false;
-            simulator.classList.remove("screen-transition-in");
+            // 車両データを読み込む
+            await loadConfig();
 
-            // アニメーションを再実行する
-            void simulator.offsetWidth;
-            simulator.classList.add("screen-transition-in");
-        }
-
-        // ここから既存の車両読み込み処理
-        await loadConfig();
-
-        if (config && config.hasScroll) {
-            await loadFont();
-        }
-
-        await startVehicle();
-
-        if (typeof setExplanation === "function") {
-            setExplanation();
-        }
-
-        if (config && config.setSwitchingTime) {
-            const jaInput = document.querySelector("#jaTime input");
-            const enInput = document.querySelector("#enTime input");
-            const infoInput = document.querySelector("#infoTime input");
-            const carInput = document.querySelector("#carNumberTime input");
-
-            if (jaInput && config.jaTime !== undefined) {
-                jaInput.value = config.jaTime;
+            if (config && config.hasScroll) {
+                await loadFont();
             }
-            if (enInput && config.enTime !== undefined) {
-                enInput.value = config.enTime;
-            }
-            if (infoInput && config.infoTime !== undefined) {
-                infoInput.value = config.infoTime;
-            }
-            if (carInput && config.carNumberTime !== undefined) {
-                carInput.value = config.carNumberTime;
-            }
-        }
 
-        if (config && config.hasReferenceSite) {
-            if (typeof setReferenceSite === "function") {
-                setReferenceSite();
+            await startVehicle();
+
+            if (typeof setExplanation === "function") {
+                setExplanation();
             }
-        } else {
-            const refEl = document.getElementById("referenceSite");
-            if (refEl) refEl.hidden = true;
-        }
 
-        // 車両読み込み完了後にBLE自動転送を実行
-        if (typeof triggerAutoTransfer === "function") {
-            triggerAutoTransfer();
-        }
+            // 切り替え時間を設定
+            if (config && config.setSwitchingTime) {
+                const jaInput = document.querySelector("#jaTime input");
+                const enInput = document.querySelector("#enTime input");
+                const infoInput = document.querySelector("#infoTime input");
+                const carInput = document.querySelector("#carNumberTime input");
 
+                if (jaInput && config.jaTime !== undefined) {
+                    jaInput.value = config.jaTime;
+                }
+                if (enInput && config.enTime !== undefined) {
+                    enInput.value = config.enTime;
+                }
+                if (infoInput && config.infoTime !== undefined) {
+                    infoInput.value = config.infoTime;
+                }
+                if (carInput && config.carNumberTime !== undefined) {
+                    carInput.value = config.carNumberTime;
+                }
+            }
+
+            // 参考サイトの設定
+            if (config && config.hasReferenceSite) {
+                if (typeof setReferenceSite === "function") {
+                    setReferenceSite();
+                }
+            } else {
+                const refEl = document.getElementById("referenceSite");
+                if (refEl) refEl.hidden = true;
+            }
+
+            // 車両読み込み完了後にBLE自動転送を実行
+            if (typeof triggerAutoTransfer === "function") {
+                triggerAutoTransfer();
+            }
+        } finally {
+            delete simulator.dataset.loadingVehicle;
+        }
     } catch (error) {
         console.error("車両選択エラー:", error);
 

@@ -2429,18 +2429,12 @@ async function startMessageBoard() {
 
     if (!vehicleSelector || !messageBoard) return;
 
-    // 二重実行を防ぐ
     if (messageBoard.dataset.transitioning === "true") return;
     messageBoard.dataset.transitioning = "true";
 
     try {
-        await showScreenSmoothly(
-            messageBoard,
-            vehicleSelector,
-            () => {
-                setVehicleSelectButton();
-            }
-        );
+        await showScreenSmoothly(messageBoard, vehicleSelector);
+        setVehicleSelectButton();
     } finally {
         delete messageBoard.dataset.transitioning;
     }
