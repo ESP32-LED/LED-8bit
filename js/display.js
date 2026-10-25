@@ -370,7 +370,7 @@ function drawDestinationSmall(dest, matrix) {
     let usedSmall = false;
     let typewidth;
 
-    let = "small";
+    let view = "small";
 
     if (informationMode === "destination_information") {
         view = "info_small";
