@@ -35,9 +35,10 @@
     width: 100%;
 }
 
-.scroll-fade-title {
-    opacity: 1;
-    transform: translateY(0);
+/* タイトルのスクロール連動アニメーション */
+#tittle.scroll-fade-title {
+    opacity: var(--title-opacity, 1);
+    transform: translateY(var(--title-offset, 0px));
     will-change: opacity, transform;
 }
 
@@ -1366,13 +1367,51 @@ a,
     transition: transform 0.15s ease, color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* ===== 画面切り替えアニメーション ===== */
 
-/* 画面切り替えアニメーション */
-#vehicleSelector.screen-transition-out {
+#vehicleSelector,
+#simulator {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 切り替え前の画面 */
+#vehicleSelector.screen-transition-out,
+#simulator.screen-transition-out {
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(-8px);
     pointer-events: none;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+/* 切り替え後の画面 */
+#vehicleSelector.screen-transition-in,
+#simulator.screen-transition-in {
+    animation: screenFadeIn 0.35s ease both;
+}
+
+@keyframes screenFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* アニメーションを減らす設定への対応 */
+@media (prefers-reduced-motion: reduce) {
+    #vehicleSelector,
+    #simulator {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
 }
 
 #simulator.screen-transition-in {
@@ -1397,14 +1436,6 @@ a,
         transition: none !important;
         transform: none !important;
     }
-}
-
-
-/* 画面切り替え */
-#vehicleSelector,
-#simulator {
-    opacity: 1;
-    transform: translateY(0);
 }
 
 #vehicleSelector.screen-transition-out,

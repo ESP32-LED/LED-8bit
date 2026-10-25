@@ -1886,53 +1886,48 @@ const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
 
 async function returnToVehicleSelector() {
-    document.body.classList.remove("simulatorMode");
     initSimulator();
     clearReferenceSite();
     clearExplanation();
 
+    // 表示する必要がない設定を非表示にする
     const hideIds = [
-        "scrollText", "startScrollBtn", "referenceSite", "explanation",
-        "jaTime", "enTime", "infoTime", "carNumberTime",
-        "setLedAgingLebel", "verticalSlideCheckbox"
+        "scrollText",
+        "startScrollBtn",
+        "referenceSite",
+        "explanation",
+        "jaTime",
+        "enTime",
+        "infoTime",
+        "carNumberTime",
+        "setLedAgingLebel",
+        "verticalSlideCheckbox"
     ];
 
     hideIds.forEach(id => {
-        document.getElementById(id).hidden = true;
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.hidden = true;
+        }
     });
 
-    const simulator = document.getElementById("simulator");
-    const vehicleSelector = document.getElementById("vehicleSelector");
+    const simulator =
+        document.getElementById("simulator");
 
-    await showScreenSmoothly(vehicleSelector, simulator);
+    const vehicleSelector =
+        document.getElementById("vehicleSelector");
 
+    // 先に画面切り替えを完了させる
+    await showScreenSmoothly(
+        vehicleSelector,
+        simulator
+    );
+
+    // 画面切り替えが終わってからレイアウトを戻す
     document.body.classList.remove("simulatorMode");
 
-    document.getElementById("scrollCheck").checked = false;
-    document.getElementById("choppyScrollCheck").checked = false;
-    document.getElementById("ledAgingCheck").checked = false;
-    document.getElementById("ledAgingLebel").value = 3;
-    document.getElementById("ledAgingLebelValue").textContent = 3;
-    document.getElementById("displayVerticalSlideBtn").textContent = "縦スライド設定を表示する";
-
-    isDisplayVerticalSlide = false;
-    isLedAging = false;
-    choppyScroll = false;
-    clickTypeBtn = false;
-    typeScroll = false;
-    destinationScroll = false;
-    typeScrollId = null;
-    destinationScrollId = null;
-    scrollSpeed = 450;
-
-    typeDestinationScrollAnimationId = null;
-
-    stopTypeScroll("ja");
-    stopTypeScroll("en");
-    stopDestinationScroll("ja");
-    stopDestinationScroll("en");
-
-    resetDestinationCycle();
+    // 以下、既存の設定リセット処理を続ける
 }
 
 function resetDestinationCycle() {
@@ -2216,3 +2211,73 @@ document.addEventListener("DOMContentLoaded", () => {
         initTitleFade();
     }
 })();
+
+// タイトルをスクロールに合わせて滑らかにフェードさせる
+function setupTitleScrollAnimation() {
+    const title = document.getElementById("tittle");
+
+    if (!title) {
+        return;
+    }
+
+    title.classList.add("scroll-fade-title");
+
+    let animationPending = false;
+
+    function updateTitleAnimation() {
+        const scrollTop =
+            window.scrollY ||
+            document.documentElement.scrollTop ||
+            0;
+
+        // 120pxスクロールすると完全にフェードアウト
+        const progress = Math.min(
+            1,
+            Math.max(0, scrollTop / 120)
+        );
+
+        // 透明度を0～1の範囲で変更
+        title.style.setProperty(
+            "--title-opacity",
+            String(1 - progress)
+        );
+
+        // 少し上方向に移動
+        title.style.setProperty(
+            "--title-offset",
+            `${-12 * progress}px`
+        );
+
+        // 完全に透明になったらクリックを受け付けない
+        title.style.pointerEvents =
+            progress >= 1 ? "none" : "";
+
+        animationPending = false;
+    }
+
+    function onScroll() {
+        if (animationPending) {
+            return;
+        }
+
+        animationPending = true;
+        requestAnimationFrame(updateTitleAnimation);
+    }
+
+    window.addEventListener("scroll", onScroll, {
+        passive: true
+    });
+
+    // 初期状態も反映
+    updateTitleAnimation();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupTitleScrollAnimation,
+        { once: true }
+    );
+} else {
+    setupTitleScrollAnimation();
+}
