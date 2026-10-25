@@ -1369,7 +1369,10 @@ button {
     transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-#tittle,
+#tittle {
+    transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, outline-color 0.4s ease;
+}
+
 #resizer,
 #closeLinePanel,
 #vehicleSelectMethod,
@@ -1458,8 +1461,8 @@ a,
     will-change: opacity, transform;
 
     transition:
-        opacity 0.06s linear,
-        transform 0.06s linear;
+        opacity 0.3s linear,
+        transform 0.3s linear;
 }
 
 /* スマホのシミュレーター画面ではタイトルを薄くしない */
