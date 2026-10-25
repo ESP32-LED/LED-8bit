@@ -268,17 +268,24 @@
         	</div>
 		</div>
 		<div id="messageBoard" hidden>
-			<label>
-				<input type="checkbox" id="timeCheck">
-				現在時刻を表示
-			</label>
-			<label>
-				<input type="checkbox" id="messageBoardScrollCheck">
-				スクロール
-			</label>
-			<textarea id="messageBoardScrollText" hidden></textarea>
-			<button id="startMessageBoardScrollBtn" hidden>スクロール更新</button>
-			<button id="messageBoardVehicleSelectButton" class="backVehicleSelector">車両選択に戻る</button>
+			<aside>
+				<label>
+					<input type="checkbox" id="timeCheck">
+					現在時刻を表示
+				</label>
+				<label>
+					<input type="checkbox" id="messageBoardScrollCheck">
+					スクロール
+				</label>
+				<textarea id="messageBoardScrollText" hidden></textarea>
+				<button id="startMessageBoardScrollBtn" hidden>スクロール更新</button>
+				<button id="messageBoardVehicleSelectButton" class="backVehicleSelector">車両選択に戻る</button>
+			</aside>
+			<main>
+				<div class="ledFrame">
+					<canvas id="led" width="895" height="223"></canvas>
+				</div>
+			</main>
 		</div>
 
         <footer id="status">

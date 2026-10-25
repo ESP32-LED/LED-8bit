@@ -1887,94 +1887,134 @@ tittle.addEventListener("click", returnToVehicleSelector);
 
 
 async function returnToVehicleSelector() {
-    const simulator = document.getElementById("simulator");
-    const vehicleSelector = document.getElementById("vehicleSelector");
+    if (!isMessageBoard) {
+        const simulator = document.getElementById("simulator");
+        const vehicleSelector = document.getElementById("vehicleSelector");
 
-    if (!simulator || !vehicleSelector) return;
+        if (!simulator || !vehicleSelector) return;
 
-    // 二重実行を防ぐ
-    if (simulator.dataset.returning === "true") return;
-    simulator.dataset.returning = "true";
+        // 二重実行を防ぐ
+        if (simulator.dataset.returning === "true") return;
+        simulator.dataset.returning = "true";
 
-    const hideIds = [
-        "scrollText",
-        "startScrollBtn",
-        "referenceSite",
-        "explanation",
-        "jaTime",
-        "enTime",
-        "infoTime",
-        "carNumberTime",
-        "setLedAgingLebel",
-        "verticalSlideCheckbox"
-    ];
+        const hideIds = [
+            "scrollText",
+            "startScrollBtn",
+            "referenceSite",
+            "explanation",
+            "jaTime",
+            "enTime",
+            "infoTime",
+            "carNumberTime",
+            "setLedAgingLebel",
+            "verticalSlideCheckbox"
+        ];
 
-    try {
-        await showScreenSmoothly(
-            vehicleSelector,
-            simulator,
-            () => {
-                // 画面切り替え完了後に初期化
-                initSimulator();
-                clearReferenceSite();
-                clearExplanation();
+        try {
+            await showScreenSmoothly(
+                vehicleSelector,
+                simulator,
+                () => {
+                    // 画面切り替え完了後に初期化
+                    initSimulator();
+                    clearReferenceSite();
+                    clearExplanation();
 
-                hideIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) element.hidden = true;
-                });
+                    hideIds.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) element.hidden = true;
+                    });
 
-                const resetCheckboxes = [
-                    "scrollCheck",
-                    "choppyScrollCheck",
-                    "ledAgingCheck"
-                ];
+                    const resetCheckboxes = [
+                        "scrollCheck",
+                        "choppyScrollCheck",
+                        "ledAgingCheck"
+                    ];
 
-                resetCheckboxes.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) element.checked = false;
-                });
+                    resetCheckboxes.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) element.checked = false;
+                    });
 
-                const agingLevel =
-                    document.getElementById("ledAgingLebel");
-                const agingValue =
-                    document.getElementById("ledAgingLebelValue");
-                const verticalSlideButton =
-                    document.getElementById("displayVerticalSlideBtn");
+                    const agingLevel =
+                        document.getElementById("ledAgingLebel");
+                    const agingValue =
+                        document.getElementById("ledAgingLebelValue");
+                    const verticalSlideButton =
+                        document.getElementById("displayVerticalSlideBtn");
 
-                if (agingLevel) agingLevel.value = 3;
-                if (agingValue) agingValue.textContent = "3";
+                    if (agingLevel) agingLevel.value = 3;
+                    if (agingValue) agingValue.textContent = "3";
 
-                if (verticalSlideButton) {
-                    verticalSlideButton.textContent =
-                        "縦スライド設定を表示する";
+                    if (verticalSlideButton) {
+                        verticalSlideButton.textContent =
+                            "縦スライド設定を表示する";
+                    }
+
+                    isDisplayVerticalSlide = false;
+                    isLedAging = false;
+                    choppyScroll = false;
+                    clickTypeBtn = false;
+                    typeScroll = false;
+                    destinationScroll = false;
+
+                    typeScrollId = null;
+                    destinationScrollId = null;
+                    scrollSpeed = 450;
+                    typeDestinationScrollAnimationId = null;
+
+                    stopTypeScroll("ja");
+                    stopTypeScroll("en");
+                    stopDestinationScroll("ja");
+                    stopDestinationScroll("en");
+
+                    resetDestinationCycle();
+
+                    // タイトルの表示状態を更新
+                    document.body.classList.remove("simulatorMode");
                 }
+            );
+        } finally {
+            delete simulator.dataset.returning;
+        }
+    } else {
+        const messageBoard = document.getElementById("messageBoard");
+        const vehicleSelector = document.getElementById("vehicleSelector");
 
-                isDisplayVerticalSlide = false;
-                isLedAging = false;
-                choppyScroll = false;
-                clickTypeBtn = false;
-                typeScroll = false;
-                destinationScroll = false;
+        if (!messageBoard || !vehicleSelector) return;
 
-                typeScrollId = null;
-                destinationScrollId = null;
-                scrollSpeed = 450;
-                typeDestinationScrollAnimationId = null;
+        // 二重実行を防ぐ
+        if (messageBoard.dataset.returning === "true") return;
+        messageBoard.dataset.returning = "true";
 
-                stopTypeScroll("ja");
-                stopTypeScroll("en");
-                stopDestinationScroll("ja");
-                stopDestinationScroll("en");
+        const hideIds = [
+            "messageBoardScrollText",
+            "startMessageBoardScrollBtn"
+        ];
 
-                resetDestinationCycle();
+        try {
+            await showScreenSmoothly(
+                vehicleSelector,
+                messageBoard,
+                () => {
+                    hideIds.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) element.hidden = true;
+                    });
+                    const resetCheckboxes = [
+                        "timeCheck",
+                        "messageBoardScrollCheck"
+                    ];
 
-                // タイトルの表示状態を更新
-                document.body.classList.remove("simulatorMode");
-            }
-        );
-    } finally {
-        delete simulator.dataset.returning;
+                    resetCheckboxes.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) element.checked = false;
+                    });
+                }
+            );
+        } finally {
+            delete messageBoard.dataset.returning;
+        }
     }
 }
 
@@ -2386,6 +2426,7 @@ function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     const messageBoard = document.getElementById("messageBoard");
 
+    isMessageBoard === true;
     // 車両選択画面を滑らかに消す
     if (vehicleSelector) {
         vehicleSelector.hidden = true;

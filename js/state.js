@@ -69,7 +69,7 @@ let destinationScrollTimer = null;
 let destinationCycleSmallTimer = null;
 let destinationCycleSmallMode = "destination";
 
-let messageBoard = false;
+let isMessageBoard = false;
 let messageBoardScroll = false;
 
 const langs = ["ja", "en"];

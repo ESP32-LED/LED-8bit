@@ -1468,9 +1468,10 @@ function setSelected(container, button) {
     button.classList.add("selected");
 }
 function setVehicleSelectButton() {
-    const container = document.getElementById("vehicleSelectButton");
+    const container = document.querySelectorAll("backVehicleSelector");
     container.addEventListener("click", returnToVehicleSelector);
 }
+
 function getName(items, itemId) {
     const item = getItem(items, itemId);
     return (
