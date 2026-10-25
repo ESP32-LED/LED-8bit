@@ -3113,13 +3113,22 @@ window.addEventListener("resize", resizeMessageBoardLED);
 
 /* 親要素のサイズ変更にも対応 */
 let mbMessageBoardResizeObserver = null;
+let mbResizeFrameId = null;
 
 const mbPreviewMain =
     messageBoardLedPreview?.closest("#messageBoard main");
 
 if (mbPreviewMain && "ResizeObserver" in window) {
-    mbMessageBoardResizeObserver =
-        new ResizeObserver(resizeMessageBoardLED);
+    mbMessageBoardResizeObserver = new ResizeObserver(() => {
+        if (mbResizeFrameId !== null) {
+            cancelAnimationFrame(mbResizeFrameId);
+        }
+
+        mbResizeFrameId = requestAnimationFrame(() => {
+            mbResizeFrameId = null;
+            resizeMessageBoardLED();
+        });
+    });
 
     mbMessageBoardResizeObserver.observe(mbPreviewMain);
 }
