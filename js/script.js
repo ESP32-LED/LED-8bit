@@ -1997,6 +1997,7 @@ async function returnToVehicleSelector() {
                 vehicleSelector,
                 messageBoard,
                 () => {
+                    isMessageBoard = false;
                     hideIds.forEach(id => {
                         const element = document.getElementById(id);
                         if (element) element.hidden = true;
