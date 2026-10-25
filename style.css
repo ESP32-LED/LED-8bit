@@ -1520,20 +1520,3 @@ a,
 #messageBoard aside {
     order: 2;
 }
-
-/* メッセージボード内の配置を修正 */
-#messageBoard > main,
-#messageBoard .container > main {
-    order: 1 !important;
-}
-
-#messageBoard > aside,
-#messageBoard .container > aside {
-    order: 2 !important;
-}
-
-/* mainを上、asideを下に並べる */
-#messageBoard,
-#messageBoard .container {
-    flex-direction: column;
-}

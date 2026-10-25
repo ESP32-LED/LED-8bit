@@ -1887,7 +1887,20 @@ tittle.addEventListener("click", returnToVehicleSelector);
 
 
 async function returnToVehicleSelector() {
-    if (!isMessageBoard) {
+    const returningFromMessageBoard = isMessageBoard;
+
+    // 画面切り替え中の二重実行を防ぐ
+    const simulatorForGuard = document.getElementById("simulator");
+    const messageBoardForGuard = document.getElementById("messageBoard");
+
+    if (
+        simulatorForGuard?.dataset.returning === "true" ||
+        messageBoardForGuard?.dataset.returning === "true"
+    ) {
+        return;
+    }
+
+    if (!returningFromMessageBoard) {
         const simulator = document.getElementById("simulator");
         const vehicleSelector = document.getElementById("vehicleSelector");
 
@@ -1993,15 +2006,15 @@ async function returnToVehicleSelector() {
         ];
 
         try {
-            await showScreenSmoothly(
+            const transitionPromise = showScreenSmoothly(
                 vehicleSelector,
                 messageBoard,
                 () => {
-                    isMessageBoard = false;
                     hideIds.forEach(id => {
                         const element = document.getElementById(id);
                         if (element) element.hidden = true;
                     });
+
                     const resetCheckboxes = [
                         "timeCheck",
                         "messageBoardScrollCheck"
@@ -2013,6 +2026,11 @@ async function returnToVehicleSelector() {
                     });
                 }
             );
+
+            // アニメーションを開始してから状態を更新
+            isMessageBoard = false;
+
+            await transitionPromise;
         } finally {
             delete messageBoard.dataset.returning;
         }
