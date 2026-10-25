@@ -2804,9 +2804,13 @@ function renderMessageBoardLEDs() {
         );
         mbOutputContext.clip();
 
+        /* LEDのドット間隔に合わせて描画位置を補正 */
+        const drawX =
+            Math.round(mbScrollPixelX / MB_PITCH) * MB_PITCH;
+
         mbOutputContext.drawImage(
             mbScrollCanvas,
-            mbScrollPixelX,
+            drawX,
             0
         );
 
