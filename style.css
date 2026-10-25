@@ -364,12 +364,13 @@ textarea {
     color: var(--text);
 }
 
+#messageBoardScroll label,
 #scroll label {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 650;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 #scroll input[type="checkbox"] {
@@ -1593,4 +1594,8 @@ a,
 
 #messageBoard body {
     padding: 10px;
+}
+
+#timeCheckLabel {
+    font-size: 14px;
 }
