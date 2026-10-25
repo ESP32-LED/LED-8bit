@@ -831,7 +831,7 @@ function createMap() {
 
         const railwayLine = L.polyline(displayCoordinates, {
             color: line.color || "black",
-            weight: 4
+            weight: 3
         }).addTo(railwayMap);
 
         const hitLine = L.polyline(displayCoordinates, {
