@@ -2464,13 +2464,13 @@ const messageBoardScrollText = document.getElementById("messageBoardScrollText")
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
 const messageBoardLedPreview = document.getElementById("messageBoardLedPreview");
 
-const MB_WIDTH = 128;
+const MB_WIDTH = 192;
 const MB_HEIGHT = 32;
 const MB_LED_SIZE = 6;
 const MB_LED_GAP = 0.5;
 const MB_PITCH = MB_LED_SIZE + MB_LED_GAP;
 const MB_DOT_RADIUS = 3;
-const MB_SCROLL_SPEED = 18;
+const MB_SCROLL_SPEED = 30;
 
 let mbScrollActive = false;
 let mbScrollText = "";
