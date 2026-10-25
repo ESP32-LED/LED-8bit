@@ -1542,6 +1542,8 @@ a,
 
 /* LEDプレビューを上に配置 */
 #messageBoard > main {
+    display:flex;
+    justify-content: center;
     order: 1;
     flex: 0 0 auto;
     width: 100%;
