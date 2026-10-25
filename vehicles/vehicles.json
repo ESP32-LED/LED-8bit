@@ -970,5 +970,15 @@
             "vehicles/metro400/icons/icon1.png"
         ],
         "site": "vehicles/metro400/site.json"
+    },
+    {
+        "id": "MT-4000",
+        "name": "南阿蘇鉄道MT-4000形",
+        "config": "vehicles/MT-4000/config.json",
+        "led": "vehicles/MT-4000/led.json",
+        "icons": [
+            "vehicles/MT-4000/icons/icon1.png"
+        ],
+        "site": "vehicles/MT-4000/site.json"
     }
 ]
