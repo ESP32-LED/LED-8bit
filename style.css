@@ -1445,6 +1445,10 @@ a,
     animation: loadingSpin 0.8s linear infinite;
 }
 
+#loading[hidden] {
+    display: none !important;
+}
+
 @keyframes loadingSpin {
     to {
         transform: rotate(360deg);

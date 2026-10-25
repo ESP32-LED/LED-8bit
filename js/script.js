@@ -538,7 +538,7 @@ async function startVehicle() {
         setupVehicleUI();
         startRenderLoop();
     } finally {
-        await hideLoading();
+        hideLoading();
     }
 }
 

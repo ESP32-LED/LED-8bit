@@ -141,11 +141,14 @@ async function selectVehicle(vehicle) {
 
     } catch (error) {
         console.error("車両選択エラー:", error);
-        mobileLog("[車両選択エラー]");
-        mobileLog("名前:", error?.name);
-        mobileLog("メッセージ:", error?.message);
-        mobileLog("スタック:", error?.stack);
-        mobileLog("エラー全体:", error);
+
+        if (typeof mobileLog === "function") {
+            mobileLog("[車両選択エラー]");
+            mobileLog("名前:", error?.name);
+            mobileLog("メッセージ:", error?.message);
+            mobileLog("スタック:", error?.stack);
+            mobileLog("エラー全体:", error);
+        }
 
         alert(
             "車両データの読み込みに失敗しました: " +
@@ -187,7 +190,6 @@ async function showScreenSmoothly(screenToShow, screenToHide) {
     screenToShow.classList.add("screen-transition-in");
 }
 
-// Loadingを滑らかに表示
 function showLoading() {
     const loading = document.getElementById("loading");
     if (!loading) return;
@@ -196,18 +198,41 @@ function showLoading() {
     loading.classList.remove("loading-visible");
 
     requestAnimationFrame(() => {
-        loading.classList.add("loading-visible");
+        requestAnimationFrame(() => {
+            loading.classList.add("loading-visible");
+        });
     });
 }
 
-// Loadingを滑らかに非表示
-async function hideLoading() {
+function hideLoading() {
     const loading = document.getElementById("loading");
     if (!loading || loading.hidden) return;
 
     loading.classList.remove("loading-visible");
-    await sleep(250);
-    loading.hidden = true;
+
+    let finished = false;
+    let timeoutId;
+
+    const finish = () => {
+        if (finished) return;
+        finished = true;
+
+        clearTimeout(timeoutId);
+        loading.removeEventListener("transitionend", onTransitionEnd);
+        loading.hidden = true;
+    };
+
+    const onTransitionEnd = event => {
+        if (
+            event.target === loading &&
+            event.propertyName === "opacity"
+        ) {
+            finish();
+        }
+    };
+
+    loading.addEventListener("transitionend", onTransitionEnd);
+    timeoutId = setTimeout(finish, 350);
 }
 
 
