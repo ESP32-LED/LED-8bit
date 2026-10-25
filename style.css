@@ -1572,6 +1572,7 @@ a,
 }
 
 #messageBoardLedPreview {
+    color: rgb(0, 0, 0);
     display: block;
     width: auto !important;
     height: auto !important;
