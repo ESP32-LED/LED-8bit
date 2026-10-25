@@ -399,8 +399,17 @@ function drawDestinationSmall(dest, matrix) {
         typewidth = getTypeWidth(type, usedSmall);
         if (config.hasDestinationInformationCombined) {
             if (informationId != null) {
-                const info = getItem("information", informationId);
-                typewidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+                if (lang === "ja") {
+                    const info = getItem("information", informationId);
+                    typewidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+                } else {
+                    if (hasEnglishInformation()) {
+                        const info = getItem("information", informationId);
+                        typewidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+                    } else {
+                        typewidth = getTypeWidth(type, usedSmall);
+                    }
+                }
             }
         }
     } else {
