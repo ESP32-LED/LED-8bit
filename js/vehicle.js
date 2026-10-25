@@ -169,25 +169,60 @@ function sleep(ms) {
 }
 
 // 指定した画面を滑らかに表示する
-async function showScreenSmoothly(screenToShow, screenToHide) {
-    if (!screenToShow) return;
-
-    // 現在の画面をフェードアウト
-    if (screenToHide && !screenToHide.hidden) {
-        screenToHide.classList.add("screen-transition-out");
-        await sleep(300);
-
-        screenToHide.hidden = true;
-        screenToHide.classList.remove("screen-transition-out");
+function showScreenSmoothly(showElement, hideElement, onComplete = () => {}) {
+    if (!showElement || !hideElement) {
+        onComplete();
+        return;
     }
 
-    // 次の画面を表示
-    screenToShow.hidden = false;
-    screenToShow.classList.remove("screen-transition-in");
+    // 古いアニメーション状態を解除
+    showElement.classList.remove(
+        "screen-transition-in",
+        "screen-transition-out"
+    );
+    hideElement.classList.remove(
+        "screen-transition-in",
+        "screen-transition-out"
+    );
 
-    // アニメーションを再実行
-    void screenToShow.offsetWidth;
-    screenToShow.classList.add("screen-transition-in");
+    // 表示先を表示し、表示元を隠す
+    // この処理は同じJavaScript処理内で行い、空白の画面を作らない
+    showElement.style.removeProperty("display");
+    hideElement.style.removeProperty("display");
+
+    showElement.hidden = false;
+    hideElement.hidden = true;
+
+    // アニメーション開始前のレイアウトを確定させる
+    void showElement.offsetWidth;
+
+    // 動きを減らす設定が有効ならアニメーションを省略
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        onComplete();
+        return;
+    }
+
+    let completed = false;
+
+    const finish = () => {
+        if (completed) return;
+        completed = true;
+
+        showElement.classList.remove("screen-transition-in");
+        showElement.removeEventListener("animationend", finish);
+
+        onComplete();
+    };
+
+    showElement.addEventListener("animationend", finish, {
+        once: true
+    });
+
+    // 表示先だけをアニメーションさせる
+    showElement.classList.add("screen-transition-in");
+
+    // アニメーションイベントが発生しない場合の保険
+    setTimeout(finish, 280);
 }
 
 function showLoading() {

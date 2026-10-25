@@ -1885,12 +1885,10 @@ document.querySelectorAll(".numberInput").forEach((container) => {
 const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
 
-async function returnToVehicleSelector() {
-    initSimulator();
-    clearReferenceSite();
-    clearExplanation();
+function returnToVehicleSelector() {
+    const simulator = document.getElementById("simulator");
+    const vehicleSelector = document.getElementById("vehicleSelector");
 
-    // 表示する必要がない設定を非表示にする
     const hideIds = [
         "scrollText",
         "startScrollBtn",
@@ -1904,30 +1902,68 @@ async function returnToVehicleSelector() {
         "verticalSlideCheckbox"
     ];
 
-    hideIds.forEach(id => {
-        const element = document.getElementById(id);
+    showScreenSmoothly(vehicleSelector, simulator, () => {
+        // 画面が切り替わってから初期化する
+        initSimulator();
+        clearReferenceSite();
+        clearExplanation();
 
-        if (element) {
-            element.hidden = true;
+        hideIds.forEach(id => {
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.hidden = true;
+            }
+        });
+
+        // 設定をリセット
+        const resetCheckboxes = [
+            "scrollCheck",
+            "choppyScrollCheck",
+            "ledAgingCheck"
+        ];
+
+        resetCheckboxes.forEach(id => {
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.checked = false;
+            }
+        });
+
+        const agingLevel = document.getElementById("ledAgingLebel");
+        const agingValue = document.getElementById("ledAgingLebelValue");
+        const verticalSlideButton = document.getElementById("displayVerticalSlideBtn");
+
+        if (agingLevel) agingLevel.value = 3;
+        if (agingValue) agingValue.textContent = "3";
+
+        if (verticalSlideButton) {
+            verticalSlideButton.textContent = "縦スライド設定を表示する";
         }
+
+        isDisplayVerticalSlide = false;
+        isLedAging = false;
+        choppyScroll = false;
+        clickTypeBtn = false;
+        typeScroll = false;
+        destinationScroll = false;
+
+        typeScrollId = null;
+        destinationScrollId = null;
+        scrollSpeed = 450;
+        typeDestinationScrollAnimationId = null;
+
+        stopTypeScroll("ja");
+        stopTypeScroll("en");
+        stopDestinationScroll("ja");
+        stopDestinationScroll("en");
+
+        resetDestinationCycle();
     });
 
-    const simulator =
-        document.getElementById("simulator");
-
-    const vehicleSelector =
-        document.getElementById("vehicleSelector");
-
-    // 先に画面切り替えを完了させる
-    await showScreenSmoothly(
-        vehicleSelector,
-        simulator
-    );
-
-    // 画面切り替えが終わってからレイアウトを戻す
+    // 表示先を切り替えた後にレイアウトを戻す
     document.body.classList.remove("simulatorMode");
-
-    // 以下、既存の設定リセット処理を続ける
 }
 
 function resetDestinationCycle() {
@@ -2212,64 +2248,109 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 })();
 
-// タイトルをスクロールに合わせて滑らかにフェードさせる
+// タイトルのスクロール連動アニメーション
 function setupTitleScrollAnimation() {
     const title = document.getElementById("tittle");
+    if (!title) return;
 
-    if (!title) {
-        return;
-    }
+    // 二重登録を防止
+    if (title.dataset.scrollAnimationReady === "true") return;
+    title.dataset.scrollAnimationReady = "true";
 
     title.classList.add("scroll-fade-title");
 
-    let animationPending = false;
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
+    let frameId = 0;
+    let latestTarget = null;
 
-    function updateTitleAnimation() {
-        const scrollTop =
-            window.scrollY ||
-            document.documentElement.scrollTop ||
-            0;
+    function getScrollTop(target) {
+        // ページ内のスクロール領域
+        if (
+            target instanceof Element &&
+            target !== document.documentElement &&
+            target !== document.body &&
+            target.scrollHeight > target.clientHeight + 1
+        ) {
+            return target.scrollTop;
+        }
 
-        // 120pxスクロールすると完全にフェードアウト
+        // ページ全体のスクロール
+        return Math.max(
+            window.scrollY || 0,
+            document.documentElement.scrollTop || 0,
+            document.body.scrollTop || 0
+        );
+    }
+
+    function updateTitle(target = null) {
+        const isMobileSimulator =
+            mobileQuery.matches &&
+            document.body.classList.contains("simulatorMode");
+
+        // スマホのシミュレーター画面では常に濃く表示
+        if (isMobileSimulator) {
+            title.style.opacity = "1";
+            title.style.transform = "none";
+            title.style.pointerEvents = "auto";
+            return;
+        }
+
+        // 車両選択画面ではスマホでもスクロール連動
+        const scrollTop = getScrollTop(target);
+
         const progress = Math.min(
             1,
             Math.max(0, scrollTop / 120)
         );
 
-        // 透明度を0～1の範囲で変更
-        title.style.setProperty(
-            "--title-opacity",
-            String(1 - progress)
-        );
+        title.style.opacity = String(1 - progress);
+        title.style.transform =
+            `translateY(${-16 * progress}px)`;
 
-        // 少し上方向に移動
-        title.style.setProperty(
-            "--title-offset",
-            `${-12 * progress}px`
-        );
-
-        // 完全に透明になったらクリックを受け付けない
         title.style.pointerEvents =
             progress >= 1 ? "none" : "";
-
-        animationPending = false;
     }
 
-    function onScroll() {
-        if (animationPending) {
-            return;
-        }
+    function onScroll(event) {
+        latestTarget = event.target;
 
-        animationPending = true;
-        requestAnimationFrame(updateTitleAnimation);
+        if (frameId) return;
+
+        frameId = requestAnimationFrame(() => {
+            frameId = 0;
+            updateTitle(latestTarget);
+        });
     }
 
+    // ページ全体と内部のスクロール領域を監視
     window.addEventListener("scroll", onScroll, {
         passive: true
     });
 
-    // 初期状態も反映
-    updateTitleAnimation();
+    document.addEventListener("scroll", onScroll, {
+        passive: true,
+        capture: true
+    });
+
+    // 画面サイズ変更にも対応
+    window.addEventListener("resize", () => {
+        updateTitle(latestTarget);
+    }, { passive: true });
+
+    // simulatorModeの切り替えを検知
+    const observer = new MutationObserver(() => {
+        updateTitle();
+
+        // 画面切り替え時にも1フレーム後に再確認
+        requestAnimationFrame(() => updateTitle());
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+
+    updateTitle();
 }
 
 if (document.readyState === "loading") {

@@ -672,6 +672,10 @@ input:checked + .slider:before {
         overflow-x: hidden;
     }
 
+    #tittle {
+        font-size: 24;
+    }
+
     .ledFrame {
         border-radius: 10px;
     }
@@ -1282,7 +1286,7 @@ input[type="number"]::-webkit-outer-spin-button {
     }
 
     body {
-        font-size: 20px;
+        font-size: 40px;
     }
 
     #buttonGroup {
@@ -1495,4 +1499,52 @@ a,
         transition: none !important;
         transform: none !important;
     }
+}
+
+/* ===== 画面切り替え ===== */
+#vehicleSelector,
+#simulator {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 表示先だけを短くアニメーション */
+#vehicleSelector.screen-transition-in,
+#simulator.screen-transition-in {
+    animation: screenFadeIn 0.22s ease-out both;
+}
+
+@keyframes screenFadeIn {
+    from {
+        opacity: 0.82;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #vehicleSelector,
+    #simulator {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/* スマホのシミュレーター画面だけタイトルを固定表示 */
+@media (max-width: 768px) {
+    body.simulatorMode #tittle.scroll-fade-title {
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+}
+
+/* 車両選択画面ではタイトルの変化を滑らかにする */
+#tittle.scroll-fade-title {
+    will-change: opacity, transform;
 }
