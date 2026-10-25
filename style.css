@@ -1570,9 +1570,15 @@ a,
         overflow-y: visible;
     }
 }
-/* メッセージボードのLEDプレビュー */
+
 #messageBoardLedPreview {
     display: block;
-    width: 832px;
-    height: 208px;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    flex-shrink: 0;
+}
+
+#messageBoard main {
+    overflow-x: auto;
 }
