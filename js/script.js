@@ -2146,3 +2146,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+const fadeTitle = document.querySelector(".scroll-fade-title");
+
+if (fadeTitle) {
+    const fadeDistance = 250;
+    let ticking = false;
+
+    function updateFadeTitle() {
+        const scrollY = window.scrollY;
+        const progress = Math.min(
+            Math.max(scrollY / fadeDistance, 0),
+            1
+        );
+
+        fadeTitle.style.opacity = 1 - progress;
+        fadeTitle.style.transform =
+            `translateY(${-20 * progress}px)`;
+
+        ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+        if (!ticking) {
+            requestAnimationFrame(updateFadeTitle);
+            ticking = true;
+        }
+    }, { passive: true });
+
+    updateFadeTitle();
+}

@@ -14,9 +14,6 @@
     --ui-font: "游明朝", YuMincho, "Hiragino Mincho ProN", "ヒラギノ明朝 ProN", "HG明朝E", "ＭＳ Ｐ明朝", "MS PMincho", "MS 明朝", "Yu Gothic UI", "Yu Gothic", "Meiryo", "Noto Sans JP", sans-serif;
 }
 
-
-
-
 /* LED用のドットフォントはゴシック体への変更対象にしない */
 @font-face {
     font-family: "KH Kagurazaka 16";
@@ -41,6 +38,12 @@
 #tittle:active {
     transform: scale(0.99);
     opacity: 0.98;
+}
+
+.scroll-fade-title {
+    opacity: 1;
+    transform: translateY(0);
+    will-change: opacity, transform;
 }
 
 #vehicleSelectMethod:focus-visible,
