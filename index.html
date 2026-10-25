@@ -268,17 +268,19 @@
         	</div>
 		</div>
 		<div id="messageBoard" hidden>
-			<aside>
+			<aside id="messageBoardSidebar">
 				<label>
 					<input type="checkbox" id="timeCheck">
 					現在時刻を表示
 				</label>
-				<label>
-					<input type="checkbox" id="messageBoardScrollCheck">
-					スクロール
-				</label>
-				<textarea id="messageBoardScrollText" hidden></textarea>
-				<button id="startMessageBoardScrollBtn" hidden>スクロール更新</button>
+				<div id="messageBoardScroll">
+					<label>
+						<input type="checkbox" id="messageBoardScrollCheck">
+						スクロール
+					</label>
+					<textarea id="messageBoardScrollText" hidden></textarea>
+					<button id="startMessageBoardScrollBtn" hidden>スクロール更新</button>
+				</div>
 				<button id="messageBoardVehicleSelectButton" class="backVehicleSelector">車両選択に戻る</button>
 			</aside>
 			<main>

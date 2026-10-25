@@ -1135,6 +1135,19 @@ input[type="number"]::-webkit-outer-spin-button {
     overflow-y: auto;
 }
 
+#messageBoardScroll {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 2px solid #9a9a9a;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background: rgb(255, 255, 255);
+    flex-wrap: wrap;
+    overflow-y: auto;
+}
+
 #messageBoardScrollText,
 #scrollText {
     margin-top: 5px;
@@ -1518,5 +1531,6 @@ a,
 }
 
 #messageBoard aside {
+    display: grid;
     order: 2;
 }
