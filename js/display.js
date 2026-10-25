@@ -400,13 +400,12 @@ function drawDestinationSmall(dest, matrix) {
         if (config.hasDestinationInformationCombined) {
             if (informationId != null) {
                 const info = getItem("information", informationId);
-                typeWidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+                typewidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
             }
         }
     } else {
         typewidth = 0;
     }
-    console.log(data);
 
     drawImage(data, typewidth, 0, matrix);
 }
