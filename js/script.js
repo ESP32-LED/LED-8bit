@@ -2842,7 +2842,7 @@ function renderMessageBoardLEDs() {
         MB_HEIGHT
     ).data;
 
-    mbOutputContext.fillStyle = "rgb(0, 0, 0)";
+    mbOutputContext.fillStyle = "rgb(255, 255, 255)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
@@ -2999,7 +2999,7 @@ async function startMessageBoardScroll() {
     createMessageBoardScrollCanvas();
 
     /* 右端から開始 */
-    mbScrollPixelX = MB_WIDTH;
+    mbScrollPixelX = MB_CANVAS_WIDTH;
     mbPreviousFrameTime = 0;
     mbScrollActive = true;
 
