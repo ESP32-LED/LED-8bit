@@ -2426,13 +2426,6 @@ function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     const messageBoard = document.getElementById("messageBoard");
 
-    // 車両選択画面を滑らかに消す
-    if (vehicleSelector) {
-        vehicleSelector.hidden = true;
-        vehicleSelector.classList.remove("screen-transition-out");
-    }
-
-    // 画面を切り替える
     if (vehicleSelector) {
         vehicleSelector.hidden = true;
         vehicleSelector.classList.remove("screen-transition-out");
@@ -2442,7 +2435,6 @@ function startMessageBoard() {
         messageBoard.hidden = false;
         messageBoard.classList.remove("screen-transition-in");
 
-        // アニメーションを再実行する
         void messageBoard.offsetWidth;
         messageBoard.classList.add("screen-transition-in");
     }
@@ -2450,7 +2442,7 @@ function startMessageBoard() {
 
 const timeCheck = document.getElementById("timeCheck");
 timeCheck.addEventListener("change", () => {
-    if (timeCheck === "checked") {
+    if (timeCheck.checked) {
         if (messageBoardScroll) {
             drawTimeSmall();
         } else {
@@ -2463,7 +2455,7 @@ const messageBoardScrollCheck = document.getElementById("messageBoardScrollCheck
 const messageBoardScrollText = document.getElementById("messageBoardScrollText");
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
 messageBoardScrollCheck.addEventListener("change", () => {
-    if (messageBoardScrollCheck === "checked") {
+    if (messageBoardScrollCheck.checked) {
         messageBoardScrollText.hidden = false;
         startMessageBoardScrollBtn.hidden = false;
     } else {
