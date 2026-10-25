@@ -38,6 +38,11 @@
     width: 100%;
 }
 
+#tittle:active {
+    transform: scale(0.99);
+    opacity: 0.98;
+}
+
 #vehicleSelectMethod:focus-visible,
 select:focus-visible,
 input:focus-visible,
