@@ -905,6 +905,7 @@ button.tap {
 
 .displayLabel {
     font-size: 24px;
+    font-weight: 450;
     font-family: var(--ui-font);
 }
 
@@ -1333,7 +1334,6 @@ input[type="number"]::-webkit-outer-spin-button {
 
 /* 色の切り替わりを滑らかにする。配置・サイズ・LED描画には影響しない */
 button {
-    font-weight: 500;
     transition:
         transform 0.18s ease,
         box-shadow 0.18s ease,
