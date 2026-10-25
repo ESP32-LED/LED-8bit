@@ -376,9 +376,9 @@ function drawDestinationSmall(dest, matrix) {
         view = "info_small";
     }
 
-    view = isDestinationFullScreen(dest)
-        ? "full_small"
-        : "small";
+    if (isDestinationFullScreen(dest)) {
+        view = "full_small";
+    }
 
     let data =
         dest.view?.[view]?.[lang]
