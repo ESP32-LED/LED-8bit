@@ -1680,6 +1680,13 @@ function buildSceneList() {
                 information: "type",
                 next: false
             });
+            if (hasEnglishType()) {
+                sceneList.push({
+                    lang: "en",
+                    information: "type",
+                    next: false
+                });
+            }
         }
         if (destinationId != null) {
             sceneList.push({
@@ -1687,6 +1694,13 @@ function buildSceneList() {
                 information: "destination",
                 next: false
             });
+            if (hasEnglishDestination()) {
+                sceneList.push({
+                    lang: "en",
+                    information: "destination",
+                    next: false
+                });
+            }
         }
     }
 }
