@@ -1404,8 +1404,8 @@ a,
     transform: translateY(-6px);
     pointer-events: none;
     transition:
-        opacity 0.18s ease,
-        transform 0.18s ease;
+        opacity 0.25s ease,
+        transform 0.25s ease;
 }
 
 @keyframes screenFadeIn {

@@ -68,10 +68,9 @@ async function selectVehicle(vehicle) {
         const simulator = document.getElementById("simulator");
 
         // 車両選択画面を滑らかに消す
-        if (vehicleSelector && !vehicleSelector.hidden) {
-            vehicleSelector.classList.add("screen-transition-out");
-
-            await new Promise(resolve => setTimeout(resolve, 300));
+        if (vehicleSelector) {
+            vehicleSelector.hidden = true;
+            vehicleSelector.classList.remove("screen-transition-out");
         }
 
         document.body.classList.add("simulatorMode");
@@ -169,61 +168,84 @@ function sleep(ms) {
 }
 
 // 指定した画面を滑らかに表示する
-function showScreenSmoothly(showElement, hideElement, onComplete = () => {}) {
-    if (!showElement || !hideElement) {
-        onComplete();
-        return;
-    }
 
-    // 古いアニメーション状態を解除
-    showElement.classList.remove(
-        "screen-transition-in",
-        "screen-transition-out"
-    );
-    hideElement.classList.remove(
-        "screen-transition-in",
-        "screen-transition-out"
-    );
+function showScreenSmoothly(showElement, hideElement, onComplete) {
+    return new Promise(resolve => {
+        if (!showElement || !hideElement) {
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+            resolve();
+            return;
+        }
 
-    // 表示先を表示し、表示元を隠す
-    // この処理は同じJavaScript処理内で行い、空白の画面を作らない
-    showElement.style.removeProperty("display");
-    hideElement.style.removeProperty("display");
-
-    showElement.hidden = false;
-    hideElement.hidden = true;
-
-    // アニメーション開始前のレイアウトを確定させる
-    void showElement.offsetWidth;
-
-    // 動きを減らす設定が有効ならアニメーションを省略
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        onComplete();
-        return;
-    }
-
-    let completed = false;
-
-    const finish = () => {
-        if (completed) return;
-        completed = true;
+        const duration = 250;
+        const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
 
         showElement.classList.remove("screen-transition-in");
-        showElement.removeEventListener("animationend", finish);
+        hideElement.classList.remove("screen-transition-in");
+        showElement.classList.remove("screen-transition-out");
+        hideElement.classList.remove("screen-transition-out");
 
-        onComplete();
-    };
+        // 表示先を表示し、表示元をフェードアウト
+        showElement.hidden = false;
+        hideElement.classList.add("screen-transition-out");
 
-    showElement.addEventListener("animationend", finish, {
-        once: true
+        if (reducedMotion) {
+            hideElement.hidden = true;
+            hideElement.classList.remove("screen-transition-out");
+
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+
+            resolve();
+            return;
+        }
+
+        let finished = false;
+
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+
+            clearTimeout(timer);
+            hideElement.removeEventListener(
+                "transitionend",
+                onTransitionEnd
+            );
+
+            hideElement.hidden = true;
+            hideElement.classList.remove("screen-transition-out");
+
+            showElement.classList.remove("screen-transition-in");
+            void showElement.offsetWidth;
+            showElement.classList.add("screen-transition-in");
+
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+
+            resolve();
+        };
+
+        const onTransitionEnd = event => {
+            if (event.target !== hideElement) return;
+            if (event.propertyName !== "opacity") return;
+            finish();
+        };
+
+        hideElement.addEventListener(
+            "transitionend",
+            onTransitionEnd
+        );
+
+        const timer = setTimeout(finish, duration + 50);
     });
-
-    // 表示先だけをアニメーションさせる
-    showElement.classList.add("screen-transition-in");
-
-    // アニメーションイベントが発生しない場合の保険
-    setTimeout(finish, 280);
 }
+
 
 function showLoading() {
     const loading = document.getElementById("loading");

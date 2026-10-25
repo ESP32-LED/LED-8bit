@@ -1885,9 +1885,16 @@ document.querySelectorAll(".numberInput").forEach((container) => {
 const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
 
-function returnToVehicleSelector() {
+
+async function returnToVehicleSelector() {
     const simulator = document.getElementById("simulator");
     const vehicleSelector = document.getElementById("vehicleSelector");
+
+    if (!simulator || !vehicleSelector) return;
+
+    // 二重実行を防ぐ
+    if (simulator.dataset.returning === "true") return;
+    simulator.dataset.returning = "true";
 
     const hideIds = [
         "scrollText",
@@ -1902,69 +1909,75 @@ function returnToVehicleSelector() {
         "verticalSlideCheckbox"
     ];
 
-    showScreenSmoothly(vehicleSelector, simulator, () => {
-        // 画面が切り替わってから初期化する
-        initSimulator();
-        clearReferenceSite();
-        clearExplanation();
+    try {
+        await showScreenSmoothly(
+            vehicleSelector,
+            simulator,
+            () => {
+                // 画面切り替え完了後に初期化
+                initSimulator();
+                clearReferenceSite();
+                clearExplanation();
 
-        hideIds.forEach(id => {
-            const element = document.getElementById(id);
+                hideIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.hidden = true;
+                });
 
-            if (element) {
-                element.hidden = true;
+                const resetCheckboxes = [
+                    "scrollCheck",
+                    "choppyScrollCheck",
+                    "ledAgingCheck"
+                ];
+
+                resetCheckboxes.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.checked = false;
+                });
+
+                const agingLevel =
+                    document.getElementById("ledAgingLebel");
+                const agingValue =
+                    document.getElementById("ledAgingLebelValue");
+                const verticalSlideButton =
+                    document.getElementById("displayVerticalSlideBtn");
+
+                if (agingLevel) agingLevel.value = 3;
+                if (agingValue) agingValue.textContent = "3";
+
+                if (verticalSlideButton) {
+                    verticalSlideButton.textContent =
+                        "縦スライド設定を表示する";
+                }
+
+                isDisplayVerticalSlide = false;
+                isLedAging = false;
+                choppyScroll = false;
+                clickTypeBtn = false;
+                typeScroll = false;
+                destinationScroll = false;
+
+                typeScrollId = null;
+                destinationScrollId = null;
+                scrollSpeed = 450;
+                typeDestinationScrollAnimationId = null;
+
+                stopTypeScroll("ja");
+                stopTypeScroll("en");
+                stopDestinationScroll("ja");
+                stopDestinationScroll("en");
+
+                resetDestinationCycle();
+
+                // タイトルの表示状態を更新
+                document.body.classList.remove("simulatorMode");
             }
-        });
-
-        // 設定をリセット
-        const resetCheckboxes = [
-            "scrollCheck",
-            "choppyScrollCheck",
-            "ledAgingCheck"
-        ];
-
-        resetCheckboxes.forEach(id => {
-            const element = document.getElementById(id);
-
-            if (element) {
-                element.checked = false;
-            }
-        });
-
-        const agingLevel = document.getElementById("ledAgingLebel");
-        const agingValue = document.getElementById("ledAgingLebelValue");
-        const verticalSlideButton = document.getElementById("displayVerticalSlideBtn");
-
-        if (agingLevel) agingLevel.value = 3;
-        if (agingValue) agingValue.textContent = "3";
-
-        if (verticalSlideButton) {
-            verticalSlideButton.textContent = "縦スライド設定を表示する";
-        }
-
-        isDisplayVerticalSlide = false;
-        isLedAging = false;
-        choppyScroll = false;
-        clickTypeBtn = false;
-        typeScroll = false;
-        destinationScroll = false;
-
-        typeScrollId = null;
-        destinationScrollId = null;
-        scrollSpeed = 450;
-        typeDestinationScrollAnimationId = null;
-
-        stopTypeScroll("ja");
-        stopTypeScroll("en");
-        stopDestinationScroll("ja");
-        stopDestinationScroll("en");
-
-        resetDestinationCycle();
-    });
-
-    // 表示先を切り替えた後にレイアウトを戻す
-    document.body.classList.remove("simulatorMode");
+        );
+    } finally {
+        delete simulator.dataset.returning;
+    }
 }
+
 
 function resetDestinationCycle() {
     if (destinationScrollTimer !== null) {
