@@ -317,6 +317,7 @@ textarea {
     margin-bottom: 8px;
     margin-right: 10px;
     height: 40px;
+    line-height: 40px;
 }
 
 #vehicleSelect {
