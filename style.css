@@ -316,8 +316,7 @@ textarea {
     width: 200px;
     margin-bottom: 8px;
     margin-right: 10px;
-    height: 40px;
-    line-height: 40px;
+    height: 50px;
 }
 
 #vehicleSelect {
@@ -1247,6 +1246,7 @@ input[type="number"]::-webkit-outer-spin-button {
         width: 100vw !important;
         box-sizing: border-box;
         flex-shrink: 0;
+        font-size: 30px;
     }
 
     #vehicleSelector {
