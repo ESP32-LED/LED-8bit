@@ -692,7 +692,7 @@ input:checked + .slider:before {
     }
 
     #tittle {
-        font-size: 15px;
+        font-size: 12px;
     }
 
     .ledFrame {
