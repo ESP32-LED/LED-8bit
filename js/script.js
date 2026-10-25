@@ -2382,7 +2382,7 @@ messageBoardBtn.addEventListener("click", () => {
     startMessageBoard();
 })
 
-function startMessageBoard {
+function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     const messageBoard = document.getElementById("messageBoard");
 
