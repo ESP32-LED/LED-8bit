@@ -378,10 +378,12 @@ textarea {
     accent-color: var(--accent);
 }
 
+#messageBoardScrollText,
 #scrollText {
     font-weight: 400 !important;
 }
 
+#startMessageBoardScrollBtn,
 #startScrollBtn {
     background: var(--accent);
     border-color: var(--accent);
@@ -390,6 +392,7 @@ textarea {
     font-weight: 500 !important;
 }
 
+#startMessageBoardScrollBtn,
 #startScrollBtn:hover {
     background: var(--accent-hover);
 }
@@ -410,6 +413,7 @@ textarea {
     color: var(--text);
 }
 
+#messageBoardVehicleSelectButton,
 #vehicleSelectButton {
     margin-top: 16px;
     color: var(--accent-hover);
@@ -419,6 +423,7 @@ textarea {
     font-weight: 500 !important;
 }
 
+#messageBoardVehicleSelectButton,
 #vehicleSelectButton:hover {
     background: var(--accent-soft);
 }
@@ -1131,6 +1136,7 @@ input[type="number"]::-webkit-outer-spin-button {
     overflow-y: auto;
 }
 
+#messageBoardScrollText,
 #scrollText {
     margin-top: 5px;
     width: 100%;
@@ -1478,4 +1484,12 @@ a,
         opacity: 1;
         transform: none;
     }
+}
+
+#messageBoardScrollText[hidden] {
+    display: none!important;
+}
+
+#startMessageBoardScrollBtn[hidden] {
+    display: none!important;
 }

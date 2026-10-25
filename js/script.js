@@ -2407,3 +2407,28 @@ function startMessageBoard {
         messageBoard.classList.add("screen-transition-in");
     }
 }
+
+const clockCheck = document.getElementById("clockCheck");
+clockCheck.addEventListener("change", () => {
+    if (clockCheck === "checked") {
+        if (messageBoardScroll) {
+            drawTimeSmall();
+        } else {
+            drawTime();
+        }
+    }
+});
+
+const messageBoardScrollCheck = document.getElementById("messageBoardScrollCheck");
+const messageBoardScrollText = document.getElementById("messageBoardScrollText");
+const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
+messageBoardScrollCheck.addEventListener("change", () => {
+    if (messageBoardScrollCheck === "checked") {
+        messageBoardScrollText.hidden = false;
+        startMessageBoardScrollBtn.hidden = false;
+    } else {
+        messageBoardScrollText.hidden = true;
+        startMessageBoardScrollBtn.hidden = true;
+        messageBoardScroll = false;
+    }
+})
