@@ -2609,7 +2609,7 @@ if (messageBoardLedPreview && mbBackgroundContext) {
 /* LEDの消灯状態をあらかじめ描画する */
 /* 消灯ドットを白色で描画 */
 function drawMessageBoardBackground() {
-    mbBackgroundContext.fillStyle = "#111111";
+    mbBackgroundContext.fillStyle = rgb(0, 0, 0);
 
     mbBackgroundContext.fillRect(
         0,
