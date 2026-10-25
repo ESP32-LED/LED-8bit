@@ -69,8 +69,6 @@ function drawType(type, matrix) {
         }
     }
     if (showNext === true) {
-        const hasSmallType = !!type.view?.small;
-        console.log(hasSmallType);
         if (hasSmallType) {
             view = "small";
         }
@@ -78,7 +76,6 @@ function drawType(type, matrix) {
     if (isTypeFullScreen(type)) {
         view = "full";
     }
-    console.log(showNext, view);
 
     let data = null;
     const typeHasJaEn = !!getItem ("type", typeId).view?.normal?.ja_en; 
@@ -397,14 +394,13 @@ function drawDestinationSmall(dest, matrix) {
     if (!data) return;
 
     const type = getItem("type", typeId)
-    console.log(usedSmall);
     if (usedSmall) {
         typewidth = getTypeWidth(type, usedSmall);
         if (config.hasDestinationInformationCombined) {
             if (informationId != null) {
-                console.log("a");
                 const info = getItem("information", informationId);
                 typeWidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
+                console.log(getTypeWidth(type, usedSmall), getInformationWidth(info, usedSmall))
             }
         }
     } else {
@@ -891,7 +887,6 @@ function getInformationWidth(info, used) {
     if (isInformationFullScreen(info)) {
         view = "full";
     }
-    console.log(info.view?.small?.ja?.width);
 
     const lang = getLangForPart();
     return (
