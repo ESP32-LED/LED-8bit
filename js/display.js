@@ -885,9 +885,11 @@ function getInformationWidth(info, used) {
         }
     }
 
-    const view = isInformationFullScreen(info)
-        ? "full"
-        : "normal";
+    let view = "normal";
+    if (isInformationFullScreen(info)) {
+        view = "full";
+    }
+    console.log(info.view?.small?.ja?.width);
 
     const lang = getLangForPart();
     return (
