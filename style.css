@@ -1394,7 +1394,8 @@ a,
 /* ===== 画面切り替えアニメーション ===== */
 
 #vehicleSelector,
-#simulator {
+#simulator,
+#messageBoard {
     opacity: 1;
     transform: translateY(0);
 }
@@ -1457,12 +1458,19 @@ a,
 
 /* ===== タイトルのスクロール連動アニメーション ===== */
 
+/* タイトルのスクロール連動アニメーション */
 #tittle.scroll-fade-title {
+    opacity: var(--title-opacity, 1);
+    transform: translateY(var(--title-offset, 0px));
     will-change: opacity, transform;
 
     transition:
         opacity 0.3s linear,
-        transform 0.3s linear;
+        transform 0.3s linear,
+        color 0.4s ease,
+        background-color 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
 }
 
 /* スマホのシミュレーター画面ではタイトルを薄くしない */
@@ -1478,13 +1486,15 @@ a,
 @media (prefers-reduced-motion: reduce) {
     #vehicleSelector,
     #simulator,
+    #messageBoard,
     #loading {
         animation: none !important;
         transition: none !important;
     }
 
     #vehicleSelector,
-    #simulator {
+    #simulator,
+    #messageBoard {
         opacity: 1;
         transform: none;
     }
@@ -1501,11 +1511,6 @@ a,
 /* 電光掲示板の設定・プレビュー配置 */
 #messageBoard[hidden] {
     display: none !important;
-}
-
-#messageBoard:not([hidden]) {
-    display: flex;
-    flex-direction: column;
 }
 
 #messageBoard main {
