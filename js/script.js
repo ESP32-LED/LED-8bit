@@ -2382,9 +2382,9 @@ messageBoardBtn.addEventListener("click", () => {
     startMessageBoard();
 })
 
-function startMessageBoard(
+function startMessageBoard {
     const vehicleSelector = document.getElementById("vehicleSelector");
-    const simulator = document.getElementById("simulator");
+    const messageBoard = document.getElementById("messageBoard");
 
     // 車両選択画面を滑らかに消す
     if (vehicleSelector) {
@@ -2392,21 +2392,18 @@ function startMessageBoard(
         vehicleSelector.classList.remove("screen-transition-out");
     }
 
-    document.body.classList.add("simulatorMode");
-    selectedVehicle = vehicle;
-
     // 画面を切り替える
     if (vehicleSelector) {
         vehicleSelector.hidden = true;
         vehicleSelector.classList.remove("screen-transition-out");
     }
 
-    if (simulator) {
-        simulator.hidden = false;
-        simulator.classList.remove("screen-transition-in");
+    if (messageBoard) {
+        messageBoard.hidden = false;
+        messageBoard.classList.remove("screen-transition-in");
 
         // アニメーションを再実行する
-        void simulator.offsetWidth;
-        simulator.classList.add("screen-transition-in");
+        void messageBoard.offsetWidth;
+        messageBoard.classList.add("screen-transition-in");
     }
-)
+}

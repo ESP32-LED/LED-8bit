@@ -254,7 +254,7 @@
 						<p class="transferStatus" style="margin-top: 8px; margin-bottom: 0; font-size: 12px; font-weight: bold; color: #333;"></p>
 					</div>
 
-					<button id="vehicleSelectButton">車両選択に戻る</button>
+					<button id="vehicleSelectButton" class="backVehicleSelector">車両選択に戻る</button>
 					<button id="displayLog" hidden>ログを表示</button>
 				</aside>
 
@@ -266,6 +266,18 @@
 					</div>
 				</main>
         	</div>
+		</div>
+		<div id="messageBoard" hidden>
+			<label>
+				<input type="checkbox" id="clockCheck">
+				現在時刻を表示
+			</label>
+			<label>
+				<input type="checkbox" id="clockScrollCheck">
+				スクロール
+			</label>
+			<textarea id="clockScrollText" hidden></textarea>
+			<button id="startClockScrollBtn" hidden>スクロール更新</button>
 		</div>
 
         <footer id="status">
