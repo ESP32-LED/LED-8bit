@@ -2464,12 +2464,31 @@ const messageBoardScrollText = document.getElementById("messageBoardScrollText")
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
 const messageBoardLedPreview = document.getElementById("messageBoardLedPreview");
 
-const MB_WIDTH = 192;
-const MB_HEIGHT = 32;
-const MB_LED_SIZE = 6;
-const MB_LED_GAP = 0.5;
+/* ===== メッセージボードLED設定 ===== */
+const MB_DISPLAY_CONFIG = {
+    width: 192,
+    height: 32,
+    ledSize: 6.5,
+    ledGap: 2
+};
+
+const MB_WIDTH = MB_DISPLAY_CONFIG.width;
+const MB_HEIGHT = MB_DISPLAY_CONFIG.height;
+
+const MB_LED_SIZE = MB_DISPLAY_CONFIG.ledSize;
+const MB_LED_GAP = MB_DISPLAY_CONFIG.ledGap;
 const MB_PITCH = MB_LED_SIZE + MB_LED_GAP;
-const MB_DOT_RADIUS = 3;
+const MB_DOT_RADIUS = MB_LED_SIZE / 2;
+
+/* ドット数・サイズ・間隔からキャンバスの実寸を計算 */
+const MB_CANVAS_WIDTH = Math.ceil(
+    (MB_WIDTH - 1) * MB_PITCH + MB_LED_SIZE
+);
+
+const MB_CANVAS_HEIGHT = Math.ceil(
+    (MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE
+);
+
 const MB_SCROLL_SPEED = 30;
 
 let mbScrollActive = false;
