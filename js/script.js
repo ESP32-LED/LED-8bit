@@ -2354,7 +2354,7 @@ function setupTitleScrollAnimation() {
 
         const progress = Math.min(
             1,
-            Math.max(0, scrollTop / 240)
+            Math.max(0, scrollTop / 360)
         );
 
         title.style.opacity = String(1 - progress);
@@ -2420,26 +2420,30 @@ if (document.readyState === "loading") {
 const messageBoardBtn = document.getElementById("messageBoardBtn");
 messageBoardBtn.addEventListener("click", () => {
     isMessageBoard = true;
-    startMessageBoard();
+    await startMessageBoard();
 })
 
-function startMessageBoard() {
+async function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     const messageBoard = document.getElementById("messageBoard");
 
-    if (vehicleSelector) {
-        vehicleSelector.hidden = true;
-        vehicleSelector.classList.remove("screen-transition-out");
-    }
+    if (!vehicleSelector || !messageBoard) return;
 
-    if (messageBoard) {
-        messageBoard.hidden = false;
-        messageBoard.classList.remove("screen-transition-in");
+    // 二重実行を防ぐ
+    if (messageBoard.dataset.transitioning === "true") return;
+    messageBoard.dataset.transitioning = "true";
 
-        void messageBoard.offsetWidth;
-        messageBoard.classList.add("screen-transition-in");
+    try {
+        await showScreenSmoothly(
+            messageBoard,
+            vehicleSelector,
+            () => {
+                setVehicleSelectButton();
+            }
+        );
+    } finally {
+        delete messageBoard.dataset.transitioning;
     }
-    setVehicleSelectButton();
 }
 
 const timeCheck = document.getElementById("timeCheck");
