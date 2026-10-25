@@ -368,6 +368,7 @@ textarea {
     align-items: center;
     gap: 8px;
     font-weight: 650;
+    font-size: 18px;
 }
 
 #scroll input[type="checkbox"] {
@@ -377,6 +378,7 @@ textarea {
 #messageBoardScrollText,
 #scrollText {
     font-weight: 400 !important;
+    font-size: 14px;
 }
 
 #startMessageBoardScrollBtn,
@@ -386,6 +388,7 @@ textarea {
     color: white;
     font-family: var(--ui-font);
     font-weight: 500 !important;
+    font-size: 18px;
 }
 
 #startMessageBoardScrollBtn,
@@ -399,10 +402,12 @@ textarea {
 
 #referenceSite label {
     font-family: var(--ui-font);
+    font-size: 18px;
 }
 
 #explanation {
     color: var(--text);
+    font-size: 18px;
 }
 
 #referenceSite {
