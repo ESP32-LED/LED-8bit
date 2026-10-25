@@ -319,6 +319,8 @@ textarea {
     display: block;
     margin-left: auto;
     width: 200px;
+    margin-bottom: 8px;
+    height: 30px;
 }
 
 #vehicleSelect {
