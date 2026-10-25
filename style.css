@@ -31,7 +31,6 @@
     padding: 14px 20px;
     color: #193653;
     box-shadow: 0 2px 8px rgba(28, 52, 84, 0.035);
-    transition: background-color 0.5s ease;
     width: 100%;
 }
 

@@ -2418,7 +2418,7 @@ if (document.readyState === "loading") {
 
 const messageBoardBtn = document.getElementById("messageBoardBtn");
 messageBoardBtn.addEventListener("click", () => {
-    messageBoard = false;
+    isMessageBoard = true;
     startMessageBoard();
 })
 
@@ -2426,7 +2426,6 @@ function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
     const messageBoard = document.getElementById("messageBoard");
 
-    isMessageBoard === true;
     // 車両選択画面を滑らかに消す
     if (vehicleSelector) {
         vehicleSelector.hidden = true;
