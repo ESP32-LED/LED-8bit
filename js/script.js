@@ -1885,7 +1885,7 @@ document.querySelectorAll(".numberInput").forEach((container) => {
 const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
 
-function returnToVehicleSelector() {
+async function returnToVehicleSelector() {
     document.body.classList.remove("simulatorMode");
     initSimulator();
     clearReferenceSite();
@@ -2142,7 +2142,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
 
 (() => {
     const initTitleFade = () => {

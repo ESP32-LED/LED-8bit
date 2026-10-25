@@ -868,7 +868,7 @@
     },
     {
         "id": "AB900",
-        "name": "AB900系",
+        "name": "阿武隈急行AB900系",
         "config": "vehicles/AB900/config.json",
         "led": "vehicles/AB900/led.json",
         "icons": [
