@@ -6,7 +6,7 @@
     "hasExplanation": "true",
     "hasType": true,
     "hasDestination": true,
-    "hasInformation": false,
+    "hasInformation": true,
     "hasInformation2": false,
     "hasLine": false,
     "hasNext": true,
@@ -28,7 +28,7 @@
     "hasInformationCombined": false,
 
     "destinationDistinction": true,
-    "nextModeDistinction": false,
+    "nextModeDistinction": true,
     "typeDistinction": false,
     "informationDistinction": false,
     "information2Distinction": false,
