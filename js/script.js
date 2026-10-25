@@ -2492,7 +2492,7 @@ const MB_CANVAS_HEIGHT = Math.ceil(
     (MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE
 );
 
-const MB_SCROLL_SPEED = 60;
+const MB_SCROLL_SPEED = 450;
 
 let mbScrollActive = false;
 let mbScrollText = "";
