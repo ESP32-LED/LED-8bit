@@ -1412,7 +1412,7 @@ a,
 #vehicleSelector.screen-transition-out,
 #simulator.screen-transition-out,
 #messageBoard.screen-transition-out {
-    opacity: 0;
+    opacity: 0.5;
     transform: translateY(-6px);
     pointer-events: none;
     transition:
@@ -1422,7 +1422,7 @@ a,
 
 @keyframes screenFadeIn {
     from {
-        opacity: 0;
+        opacity: 0.5;
         transform: translateY(6px);
     }
     to {
