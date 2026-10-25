@@ -2577,14 +2577,16 @@ mbTextCanvas.height = MB_HEIGHT;
 const mbTextContext = mbTextCanvas.getContext("2d");
 
 const mbBackgroundCanvas = document.createElement("canvas");
-mbBackgroundCanvas.width = MB_WIDTH * MB_PITCH;
-mbBackgroundCanvas.height = MB_HEIGHT * MB_PITCH;
 
-const mbBackgroundContext = mbBackgroundCanvas.getContext("2d");
+mbBackgroundCanvas.width = MB_CANVAS_WIDTH;
+mbBackgroundCanvas.height = MB_CANVAS_HEIGHT;
+
+const mbBackgroundContext =
+    mbBackgroundCanvas.getContext("2d");
 
 if (messageBoardLedPreview && mbOutputContext) {
-    messageBoardLedPreview.width = MB_WIDTH * MB_PITCH;
-    messageBoardLedPreview.height = MB_HEIGHT * MB_PITCH;
+    messageBoardLedPreview.width = MB_CANVAS_WIDTH;
+    messageBoardLedPreview.height = MB_CANVAS_HEIGHT;
 }
 
 if (messageBoardLedPreview && mbBackgroundContext) {
@@ -2592,20 +2594,23 @@ if (messageBoardLedPreview && mbBackgroundContext) {
 }
 
 /* LEDの消灯状態をあらかじめ描画する */
+/* 消灯ドットを白色で描画 */
 function drawMessageBoardBackground() {
     mbBackgroundContext.fillStyle = "#111111";
+
     mbBackgroundContext.fillRect(
         0,
         0,
-        mbBackgroundCanvas.width,
-        mbBackgroundCanvas.height
+        MB_CANVAS_WIDTH,
+        MB_CANVAS_HEIGHT
     );
 
-    mbBackgroundContext.fillStyle = "#220000";
+    mbBackgroundContext.fillStyle = "rgb(0, 0, 0)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
             mbBackgroundContext.beginPath();
+
             mbBackgroundContext.arc(
                 x * MB_PITCH + MB_DOT_RADIUS,
                 y * MB_PITCH + MB_DOT_RADIUS,
@@ -2613,6 +2618,7 @@ function drawMessageBoardBackground() {
                 0,
                 Math.PI * 2
             );
+
             mbBackgroundContext.fill();
         }
     }
@@ -2731,6 +2737,7 @@ function drawMessageBoardScrollTextFrame() {
 }
 
 /* LEDの各ドットに変換してプレビューへ出力する */
+/* 時刻・スクロール・その他のドットを色分けして描画 */
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
 
@@ -2741,18 +2748,41 @@ function renderMessageBoardLEDs() {
         MB_HEIGHT
     ).data;
 
-    mbOutputContext.drawImage(mbBackgroundCanvas, 0, 0);
-    mbOutputContext.fillStyle = "#ff4040";
+    /* 白色の消灯ドットを先に描く */
+    mbOutputContext.drawImage(
+        mbBackgroundCanvas,
+        0,
+        0
+    );
+
+    const isScrolling =
+        mbScrollActive &&
+        !!messageBoardScrollCheck?.checked;
 
     for (let y = 0; y < MB_HEIGHT; y++) {
+        /*
+         * 時刻とスクロールを同時に表示するときは、
+         * 上半分が黒色の時刻、下半分が黄色のスクロール。
+         *
+         * 時刻を表示しない場合は、
+         * スクロール文字をすべて黄色にする。
+         */
+        const isScrollRow =
+            isScrolling &&
+            (!timeCheck?.checked || y >= 16);
+
+        mbOutputContext.fillStyle = isScrollRow
+            ? "rgb(255, 242, 0)"
+            : "rgb(255, 255, 255)";
+
         for (let x = 0; x < MB_WIDTH; x++) {
             const index = (y * MB_WIDTH + x) * 4;
             const alpha = pixels[index + 3];
 
-            /* 文字のアンチエイリアスをしきい値でLEDに変換 */
             if (alpha < 128) continue;
 
             mbOutputContext.beginPath();
+
             mbOutputContext.arc(
                 x * MB_PITCH + MB_DOT_RADIUS,
                 y * MB_PITCH + MB_DOT_RADIUS,
@@ -2760,6 +2790,7 @@ function renderMessageBoardLEDs() {
                 0,
                 Math.PI * 2
             );
+
             mbOutputContext.fill();
         }
     }
