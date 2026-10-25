@@ -315,12 +315,12 @@ textarea {
     display: flex;
 }
 
-#messageBoard {
+#messageBoardBtn {
     display: block;
     margin-left: auto;
     width: 200px;
     margin-bottom: 8px;
-    height: 30px;
+    height: 40px;
 }
 
 #vehicleSelect {
@@ -685,7 +685,7 @@ input:checked + .slider:before {
     }
 
     #tittle {
-        font-size: 40px;
+        font-size: 20px;
     }
 
     .ledFrame {

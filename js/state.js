@@ -69,4 +69,6 @@ let destinationScrollTimer = null;
 let destinationCycleSmallTimer = null;
 let destinationCycleSmallMode = "destination";
 
+let messageBoard = false;
+
 const langs = ["ja", "en"];
