@@ -2438,6 +2438,7 @@ function startMessageBoard() {
         void messageBoard.offsetWidth;
         messageBoard.classList.add("screen-transition-in");
     }
+    setVehicleSelectButton();
 }
 
 const timeCheck = document.getElementById("timeCheck");
