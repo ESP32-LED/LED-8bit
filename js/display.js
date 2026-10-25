@@ -370,7 +370,13 @@ function drawDestinationSmall(dest, matrix) {
     let usedSmall = false;
     let typewidth;
 
-    const view = isDestinationFullScreen(dest)
+    let = "small";
+
+    if (informationMode === "destination_information") {
+        view = "info_small";
+    }
+
+    view = isDestinationFullScreen(dest)
         ? "full_small"
         : "small";
 
