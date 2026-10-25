@@ -310,15 +310,12 @@ textarea {
     cursor: pointer;
 }
 
-#vehicleSelectTop {
-    display: flex;
-}
-
 #messageBoardBtn {
     display: block;
     margin-left: auto;
     width: 200px;
     margin-bottom: 8px;
+    margin-right: 10px;
     height: 40px;
 }
 
