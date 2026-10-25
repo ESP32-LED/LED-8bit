@@ -2418,10 +2418,10 @@ if (document.readyState === "loading") {
 }
 
 const messageBoardBtn = document.getElementById("messageBoardBtn");
-messageBoardBtn.addEventListener("click", () => {
+messageBoardBtn.addEventListener("click", async () => {
     isMessageBoard = true;
     await startMessageBoard();
-})
+});
 
 async function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
