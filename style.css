@@ -1570,3 +1570,9 @@ a,
         overflow-y: visible;
     }
 }
+/* メッセージボードのLEDプレビュー */
+#messageBoardLedPreview {
+    display: block;
+    width: 832px;
+    height: 208px;
+}

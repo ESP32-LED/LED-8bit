@@ -2459,26 +2459,457 @@ async function startMessageBoard() {
 }
 
 const timeCheck = document.getElementById("timeCheck");
-timeCheck.addEventListener("change", () => {
-    if (timeCheck.checked) {
-        if (messageBoardScroll) {
-            drawTimeSmall();
-        } else {
-            drawTime();
-        }
-    } else 
-});
-
 const messageBoardScrollCheck = document.getElementById("messageBoardScrollCheck");
 const messageBoardScrollText = document.getElementById("messageBoardScrollText");
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
-messageBoardScrollCheck.addEventListener("change", () => {
+const messageBoardLedPreview = document.getElementById("messageBoardLedPreview");
+
+const MB_WIDTH = 128;
+const MB_HEIGHT = 32;
+const MB_LED_SIZE = 6;
+const MB_LED_GAP = 0.5;
+const MB_PITCH = MB_LED_SIZE + MB_LED_GAP;
+const MB_DOT_RADIUS = 3;
+const MB_SCROLL_SPEED = 18;
+
+let mbScrollActive = false;
+let mbScrollText = "";
+let mbScrollWidth = 0;
+let mbScrollOffset = 0;
+let mbPreviousFrameTime = 0;
+let mbAnimationFrame = null;
+
+const mbOutputContext = messageBoardLedPreview?.getContext("2d");
+
+/* ===== メッセージボード用JSONフォント ===== */
+
+let mbClockFont16 = null;
+let mbClockFont24 = null;
+
+async function loadMessageBoardClockFonts() {
+    async function loadFont(path, size) {
+        const response = await fetch(
+            new URL(path, document.baseURI)
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `フォント読み込み失敗: ${path} (${response.status})`
+            );
+        }
+
+        const font = await response.json();
+
+        if (
+            font.width !== size ||
+            font.height !== size ||
+            !font.glyphs
+        ) {
+            throw new Error(
+                `${path} のwidth・height・glyphsを確認してください`
+            );
+        }
+
+        for (const character of "0123456789:") {
+            const rows = font.glyphs[character];
+
+            if (!Array.isArray(rows) || rows.length !== size) {
+                throw new Error(
+                    `${path}: 文字「${character}」のデータがありません`
+                );
+            }
+
+            for (const row of rows) {
+                if (
+                    typeof row !== "string" ||
+                    !/^[0-9a-fA-F]+$/.test(row) ||
+                    row.length !== size / 4
+                ) {
+                    throw new Error(
+                        `${path}: 文字「${character}」の行データが不正です`
+                    );
+                }
+            }
+        }
+
+        return font;
+    }
+
+    const [font16, font24] = await Promise.all([
+        loadFont("fonts/clock16.json", 16),
+        loadFont("fonts/clock24.json", 24)
+    ]);
+
+    mbClockFont16 = font16;
+    mbClockFont24 = font24;
+
+    return true;
+}
+
+const mbClockFontsReady = loadMessageBoardClockFonts().catch(error => {
+    console.error("時刻用JSONフォントを読み込めませんでした:", error);
+    return false;
+});
+
+const mbTextCanvas = document.createElement("canvas");
+mbTextCanvas.width = MB_WIDTH;
+mbTextCanvas.height = MB_HEIGHT;
+
+const mbTextContext = mbTextCanvas.getContext("2d");
+
+const mbBackgroundCanvas = document.createElement("canvas");
+mbBackgroundCanvas.width = MB_WIDTH * MB_PITCH;
+mbBackgroundCanvas.height = MB_HEIGHT * MB_PITCH;
+
+const mbBackgroundContext = mbBackgroundCanvas.getContext("2d");
+
+if (messageBoardLedPreview && mbOutputContext) {
+    messageBoardLedPreview.width = MB_WIDTH * MB_PITCH;
+    messageBoardLedPreview.height = MB_HEIGHT * MB_PITCH;
+}
+
+if (messageBoardLedPreview && mbBackgroundContext) {
+    drawMessageBoardBackground();
+}
+
+/* LEDの消灯状態をあらかじめ描画する */
+function drawMessageBoardBackground() {
+    mbBackgroundContext.fillStyle = "#111111";
+    mbBackgroundContext.fillRect(
+        0,
+        0,
+        mbBackgroundCanvas.width,
+        mbBackgroundCanvas.height
+    );
+
+    mbBackgroundContext.fillStyle = "#220000";
+
+    for (let y = 0; y < MB_HEIGHT; y++) {
+        for (let x = 0; x < MB_WIDTH; x++) {
+            mbBackgroundContext.beginPath();
+            mbBackgroundContext.arc(
+                x * MB_PITCH + MB_DOT_RADIUS,
+                y * MB_PITCH + MB_DOT_RADIUS,
+                MB_DOT_RADIUS,
+                0,
+                Math.PI * 2
+            );
+            mbBackgroundContext.fill();
+        }
+    }
+}
+
+/* 現在時刻を取得する */
+function getMessageBoardTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+}
+
+/* 時刻を指定した位置・サイズで描画する */
+/* JSONのビットマップフォントで時刻を描画する */
+/* JSONフォントで時刻を縦横中央に描画 */
+function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
+    if (!font) return;
+
+    const time = getMessageBoardTime();
+    const characterCount = time.length;
+    const totalWidth = characterCount * displayWidth;
+
+    /* 横方向：文字列全体を中央に配置 */
+    const startX = Math.floor((MB_WIDTH - totalWidth) / 2);
+
+    /* 縦方向：表示領域の中央に配置 */
+    const startY = top + Math.floor((areaHeight - font.height) / 2);
+
+    const hexLength = font.width / 4;
+
+    mbTextContext.fillStyle = "#ffffff";
+
+    for (let i = 0; i < characterCount; i++) {
+        const rows = font.glyphs[time[i]];
+        if (!rows) continue;
+
+        for (let y = 0; y < font.height; y++) {
+            const rowBits = Number.parseInt(
+                rows[y].padStart(hexLength, "0"),
+                16
+            );
+
+            for (let x = 0; x < displayWidth; x++) {
+                const sourceX = Math.floor(
+                    x * font.width / displayWidth
+                );
+
+                const bit = Math.floor(
+                    rowBits / (2 ** (font.width - 1 - sourceX))
+                ) % 2;
+
+                if (bit !== 1) continue;
+
+                mbTextContext.fillRect(
+                    startX + i * displayWidth + x,
+                    startY + y,
+                    1,
+                    1
+                );
+            }
+        }
+    }
+}
+
+/* 24×24フォント：LED全体の中央 */
+function drawMessageBoardClockLarge() {
+    drawMessageBoardClockBitmap(
+        mbClockFont24,
+        24,
+        0,
+        MB_HEIGHT
+    );
+}
+
+/* 16×16フォント：上側16ドットの中央 */
+function drawMessageBoardClockSmall() {
+    drawMessageBoardClockBitmap(
+        mbClockFont16,
+        16,
+        0,
+        16
+    );
+}
+
+/* スクロール文字を描画する */
+function drawMessageBoardScrollTextFrame() {
+    const ctx = mbTextContext;
+    const hasClock = !!timeCheck?.checked;
+
+    const fontSize = hasClock ? 16 : 24;
+    const top = hasClock ? 16 : 4;
+    const height = hasClock ? 16 : 24;
+
+    ctx.save();
+
+    /* スクロールできる範囲を制限する */
+    ctx.beginPath();
+    ctx.rect(0, top, MB_WIDTH, height);
+    ctx.clip();
+
+    ctx.font =
+        `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+
+    const x = MB_WIDTH - mbScrollOffset;
+    const centerY = top + height / 2;
+
+    ctx.fillText(mbScrollText, x, centerY);
+
+    ctx.restore();
+}
+
+/* LEDの各ドットに変換してプレビューへ出力する */
+function renderMessageBoardLEDs() {
+    if (!mbOutputContext || !mbTextContext) return;
+
+    const pixels = mbTextContext.getImageData(
+        0,
+        0,
+        MB_WIDTH,
+        MB_HEIGHT
+    ).data;
+
+    mbOutputContext.drawImage(mbBackgroundCanvas, 0, 0);
+    mbOutputContext.fillStyle = "#ff4040";
+
+    for (let y = 0; y < MB_HEIGHT; y++) {
+        for (let x = 0; x < MB_WIDTH; x++) {
+            const index = (y * MB_WIDTH + x) * 4;
+            const alpha = pixels[index + 3];
+
+            /* 文字のアンチエイリアスをしきい値でLEDに変換 */
+            if (alpha < 128) continue;
+
+            mbOutputContext.beginPath();
+            mbOutputContext.arc(
+                x * MB_PITCH + MB_DOT_RADIUS,
+                y * MB_PITCH + MB_DOT_RADIUS,
+                MB_DOT_RADIUS,
+                0,
+                Math.PI * 2
+            );
+            mbOutputContext.fill();
+        }
+    }
+}
+
+/* 現在のチェック状態に応じて1画面分を描画する */
+function drawMessageBoardFrame() {
+    if (!mbTextContext) return;
+
+    mbTextContext.clearRect(
+        0,
+        0,
+        MB_WIDTH,
+        MB_HEIGHT
+    );
+
+    if (mbScrollActive && messageBoardScrollCheck?.checked) {
+        /* スクロール中 */
+        if (timeCheck?.checked) {
+            drawMessageBoardClockSmall();
+        }
+
+        drawMessageBoardScrollTextFrame();
+    } else if (timeCheck?.checked) {
+        /* スクロールしていない場合は時刻を全体表示 */
+        drawMessageBoardClockLarge();
+    }
+
+    renderMessageBoardLEDs();
+}
+
+/* スクロールを停止する */
+function stopMessageBoardScroll() {
+    mbScrollActive = false;
+
+    if (mbAnimationFrame !== null) {
+        cancelAnimationFrame(mbAnimationFrame);
+        mbAnimationFrame = null;
+    }
+
+    mbPreviousFrameTime = 0;
+
+    /* 既存コードでも使用している場合に状態を同期 */
+    if (typeof messageBoardScroll !== "undefined") {
+        messageBoardScroll = false;
+    }
+
+    drawMessageBoardFrame();
+}
+
+/* スクロールアニメーション */
+function animateMessageBoardScroll(timestamp) {
+    if (!mbScrollActive || !messageBoardScrollCheck?.checked) {
+        return;
+    }
+
+    if (mbPreviousFrameTime !== 0) {
+        const delta = Math.min(
+            (timestamp - mbPreviousFrameTime) / 1000,
+            0.05
+        );
+
+        mbScrollOffset += MB_SCROLL_SPEED * delta;
+    }
+
+    mbPreviousFrameTime = timestamp;
+
+    /*
+     * 文字が左側へ抜け、少し空白ができたら右側から再表示する。
+     */
+    const cycleLength = MB_WIDTH + mbScrollWidth + 32;
+
+    if (mbScrollOffset >= cycleLength) {
+        mbScrollOffset -= cycleLength;
+    }
+
+    drawMessageBoardFrame();
+
+    mbAnimationFrame = requestAnimationFrame(
+        animateMessageBoardScroll
+    );
+}
+
+/* 開始ボタンが押されたとき */
+async function startMessageBoardScroll() {
+    if (!messageBoardScrollCheck?.checked) return;
+    if (!messageBoardScrollText || !mbTextContext) return;
+
+    mbScrollText = messageBoardScrollText.value
+        .replace(/\r?\n/g, " ");
+
+    if (!mbScrollText.trim()) {
+        stopMessageBoardScroll();
+        return;
+    }
+
+    /* 自分で用意した時刻フォントの読み込みを待つ */
+    if (timeCheck?.checked) {
+        const fontsLoaded = await mbClockFontsReady;
+
+        if (!fontsLoaded) {
+            console.error("時刻用JSONフォントを確認してください。");
+            return;
+        }
+    }
+
+    /* 連打された場合は前のアニメーションを停止 */
+    if (mbAnimationFrame !== null) {
+        cancelAnimationFrame(mbAnimationFrame);
+    }
+
+    mbTextContext.font =
+        ` ${timeCheck?.checked ? 16 : 24}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
+
+    mbScrollWidth = mbTextContext.measureText(mbScrollText).width;
+    mbScrollOffset = 0;
+    mbPreviousFrameTime = 0;
+    mbScrollActive = true;
+
+    if (typeof messageBoardScroll !== "undefined") {
+        messageBoardScroll = true;
+    }
+
+    mbAnimationFrame = requestAnimationFrame(
+        animateMessageBoardScroll
+    );
+}
+
+/* 時刻チェックの変更 */
+timeCheck?.addEventListener("change", async () => {
+    if (mbScrollActive) {
+        await startMessageBoardScroll();
+    } else {
+        drawMessageBoardFrame();
+    }
+});
+
+/* スクロールチェックの変更 */
+messageBoardScrollCheck?.addEventListener("change", () => {
     if (messageBoardScrollCheck.checked) {
         messageBoardScrollText.hidden = false;
         startMessageBoardScrollBtn.hidden = false;
+
+        /* チェックしただけではスクロールを開始しない */
+        drawMessageBoardFrame();
     } else {
         messageBoardScrollText.hidden = true;
         startMessageBoardScrollBtn.hidden = true;
-        messageBoardScroll = false;
+
+        stopMessageBoardScroll();
     }
+});
+
+/* 開始ボタン */
+startMessageBoardScrollBtn?.addEventListener(
+    "click",
+    startMessageBoardScroll
+);
+
+/* スクロールしていない間も時刻を定期的に更新 */
+setInterval(() => {
+    if (!mbScrollActive) {
+        drawMessageBoardFrame();
+    }
+}, 1000);
+
+/* 初期表示 */
+drawMessageBoardFrame();
+
+mbClockFontsReady.then(() => {
+    drawMessageBoardFrame();
 });
