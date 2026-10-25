@@ -2431,4 +2431,4 @@ messageBoardScrollCheck.addEventListener("change", () => {
         startMessageBoardScrollBtn.hidden = true;
         messageBoardScroll = false;
     }
-})
+});
