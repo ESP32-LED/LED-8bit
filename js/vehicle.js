@@ -169,38 +169,35 @@ function sleep(ms) {
 function showScreenSmoothly(showElement, hideElement, onComplete) {
     return new Promise(resolve => {
         if (!showElement || !hideElement) {
-            if (typeof onComplete === "function") {
-                onComplete();
-            }
+            if (typeof onComplete === "function") onComplete();
             resolve();
             return;
         }
 
-        const duration = 250;
+        const duration = 400;
         const reducedMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)"
         ).matches;
 
-        showElement.classList.remove("screen-transition-in");
-        hideElement.classList.remove("screen-transition-in");
-        showElement.classList.remove("screen-transition-out");
-        hideElement.classList.remove("screen-transition-out");
+        showElement.classList.remove("screen-transition-in", "screen-transition-out");
+        hideElement.classList.remove("screen-transition-in", "screen-transition-out");
 
-        // 表示先を表示し、表示元をフェードアウト
+        // 表示先を準備
         showElement.hidden = false;
-        hideElement.classList.add("screen-transition-out");
 
         if (reducedMotion) {
             hideElement.hidden = true;
-            hideElement.classList.remove("screen-transition-out");
 
-            if (typeof onComplete === "function") {
-                onComplete();
-            }
-
+            if (typeof onComplete === "function") onComplete();
             resolve();
             return;
         }
+
+        // レイアウトを確定してからフェードアウト
+        void showElement.offsetWidth;
+        void hideElement.offsetWidth;
+
+        hideElement.classList.add("screen-transition-out");
 
         let finished = false;
 
@@ -209,22 +206,16 @@ function showScreenSmoothly(showElement, hideElement, onComplete) {
             finished = true;
 
             clearTimeout(timer);
-            hideElement.removeEventListener(
-                "transitionend",
-                onTransitionEnd
-            );
+            hideElement.removeEventListener("transitionend", onTransitionEnd);
 
             hideElement.hidden = true;
             hideElement.classList.remove("screen-transition-out");
 
-            showElement.classList.remove("screen-transition-in");
+            showElement.classList.remove("screen-transition-out");
             void showElement.offsetWidth;
             showElement.classList.add("screen-transition-in");
 
-            if (typeof onComplete === "function") {
-                onComplete();
-            }
-
+            if (typeof onComplete === "function") onComplete();
             resolve();
         };
 
@@ -234,12 +225,9 @@ function showScreenSmoothly(showElement, hideElement, onComplete) {
             finish();
         };
 
-        hideElement.addEventListener(
-            "transitionend",
-            onTransitionEnd
-        );
+        hideElement.addEventListener("transitionend", onTransitionEnd);
 
-        const timer = setTimeout(finish, duration + 50);
+        const timer = setTimeout(finish, duration + 100);
     });
 }
 
