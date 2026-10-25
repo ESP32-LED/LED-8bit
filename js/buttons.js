@@ -1506,7 +1506,7 @@ observer.observe(document.body, {
     attributeFilter: ["hidden"]
 });
 function resizeButtonText() {
-    const buttons = document.querySelectorAll("button");
+    const buttons = document.querySelectorAll("#buttonGroup button");
     buttons.forEach(button => {
         if (button.getBoundingClientRect().width === 0) return;
         const text = button.textContent.trim();
