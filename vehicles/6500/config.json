@@ -25,7 +25,7 @@
     "hasInformationCombined": false,
 
     "destinationDistinction": true,
-    "nextModeDistinction": false,
+    "nextModeDistinction": true,
     "typeDistinction": false,
     "informationDistinction": false,
     "information2Distinction": false,
