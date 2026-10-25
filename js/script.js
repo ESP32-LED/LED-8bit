@@ -538,7 +538,7 @@ async function startVehicle() {
         setupVehicleUI();
         startRenderLoop();
     } finally {
-        hideLoading();
+        await hideLoading();
     }
 }
 
@@ -1901,8 +1901,12 @@ function returnToVehicleSelector() {
         document.getElementById(id).hidden = true;
     });
 
-    document.getElementById("simulator").hidden = true;
-    document.getElementById("vehicleSelector").hidden = false;
+    const simulator = document.getElementById("simulator");
+    const vehicleSelector = document.getElementById("vehicleSelector");
+
+    await showScreenSmoothly(vehicleSelector, simulator);
+
+    document.body.classList.remove("simulatorMode");
 
     document.getElementById("scrollCheck").checked = false;
     document.getElementById("choppyScrollCheck").checked = false;
@@ -1994,14 +1998,6 @@ function clearReferenceSite() {
 tittle.addEventListener("pointerup", () => {
     tittle.style.backgroundColor = "white";
 });
-
-function showLoading() {
-    document.getElementById("loading").hidden = false;
-}
-
-function hideLoading() {
-    document.getElementById("loading").hidden = true;
-}
 
 const scrollCheck = document.getElementById("scrollCheck");
 const scrollText = document.getElementById("scrollText");

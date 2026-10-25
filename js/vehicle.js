@@ -160,6 +160,57 @@ async function initVehicles() {
     createVehicleButtons();
 }
 
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// 指定した画面を滑らかに表示する
+async function showScreenSmoothly(screenToShow, screenToHide) {
+    if (!screenToShow) return;
+
+    // 現在の画面をフェードアウト
+    if (screenToHide && !screenToHide.hidden) {
+        screenToHide.classList.add("screen-transition-out");
+        await sleep(300);
+
+        screenToHide.hidden = true;
+        screenToHide.classList.remove("screen-transition-out");
+    }
+
+    // 次の画面を表示
+    screenToShow.hidden = false;
+    screenToShow.classList.remove("screen-transition-in");
+
+    // アニメーションを再実行
+    void screenToShow.offsetWidth;
+    screenToShow.classList.add("screen-transition-in");
+}
+
+// Loadingを滑らかに表示
+function showLoading() {
+    const loading = document.getElementById("loading");
+    if (!loading) return;
+
+    loading.hidden = false;
+    loading.classList.remove("loading-visible");
+
+    requestAnimationFrame(() => {
+        loading.classList.add("loading-visible");
+    });
+}
+
+// Loadingを滑らかに非表示
+async function hideLoading() {
+    const loading = document.getElementById("loading");
+    if (!loading || loading.hidden) return;
+
+    loading.classList.remove("loading-visible");
+    await sleep(250);
+    loading.hidden = true;
+}
+
+
 // 他ファイルからの参照用にグローバル展開
 window.loadConfig = loadConfig;
 window.selectVehicle = selectVehicle;
