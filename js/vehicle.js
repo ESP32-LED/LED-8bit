@@ -169,7 +169,9 @@ function sleep(ms) {
 function showScreenSmoothly(showElement, hideElement, onComplete) {
     return new Promise(resolve => {
         if (!showElement || !hideElement) {
-            if (typeof onComplete === "function") onComplete();
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
             resolve();
             return;
         }
@@ -179,55 +181,132 @@ function showScreenSmoothly(showElement, hideElement, onComplete) {
             "(prefers-reduced-motion: reduce)"
         ).matches;
 
-        showElement.classList.remove("screen-transition-in", "screen-transition-out");
-        hideElement.classList.remove("screen-transition-in", "screen-transition-out");
+        showElement.classList.remove(
+            "screen-transition-in",
+            "screen-transition-out"
+        );
 
-        // 表示先を準備
-        showElement.hidden = false;
+        hideElement.classList.remove(
+            "screen-transition-in",
+            "screen-transition-out"
+        );
 
+        // 動きを減らす設定が有効ならアニメーションを省略
         if (reducedMotion) {
             hideElement.hidden = true;
+            showElement.hidden = false;
 
-            if (typeof onComplete === "function") onComplete();
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+
             resolve();
             return;
         }
 
-        // レイアウトを確定してからフェードアウト
-        void showElement.offsetWidth;
-        void hideElement.offsetWidth;
-
-        hideElement.classList.add("screen-transition-out");
-
         let finished = false;
+        let fallbackTimer = null;
+        let cleanupTimer = null;
 
+        // フェードイン終了後にアニメーションクラスを解除
+        const cleanupShowAnimation = event => {
+            if (
+                event &&
+                (
+                    event.target !== showElement ||
+                    event.animationName !== "screenFadeIn"
+                )
+            ) {
+                return;
+            }
+
+            showElement.removeEventListener(
+                "animationend",
+                cleanupShowAnimation
+            );
+
+            if (cleanupTimer !== null) {
+                clearTimeout(cleanupTimer);
+                cleanupTimer = null;
+            }
+
+            showElement.classList.remove("screen-transition-in");
+        };
+
+        // 表示元が消えたら、表示先をフェードインさせる
         const finish = () => {
             if (finished) return;
             finished = true;
 
-            clearTimeout(timer);
-            hideElement.removeEventListener("transitionend", onTransitionEnd);
+            if (fallbackTimer !== null) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+
+            hideElement.removeEventListener(
+                "transitionend",
+                onTransitionEnd
+            );
 
             hideElement.hidden = true;
-            hideElement.classList.remove("screen-transition-out");
 
-            showElement.classList.remove("screen-transition-out");
+            hideElement.classList.remove(
+                "screen-transition-in",
+                "screen-transition-out"
+            );
+
+            showElement.classList.remove(
+                "screen-transition-in",
+                "screen-transition-out"
+            );
+
+            // 表示先をアニメーション開始前に隠しておくのではなく、
+            // 表示してから同じ処理内でフェードインを設定する
+            showElement.hidden = false;
+
             void showElement.offsetWidth;
+
+            showElement.addEventListener(
+                "animationend",
+                cleanupShowAnimation
+            );
+
             showElement.classList.add("screen-transition-in");
 
-            if (typeof onComplete === "function") onComplete();
+            // animationend が発生しない場合の保険
+            cleanupTimer = setTimeout(() => {
+                cleanupShowAnimation();
+            }, duration + 100);
+
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+
             resolve();
         };
 
+        // 表示元のフェードアウト完了を検知
         const onTransitionEnd = event => {
             if (event.target !== hideElement) return;
             if (event.propertyName !== "opacity") return;
+
             finish();
         };
 
-        hideElement.addEventListener("transitionend", onTransitionEnd);
+        hideElement.addEventListener(
+            "transitionend",
+            onTransitionEnd
+        );
 
-        const timer = setTimeout(finish, duration + 100);
+        // 表示元だけを先にフェードアウト
+        void hideElement.offsetWidth;
+
+        hideElement.classList.add("screen-transition-out");
+
+        // transitionend が発生しない場合の保険
+        fallbackTimer = setTimeout(() => {
+            finish();
+        }, duration + 100);
     });
 }
 

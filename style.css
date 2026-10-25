@@ -1521,16 +1521,57 @@ a,
     display: none!important;
 }
 
-/* 電光掲示板の設定・プレビュー配置 */
+/* ===== メッセージボードのレイアウト ===== */
+
 #messageBoard[hidden] {
     display: none !important;
 }
 
-#messageBoard main {
-    order: 1;
+/* PCでは設定を左、LEDプレビューを右に配置 */
+#messageBoard:not([hidden]) {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
 }
 
-#messageBoard aside {
-    display: grid;
+#messageBoard > aside {
+    order: 1;
+    flex: 0 0 300px;
+    width: 300px;
+    min-width: 260px;
+    max-width: none;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+#messageBoard > main {
     order: 2;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    min-height: 300px;
+    box-sizing: border-box;
+}
+
+/* スマホではLEDを上、設定を下にする */
+@media (max-width: 768px) {
+    #messageBoard:not([hidden]) {
+        flex-direction: column;
+    }
+
+    #messageBoard > main {
+        order: 1;
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    #messageBoard > aside {
+        order: 2;
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 0;
+    }
 }
