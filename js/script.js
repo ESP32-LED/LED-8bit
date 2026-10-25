@@ -2453,6 +2453,9 @@ async function startMessageBoard() {
     try {
         await showScreenSmoothly(messageBoard, vehicleSelector);
         setVehicleSelectButton();
+
+        /* 表示された後にサイズを計算 */
+        requestAnimationFrame(resizeMessageBoardLED);
     } finally {
         delete messageBoard.dataset.transitioning;
     }
@@ -2494,9 +2497,15 @@ const MB_SCROLL_SPEED = 60;
 let mbScrollActive = false;
 let mbScrollText = "";
 let mbScrollWidth = 0;
-let mbScrollOffset = 0;
+
+/* スクロール文字画像の左端位置 */
+let mbScrollPixelX = 0;
+
 let mbPreviousFrameTime = 0;
 let mbAnimationFrame = null;
+
+/* スクロール文字を一度だけ描画するキャッシュ */
+const mbScrollCanvas = document.createElement("canvas");
 
 const mbOutputContext = messageBoardLedPreview?.getContext("2d");
 
@@ -2705,38 +2714,76 @@ function drawMessageBoardClockSmall() {
     );
 }
 
-/* スクロール文字を描画する */
-function drawMessageBoardScrollTextFrame() {
-    const ctx = mbTextContext;
+/* スクロール文字をオフスクリーンCanvasに一度だけ描画 */
+function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
     const fontSize = hasClock ? 16 : 24;
     const top = hasClock ? 16 : 4;
     const height = hasClock ? 16 : 24;
 
-    ctx.save();
-
-    /* スクロールできる範囲を制限する */
-    ctx.beginPath();
-    ctx.rect(0, top, MB_WIDTH, height);
-    ctx.clip();
-
-    ctx.font =
+    const font =
         `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
+    /* 文字幅を計測 */
+    mbTextContext.font = font;
+
+    const measuredWidth =
+        mbTextContext.measureText(mbScrollText).width;
+
+    mbScrollCanvas.width = Math.max(
+        1,
+        Math.ceil(measuredWidth) + 4
+    );
+
+    mbScrollCanvas.height = MB_HEIGHT;
+
+    const ctx = mbScrollCanvas.getContext("2d");
+
+    /* Canvasのサイズ変更後に描画設定を指定し直す */
+    ctx.font = font;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
 
-    const x = MB_WIDTH - mbScrollOffset;
-    const centerY = top + height / 2;
+    /* 上下の余白を確保して文字画像を作る */
+    ctx.fillText(
+        mbScrollText,
+        2,
+        top + height / 2
+    );
 
-    ctx.fillText(mbScrollText, x, centerY);
+    mbScrollWidth = mbScrollCanvas.width;
+}
+
+/* キャッシュした文字画像をスクロール位置に描画 */
+function drawMessageBoardScrollTextFrame() {
+    const ctx = mbTextContext;
+    const hasClock = !!timeCheck?.checked;
+
+    const top = hasClock ? 16 : 4;
+    const height = hasClock ? 16 : 24;
+
+    ctx.save();
+
+    /* 上下の表示領域から文字がはみ出さないようにする */
+    ctx.beginPath();
+    ctx.rect(0, top, MB_WIDTH, height);
+    ctx.clip();
+
+    /*
+     * 位置を整数に丸め、LEDのドット列に合わせて移動する。
+     * 文字そのものは毎回描き直さず、画像を移動させる。
+     */
+    ctx.drawImage(
+        mbScrollCanvas,
+        Math.floor(mbScrollPixelX),
+        0
+    );
 
     ctx.restore();
 }
 
-/* LEDの各ドットに変換してプレビューへ出力する */
 /* 時刻・スクロール・その他のドットを色分けして描画 */
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
@@ -2832,8 +2879,8 @@ function stopMessageBoardScroll() {
     }
 
     mbPreviousFrameTime = 0;
+    mbScrollPixelX = MB_WIDTH;
 
-    /* 既存コードでも使用している場合に状態を同期 */
     if (typeof messageBoardScroll !== "undefined") {
         messageBoardScroll = false;
     }
@@ -2844,27 +2891,28 @@ function stopMessageBoardScroll() {
 /* スクロールアニメーション */
 function animateMessageBoardScroll(timestamp) {
     if (!mbScrollActive || !messageBoardScrollCheck?.checked) {
+        mbAnimationFrame = null;
         return;
     }
 
     if (mbPreviousFrameTime !== 0) {
-        const delta = Math.min(
+        const deltaTime = Math.min(
             (timestamp - mbPreviousFrameTime) / 1000,
             0.05
         );
 
-        mbScrollOffset += MB_SCROLL_SPEED * delta;
+        /* 経過時間に応じて左へ移動 */
+        mbScrollPixelX -= MB_SCROLL_SPEED * deltaTime;
     }
 
     mbPreviousFrameTime = timestamp;
 
     /*
-     * 文字が左側へ抜け、少し空白ができたら右側から再表示する。
+     * 文字が左側へ完全に抜け、
+     * さらに32ドット分の空白ができたら右端へ戻す。
      */
-    const cycleLength = MB_WIDTH + mbScrollWidth + 32;
-
-    if (mbScrollOffset >= cycleLength) {
-        mbScrollOffset -= cycleLength;
+    if (mbScrollPixelX + mbScrollWidth < -32) {
+        mbScrollPixelX = MB_WIDTH;
     }
 
     drawMessageBoardFrame();
@@ -2887,26 +2935,30 @@ async function startMessageBoardScroll() {
         return;
     }
 
-    /* 自分で用意した時刻フォントの読み込みを待つ */
+    /* 以前のアニメーションを停止 */
+    if (mbAnimationFrame !== null) {
+        cancelAnimationFrame(mbAnimationFrame);
+        mbAnimationFrame = null;
+    }
+
+    mbScrollActive = false;
+
+    /* 時刻表示に必要なJSONフォントの読み込みを待つ */
     if (timeCheck?.checked) {
         const fontsLoaded = await mbClockFontsReady;
 
         if (!fontsLoaded) {
             console.error("時刻用JSONフォントを確認してください。");
+            drawMessageBoardFrame();
             return;
         }
     }
 
-    /* 連打された場合は前のアニメーションを停止 */
-    if (mbAnimationFrame !== null) {
-        cancelAnimationFrame(mbAnimationFrame);
-    }
+    /* スクロール文字の画像を作成する */
+    createMessageBoardScrollCanvas();
 
-    mbTextContext.font =
-        ` ${timeCheck?.checked ? 16 : 24}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
-
-    mbScrollWidth = mbTextContext.measureText(mbScrollText).width;
-    mbScrollOffset = 0;
+    /* 右端から開始 */
+    mbScrollPixelX = MB_WIDTH;
     mbPreviousFrameTime = 0;
     mbScrollActive = true;
 
@@ -2914,15 +2966,17 @@ async function startMessageBoardScroll() {
         messageBoardScroll = true;
     }
 
+    drawMessageBoardFrame();
+
     mbAnimationFrame = requestAnimationFrame(
         animateMessageBoardScroll
     );
 }
 
 /* 時刻チェックの変更 */
-timeCheck?.addEventListener("change", async () => {
-    if (mbScrollActive) {
-        await startMessageBoardScroll();
+timeCheck?.addEventListener("change", () => {
+    if (mbScrollActive && messageBoardScrollCheck?.checked) {
+        startMessageBoardScroll();
     } else {
         drawMessageBoardFrame();
     }
@@ -2963,3 +3017,71 @@ drawMessageBoardFrame();
 mbClockFontsReady.then(() => {
     drawMessageBoardFrame();
 });
+
+/* メッセージボードのLEDプレビューを自動調整 */
+function resizeMessageBoardLED() {
+    const canvas = messageBoardLedPreview;
+    const main = canvas?.closest("#messageBoard main");
+
+    if (!canvas || !main) return;
+    if (main.clientWidth <= 0) return;
+
+    const rect = main.getBoundingClientRect();
+    const style = getComputedStyle(main);
+
+    const paddingX =
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight);
+
+    /* 表示できる最大幅 */
+    const maxWidth = Math.max(
+        1,
+        main.clientWidth - paddingX - 24
+    );
+
+    /* 画面下端までに使える高さ */
+    const maxHeight = Math.max(
+        1,
+        window.innerHeight - Math.max(0, rect.top) - 24
+    );
+
+    /* 横幅・高さの両方から縮小率を決める */
+    const scale = Math.min(
+        1,
+        maxWidth / canvas.width,
+        maxHeight / canvas.height
+    );
+
+    /* 実際のCanvas解像度は維持し、表示サイズだけ変更 */
+    const displayWidth = Math.max(
+        1,
+        Math.floor(canvas.width * scale)
+    );
+
+    const displayHeight = Math.max(
+        1,
+        Math.floor(canvas.height * scale)
+    );
+
+    canvas.style.width = `${displayWidth}px`;
+    canvas.style.height = `${displayHeight}px`;
+}
+
+/* ウィンドウのサイズ変更に対応 */
+window.addEventListener("resize", resizeMessageBoardLED);
+
+/* 親要素のサイズ変更にも対応 */
+let mbMessageBoardResizeObserver = null;
+
+const mbPreviewMain =
+    messageBoardLedPreview?.closest("#messageBoard main");
+
+if (mbPreviewMain && "ResizeObserver" in window) {
+    mbMessageBoardResizeObserver =
+        new ResizeObserver(resizeMessageBoardLED);
+
+    mbMessageBoardResizeObserver.observe(mbPreviewMain);
+}
+
+/* 初期表示時にも調整 */
+requestAnimationFrame(resizeMessageBoardLED);
