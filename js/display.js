@@ -397,10 +397,12 @@ function drawDestinationSmall(dest, matrix) {
     if (!data) return;
 
     const type = getItem("type", typeId)
+    console.log(usedSmall);
     if (usedSmall) {
         typewidth = getTypeWidth(type, usedSmall);
         if (config.hasDestinationInformationCombined) {
             if (informationId != null) {
+                console.log("a");
                 const info = getItem("information", informationId);
                 typeWidth = getTypeWidth(type, usedSmall) + getInformationWidth(info, usedSmall);
             }
