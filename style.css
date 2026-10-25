@@ -673,7 +673,7 @@ input:checked + .slider:before {
     }
 
     #tittle {
-        font-size: 24;
+        font-size: 40px;
     }
 
     .ledFrame {
@@ -1379,93 +1379,37 @@ a,
     transform: translateY(0);
 }
 
-/* 切り替え前の画面 */
-#vehicleSelector.screen-transition-out,
-#simulator.screen-transition-out {
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
-}
-
-/* 切り替え後の画面 */
+/* 表示先の画面 */
 #vehicleSelector.screen-transition-in,
 #simulator.screen-transition-in {
-    animation: screenFadeIn 0.35s ease both;
+    animation: screenFadeIn 0.24s ease-out both;
 }
 
-@keyframes screenFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* アニメーションを減らす設定への対応 */
-@media (prefers-reduced-motion: reduce) {
-    #vehicleSelector,
-    #simulator {
-        animation: none !important;
-        transition: none !important;
-        transform: none !important;
-    }
-}
-
-#simulator.screen-transition-in {
-    animation: simulatorFadeIn 0.4s ease both;
-}
-
-@keyframes simulatorFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    #vehicleSelector.screen-transition-out,
-    #simulator.screen-transition-in {
-        animation: none !important;
-        transition: none !important;
-        transform: none !important;
-    }
-}
-
+/* 切り替え前の画面をフェードアウトする場合 */
 #vehicleSelector.screen-transition-out,
 #simulator.screen-transition-out {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.screen-transition-in {
-    animation: screenFadeIn 0.4s ease both;
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
 }
 
 @keyframes screenFadeIn {
     from {
-        opacity: 0;
-        transform: translateY(10px);
+        opacity: 0.82;
+        transform: translateY(5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* Loadingのフェード */
+/* ===== ローディングのフェード ===== */
+
 #loading {
     opacity: 0;
     transition: opacity 0.25s ease;
@@ -1475,13 +1419,12 @@ a,
     opacity: 1;
 }
 
-/* ローディング表示中のくるくるアイコンがある場合 */
-#loading .spinner {
-    animation: loadingSpin 0.8s linear infinite;
-}
-
 #loading[hidden] {
     display: none !important;
+}
+
+#loading .spinner {
+    animation: loadingSpin 0.8s linear infinite;
 }
 
 @keyframes loadingSpin {
@@ -1490,52 +1433,17 @@ a,
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    #vehicleSelector,
-    #simulator,
-    #loading,
-    .screen-transition-in {
-        animation: none !important;
-        transition: none !important;
-        transform: none !important;
-    }
+/* ===== タイトルのスクロール連動アニメーション ===== */
+
+#tittle.scroll-fade-title {
+    will-change: opacity, transform;
+
+    transition:
+        opacity 0.06s linear,
+        transform 0.06s linear;
 }
 
-/* ===== 画面切り替え ===== */
-#vehicleSelector,
-#simulator {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* 表示先だけを短くアニメーション */
-#vehicleSelector.screen-transition-in,
-#simulator.screen-transition-in {
-    animation: screenFadeIn 0.22s ease-out both;
-}
-
-@keyframes screenFadeIn {
-    from {
-        opacity: 0.82;
-        transform: translateY(4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    #vehicleSelector,
-    #simulator {
-        animation: none !important;
-        transition: none !important;
-        transform: none !important;
-    }
-}
-
-/* スマホのシミュレーター画面だけタイトルを固定表示 */
+/* スマホのシミュレーター画面ではタイトルを薄くしない */
 @media (max-width: 768px) {
     body.simulatorMode #tittle.scroll-fade-title {
         opacity: 1 !important;
@@ -1544,7 +1452,18 @@ a,
     }
 }
 
-/* 車両選択画面ではタイトルの変化を滑らかにする */
-#tittle.scroll-fade-title {
-    will-change: opacity, transform;
+/* アニメーションを減らす設定への対応 */
+@media (prefers-reduced-motion: reduce) {
+    #vehicleSelector,
+    #simulator,
+    #loading {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    #vehicleSelector,
+    #simulator {
+        opacity: 1;
+        transform: none;
+    }
 }
