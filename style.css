@@ -848,7 +848,7 @@ button {
     font-family: var(--ui-font);
     letter-spacing: -0.03em;
     font-size: 16px;
-    font-weight: 100;
+    font-weight: 300;
     touch-action: manipulation;
     transition:
         transform 0.18s ease,
