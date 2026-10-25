@@ -746,7 +746,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 .container {
@@ -821,7 +821,7 @@ button {
     border-radius: 8px;
     box-shadow: -3px 3px 8px rgba(0,0,0,0.25);
     cursor: pointer;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
     letter-spacing: -0.03em;
     font-size: 16px;
     font-weight: 100;
@@ -853,12 +853,12 @@ button.tap {
 }
 
 #vehicleSelectMethodLabel {
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
     font-size: 20px;
 }
 
 #vehicleSelectMethod {
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
     font-size: 16px;
     margin-bottom: 10px;
     padding: 6px;
@@ -902,7 +902,7 @@ button.tap {
 
 .displayLabel {
     font-size: 24px;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 .buttonGroup {
@@ -934,7 +934,7 @@ button.tap {
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
     font-size: 18px;
     transition: 0.05s;
 }
@@ -1006,7 +1006,7 @@ button.tap {
     border-radius: 6px;
     overflow: hidden;
     background: white;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 .numberInput input {
@@ -1016,7 +1016,7 @@ button.tap {
     outline: none;
     text-align: center;
     font-size: 16px;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 .numberInput button {
@@ -1116,7 +1116,7 @@ input[type="number"]::-webkit-outer-spin-button {
     height: 150px;
     box-sizing: border-box;
     resize: vertical;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family:var(--ui-font);
     font-size: 16px;
     border: 1px solid #000000;
     border-radius: 4px;
@@ -1158,7 +1158,7 @@ input[type="number"]::-webkit-outer-spin-button {
     outline: none;
     text-align: center;
     font-size: 16px;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 #explanation {
@@ -1175,7 +1175,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 #explanationLabel {
     font-size: 16px;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 @keyframes loadingDots {
@@ -1325,7 +1325,7 @@ input[type="number"]::-webkit-outer-spin-button {
     border: 1px solid #000000;
     border-radius: 4px;
     font-size: 16px;
-    font-family: "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+    font-family: var(--ui-font);
 }
 
 /* 色の切り替わりを滑らかにする。配置・サイズ・LED描画には影響しない */
