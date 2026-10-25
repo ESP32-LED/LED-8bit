@@ -383,7 +383,7 @@ function drawDestinationSmall(dest, matrix) {
     let data =
         dest.view?.[view]?.[lang]
         ?? dest.view?.[view]?.ja;
-        if (view === "small") {
+        if (view === "small" || view === "info_small") {
             usedSmall = true;
         }
 
