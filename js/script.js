@@ -1327,7 +1327,7 @@ function buildSceneList() {
             }
         }
 
-        if (informationId != null && !hasDestinationInformationCombined) {
+        if (informationId != null && !config.hasDestinationInformationCombined) {
             if (config.informationPosition === "normal") {
                 if (scrollId === null) {
                     if (nextId != null) {
