@@ -1079,6 +1079,12 @@ function buildSceneList() {
                                     information: "destination_information",
                                     next: true
                                 });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination",
+                                    next: true
+                                });
                             }
                         } else {
                             sceneList.push({
@@ -1321,7 +1327,7 @@ function buildSceneList() {
             }
         }
 
-        if (informationId != null) {
+        if (informationId != null && !hasDestinationInformationCombined) {
             if (config.informationPosition === "normal") {
                 if (scrollId === null) {
                     if (nextId != null) {
