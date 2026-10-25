@@ -64,15 +64,35 @@ async function loadConfig() {
 // 車両選択時のメイン処理
 async function selectVehicle(vehicle) {
     try {
-        document.body.classList.add("simulatorMode");
-
-        selectedVehicle = vehicle;
         const vehicleSelector = document.getElementById("vehicleSelector");
         const simulator = document.getElementById("simulator");
-        
-        if (vehicleSelector) vehicleSelector.hidden = true;
-        if (simulator) simulator.hidden = false;
 
+        // 車両選択画面を滑らかに消す
+        if (vehicleSelector && !vehicleSelector.hidden) {
+            vehicleSelector.classList.add("screen-transition-out");
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        document.body.classList.add("simulatorMode");
+        selectedVehicle = vehicle;
+
+        // 画面を切り替える
+        if (vehicleSelector) {
+            vehicleSelector.hidden = true;
+            vehicleSelector.classList.remove("screen-transition-out");
+        }
+
+        if (simulator) {
+            simulator.hidden = false;
+            simulator.classList.remove("screen-transition-in");
+
+            // アニメーションを再実行する
+            void simulator.offsetWidth;
+            simulator.classList.add("screen-transition-in");
+        }
+
+        // ここから既存の車両読み込み処理
         await loadConfig();
 
         if (config && config.hasScroll) {
@@ -80,8 +100,10 @@ async function selectVehicle(vehicle) {
         }
 
         await startVehicle();
-        
-        if (typeof setExplanation === "function") setExplanation();
+
+        if (typeof setExplanation === "function") {
+            setExplanation();
+        }
 
         if (config && config.setSwitchingTime) {
             const jaInput = document.querySelector("#jaTime input");
@@ -89,14 +111,24 @@ async function selectVehicle(vehicle) {
             const infoInput = document.querySelector("#infoTime input");
             const carInput = document.querySelector("#carNumberTime input");
 
-            if (jaInput && config.jaTime !== undefined) jaInput.value = config.jaTime;
-            if (enInput && config.enTime !== undefined) enInput.value = config.enTime;
-            if (infoInput && config.infoTime !== undefined) infoInput.value = config.infoTime;
-            if (carInput && config.carNumberTime !== undefined) carInput.value = config.carNumberTime;
+            if (jaInput && config.jaTime !== undefined) {
+                jaInput.value = config.jaTime;
+            }
+            if (enInput && config.enTime !== undefined) {
+                enInput.value = config.enTime;
+            }
+            if (infoInput && config.infoTime !== undefined) {
+                infoInput.value = config.infoTime;
+            }
+            if (carInput && config.carNumberTime !== undefined) {
+                carInput.value = config.carNumberTime;
+            }
         }
 
         if (config && config.hasReferenceSite) {
-            if (typeof setReferenceSite === "function") setReferenceSite();
+            if (typeof setReferenceSite === "function") {
+                setReferenceSite();
+            }
         } else {
             const refEl = document.getElementById("referenceSite");
             if (refEl) refEl.hidden = true;
@@ -114,12 +146,14 @@ async function selectVehicle(vehicle) {
         mobileLog("メッセージ:", error?.message);
         mobileLog("スタック:", error?.stack);
         mobileLog("エラー全体:", error);
+
         alert(
             "車両データの読み込みに失敗しました: " +
             (error?.message || error)
         );
     }
 }
+
 
 async function initVehicles() {
     await loadVehicles();
