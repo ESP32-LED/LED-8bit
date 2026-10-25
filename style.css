@@ -848,7 +848,7 @@ button {
     font-family: var(--ui-font);
     letter-spacing: -0.03em;
     font-size: 16px;
-    font-weight: 300;
+    font-weight: 400!important;
     touch-action: manipulation;
     transition:
         transform 0.18s ease,
@@ -1574,4 +1574,27 @@ a,
         width: 100%;
         min-width: 0;
     }
+}
+
+/* メッセージボードを縦並びにする */
+#messageBoard {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* LEDプレビューを上に配置 */
+#messageBoard main {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 設定欄を下に配置 */
+#messageBoard aside {
+    order: 2;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }

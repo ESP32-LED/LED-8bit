@@ -2466,7 +2466,7 @@ timeCheck.addEventListener("change", () => {
         } else {
             drawTime();
         }
-    }
+    } else 
 });
 
 const messageBoardScrollCheck = document.getElementById("messageBoardScrollCheck");
