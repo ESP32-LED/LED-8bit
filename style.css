@@ -1571,20 +1571,9 @@ a,
     }
 }
 
-#messageBoardLedPreview {
-    color: rgb(0, 0, 0);
-    display: block;
-    width: auto !important;
-    height: auto !important;
-    max-width: none !important;
-    flex-shrink: 0;
-}
-
-#messageBoard main {
-    overflow-x: auto;
-}
-
-#messageBoard main {
+/* メッセージボードのLEDプレビュー */
+#messageBoard:not([hidden]) > main {
+    width: 100%;
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
@@ -1592,7 +1581,9 @@ a,
 
 #messageBoardLedPreview {
     display: block;
-    max-width: 100%;
+    width: auto;
     height: auto;
+    max-width: none;
+    max-height: none;
     flex-shrink: 0;
 }

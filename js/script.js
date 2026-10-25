@@ -2506,6 +2506,8 @@ let mbAnimationFrame = null;
 
 /* スクロール文字を一度だけ描画するキャッシュ */
 const mbScrollCanvas = document.createElement("canvas");
+/* 文字を生成するための低解像度Canvas */
+const mbScrollSourceCanvas = document.createElement("canvas");
 
 const mbOutputContext = messageBoardLedPreview?.getContext("2d");
 
@@ -2721,37 +2723,72 @@ function createMessageBoardScrollCanvas() {
     const fontSize = hasClock ? 16 : 24;
     const top = hasClock ? 16 : 4;
     const height = hasClock ? 16 : 24;
+    const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
-    const font =
-        `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
+    let ctx = mbScrollSourceCanvas.getContext("2d");
 
-    /* 文字幅を計測 */
-    mbTextContext.font = font;
+    ctx.font = font;
 
-    const measuredWidth =
-        mbTextContext.measureText(mbScrollText).width;
+    const textWidth = Math.ceil(
+        ctx.measureText(mbScrollText).width
+    ) + 4;
 
-    mbScrollCanvas.width = Math.max(
-        1,
-        Math.ceil(measuredWidth) + 4
-    );
+    mbScrollSourceCanvas.width = Math.max(1, textWidth);
+    mbScrollSourceCanvas.height = MB_HEIGHT;
 
-    mbScrollCanvas.height = MB_HEIGHT;
-
-    const ctx = mbScrollCanvas.getContext("2d");
-
-    /* Canvasのサイズ変更後に描画設定を指定し直す */
+    ctx = mbScrollSourceCanvas.getContext("2d");
+    ctx.clearRect(0, 0, textWidth, MB_HEIGHT);
     ctx.font = font;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
 
-    /* 上下の余白を確保して文字画像を作る */
     ctx.fillText(
         mbScrollText,
         2,
         top + height / 2
     );
+
+    /* LEDドットの実寸でスクロール画像を作る */
+    mbScrollCanvas.width = Math.ceil(
+        (textWidth - 1) * MB_PITCH + MB_LED_SIZE
+    );
+    mbScrollCanvas.height = MB_CANVAS_HEIGHT;
+
+    const out = mbScrollCanvas.getContext("2d");
+    out.clearRect(
+        0,
+        0,
+        mbScrollCanvas.width,
+        mbScrollCanvas.height
+    );
+
+    const pixels = ctx.getImageData(
+        0,
+        0,
+        textWidth,
+        MB_HEIGHT
+    ).data;
+
+    out.fillStyle = "rgb(255, 242, 0)";
+
+    for (let y = 0; y < MB_HEIGHT; y++) {
+        for (let x = 0; x < textWidth; x++) {
+            const index = (y * textWidth + x) * 4;
+
+            if (pixels[index + 3] < 128) continue;
+
+            out.beginPath();
+            out.arc(
+                x * MB_PITCH + MB_DOT_RADIUS,
+                y * MB_PITCH + MB_DOT_RADIUS,
+                MB_DOT_RADIUS,
+                0,
+                Math.PI * 2
+            );
+            out.fill();
+        }
+    }
 
     mbScrollWidth = mbScrollCanvas.width;
 }
@@ -2788,6 +2825,10 @@ function drawMessageBoardScrollTextFrame() {
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
 
+    /* 消灯ドットを描く */
+    mbOutputContext.drawImage(mbBackgroundCanvas, 0, 0);
+
+    /* 時刻を黒色LEDとして描画 */
     const pixels = mbTextContext.getImageData(
         0,
         0,
@@ -2795,41 +2836,15 @@ function renderMessageBoardLEDs() {
         MB_HEIGHT
     ).data;
 
-    /* 白色の消灯ドットを先に描く */
-    mbOutputContext.drawImage(
-        mbBackgroundCanvas,
-        0,
-        0
-    );
-
-    const isScrolling =
-        mbScrollActive &&
-        !!messageBoardScrollCheck?.checked;
+    mbOutputContext.fillStyle = "rgb(0, 0, 0)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
-        /*
-         * 時刻とスクロールを同時に表示するときは、
-         * 上半分が黒色の時刻、下半分が黄色のスクロール。
-         *
-         * 時刻を表示しない場合は、
-         * スクロール文字をすべて黄色にする。
-         */
-        const isScrollRow =
-            isScrolling &&
-            (!timeCheck?.checked || y >= 16);
-
-        mbOutputContext.fillStyle = isScrollRow
-            ? "rgb(255, 242, 0)"
-            : "rgb(255, 255, 255)";
-
         for (let x = 0; x < MB_WIDTH; x++) {
             const index = (y * MB_WIDTH + x) * 4;
-            const alpha = pixels[index + 3];
 
-            if (alpha < 128) continue;
+            if (pixels[index + 3] < 128) continue;
 
             mbOutputContext.beginPath();
-
             mbOutputContext.arc(
                 x * MB_PITCH + MB_DOT_RADIUS,
                 y * MB_PITCH + MB_DOT_RADIUS,
@@ -2837,9 +2852,33 @@ function renderMessageBoardLEDs() {
                 0,
                 Math.PI * 2
             );
-
             mbOutputContext.fill();
         }
+    }
+
+    /* スクロール画像を物理Canvas上で移動 */
+    if (mbScrollActive && messageBoardScrollCheck?.checked) {
+        const hasClock = !!timeCheck?.checked;
+        const top = (hasClock ? 16 : 4) * MB_PITCH;
+        const height = (hasClock ? 16 : 24) * MB_PITCH;
+
+        mbOutputContext.save();
+        mbOutputContext.beginPath();
+        mbOutputContext.rect(
+            0,
+            top,
+            MB_CANVAS_WIDTH,
+            height
+        );
+        mbOutputContext.clip();
+
+        mbOutputContext.drawImage(
+            mbScrollCanvas,
+            mbScrollPixelX,
+            0
+        );
+
+        mbOutputContext.restore();
     }
 }
 
@@ -2855,14 +2894,10 @@ function drawMessageBoardFrame() {
     );
 
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
-        /* スクロール中 */
         if (timeCheck?.checked) {
             drawMessageBoardClockSmall();
         }
-
-        drawMessageBoardScrollTextFrame();
     } else if (timeCheck?.checked) {
-        /* スクロールしていない場合は時刻を全体表示 */
         drawMessageBoardClockLarge();
     }
 
@@ -2879,7 +2914,7 @@ function stopMessageBoardScroll() {
     }
 
     mbPreviousFrameTime = 0;
-    mbScrollPixelX = MB_WIDTH;
+    mbScrollPixelX = MB_CANVAS_WIDTH;
 
     if (typeof messageBoardScroll !== "undefined") {
         messageBoardScroll = false;
@@ -2888,6 +2923,7 @@ function stopMessageBoardScroll() {
     drawMessageBoardFrame();
 }
 
+/* スクロールアニメーション */
 /* スクロールアニメーション */
 function animateMessageBoardScroll(timestamp) {
     if (!mbScrollActive || !messageBoardScrollCheck?.checked) {
@@ -2901,18 +2937,17 @@ function animateMessageBoardScroll(timestamp) {
             0.05
         );
 
-        /* 経過時間に応じて左へ移動 */
+        /* 実際のCanvas座標で移動 */
         mbScrollPixelX -= MB_SCROLL_SPEED * deltaTime;
     }
 
     mbPreviousFrameTime = timestamp;
 
-    /*
-     * 文字が左側へ完全に抜け、
-     * さらに32ドット分の空白ができたら右端へ戻す。
-     */
-    if (mbScrollPixelX + mbScrollWidth < -32) {
-        mbScrollPixelX = MB_WIDTH;
+    /* 32ドット分の空白を残して次の周回へ */
+    const gap = 32 * MB_PITCH;
+
+    if (mbScrollPixelX + mbScrollWidth < -gap) {
+        mbScrollPixelX = MB_CANVAS_WIDTH;
     }
 
     drawMessageBoardFrame();
