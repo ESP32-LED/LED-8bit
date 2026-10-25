@@ -69,6 +69,7 @@ function drawType(type, matrix) {
         }
     }
     if (showNext === true) {
+        const hasSmallType = !!type.view?.small;
         if (hasSmallType) {
             view = "small";
         }
