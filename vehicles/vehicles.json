@@ -390,7 +390,7 @@
     },
     {
         "id": "E200",
-        "name": "キハE200系",
+        "name": "キハE200形",
         "config": "vehicles/E200/config.json",
         "led": "vehicles/E200/led.json",
         "icons": [
