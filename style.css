@@ -692,7 +692,7 @@ input:checked + .slider:before {
     }
 
     #tittle {
-        font-size: 20px;
+        font-size: 15px;
     }
 
     .ledFrame {
@@ -1246,7 +1246,6 @@ input[type="number"]::-webkit-outer-spin-button {
         width: 100vw !important;
         box-sizing: border-box;
         flex-shrink: 0;
-        font-size: 30px;
     }
 
     #vehicleSelector {
