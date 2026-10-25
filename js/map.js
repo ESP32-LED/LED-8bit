@@ -425,11 +425,16 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
             let offset = 0;
 
             if (otherLines.length) {
-                const group = [...new Set([lineIndex, ...otherLines])]
-                    .sort((a, b) => a - b);
+                // この区間で継続的に重複すると判定された路線を使い、
+                // 細かい区間ごとにグループの大きさが変わるのを防ぐ
+                const group = [
+                    ...new Set([lineIndex, ...persistentPeers[i]])
+                ].sort((a, b) => a - b);
+
+                const position = group.indexOf(lineIndex);
 
                 offset =
-                    (group.indexOf(lineIndex) - (group.length - 1) / 2) * spacing;
+                    (position - (group.length - 1) / 2) * spacing;
             }
 
             spans.push({
