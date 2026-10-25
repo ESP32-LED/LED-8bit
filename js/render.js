@@ -330,16 +330,56 @@ function drawLEDRectangle(targetCtx, x, y, color) {
 }
 
 function drawImage(displayData, startX, startY, matrix) {
+    if (!displayData || !Array.isArray(displayData.data)) {
+        console.error("drawImage: 画像データが不正です", displayData);
+        return;
+    }
+
+    if (!Array.isArray(matrix)) {
+        console.error("drawImage: matrixが配列ではありません", matrix);
+        return;
+    }
+
     const data = displayData.data;
     let index = 0;
 
     for (let y = 0; y < displayData.height; y++) {
         for (let x = 0; x < displayData.width; x++) {
-            matrix[startY + y][startX + x] = {
-                r: data[index],
-                g: data[index + 1],
-                b: data[index + 2]
+            const matrixY = startY + y;
+            const matrixX = startX + x;
+
+            if (
+                !Number.isInteger(matrixY) ||
+                !Number.isInteger(matrixX) ||
+                matrixY < 0 ||
+                matrixY >= matrix.length ||
+                !Array.isArray(matrix[matrixY]) ||
+                matrixX < 0 ||
+                matrixX >= matrix[matrixY].length
+            ) {
+                console.error("drawImage: 書き込み位置が範囲外です", {
+                    startX,
+                    startY,
+                    x,
+                    y,
+                    matrixX,
+                    matrixY,
+                    matrixWidth: matrix[0]?.length,
+                    matrixHeight: matrix.length,
+                    imageWidth: displayData.width,
+                    imageHeight: displayData.height
+                });
+
+                index += 3;
+                continue;
+            }
+
+            matrix[matrixY][matrixX] = {
+                r: data[index] ?? 0,
+                g: data[index + 1] ?? 0,
+                b: data[index + 2] ?? 0
             };
+
             index += 3;
         }
     }
