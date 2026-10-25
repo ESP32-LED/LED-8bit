@@ -2313,7 +2313,7 @@ function setupTitleScrollAnimation() {
 
         const progress = Math.min(
             1,
-            Math.max(0, scrollTop / 120)
+            Math.max(0, scrollTop / 240)
         );
 
         title.style.opacity = String(1 - progress);
