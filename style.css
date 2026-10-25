@@ -1493,3 +1493,21 @@ a,
 #startMessageBoardScrollBtn[hidden] {
     display: none!important;
 }
+
+/* 電光掲示板の設定・プレビュー配置 */
+#messageBoard[hidden] {
+    display: none !important;
+}
+
+#messageBoard:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+}
+
+#messageBoard main {
+    order: 1;
+}
+
+#messageBoard aside {
+    order: 2;
+}
