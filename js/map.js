@@ -202,13 +202,15 @@ function buildRailwayOverlapData(lines) {
         overlapData[a.lineIndex][a.segmentIndex].push({
             start: overlap.a[0],
             end: overlap.a[1],
-            otherLine: b.lineIndex
+            otherLine: b.lineIndex,
+            otherSegmentIndex: b.segmentIndex
         });
 
         overlapData[b.lineIndex][b.segmentIndex].push({
             start: overlap.b[0],
             end: overlap.b[1],
-            otherLine: a.lineIndex
+            otherLine: a.lineIndex,
+            otherSegmentIndex: a.segmentIndex
         });
     }
 
@@ -244,7 +246,7 @@ function offsetRailwayPoint(start, end, t, offsetPixels, directionSign) {
     return [result.lat, result.lng];
 }
 
-function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) {
+function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches, allLines)  {
     if (!railwayMap || !Array.isArray(coordinates) || coordinates.length < 2) {
         return coordinates;
     }
@@ -288,6 +290,46 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
 
     const totalDistance = cumulative[cumulative.length - 1];
     if (totalDistance < 0.001) return coordinates;
+
+    // 路線の座標方向を判定する
+    function getLineDirectionSign(points) {
+        if (!points || points.length < 2) return 1;
+
+        const first = points[0];
+        const last = points[points.length - 1];
+
+        const dx = last.x - first.x;
+        const dy = last.y - first.y;
+
+        return dx < 0 || (Math.abs(dx) < 1e-6 && dy > 0)
+            ? -1
+            : 1;
+    }
+
+    const currentDirectionSign = getLineDirectionSign(projected);
+
+    // 相手路線の投影座標をキャッシュする
+    const peerProjectedCache = new Map();
+
+    function getPeerProjectedLine(peerLineIndex) {
+        if (peerProjectedCache.has(peerLineIndex)) {
+            return peerProjectedCache.get(peerLineIndex);
+        }
+
+        const peerLine = allLines[peerLineIndex];
+
+        if (!peerLine || !Array.isArray(peerLine.coordinates)) {
+            return null;
+        }
+
+        const points = peerLine.coordinates.map(p =>
+            railwayMap.project(p, zoom)
+        );
+
+        peerProjectedCache.set(peerLineIndex, points);
+
+        return points;
+    }
 
     const peersBySegment = lengths.map((_, i) =>
         new Set((segmentMatches[i] || [])
@@ -425,16 +467,84 @@ function createOffsetRailwayCoordinates(coordinates, lineIndex, segmentMatches) 
             let offset = 0;
 
             if (otherLines.length) {
-                // この区間で継続的に重複すると判定された路線を使い、
-                // 細かい区間ごとにグループの大きさが変わるのを防ぐ
+                // 細かい区間ごとにグループ順位が変わらないようにする
                 const group = [
                     ...new Set([lineIndex, ...persistentPeers[i]])
                 ].sort((a, b) => a - b);
 
-                const position = group.indexOf(lineIndex);
+                const rank = group.indexOf(lineIndex);
 
-                offset =
-                    (position - (group.length - 1) / 2) * spacing;
+                offset = (
+                    rank - (group.length - 1) / 2
+                ) * spacing;
+
+                // グループ内で最も番号の小さい路線を基準にする
+                const referenceLineIndex = group[0];
+
+                if (referenceLineIndex !== lineIndex) {
+                    const activeMatches = matches.filter(m =>
+                        mid >= m.start - 1e-8 &&
+                        mid <= m.end + 1e-8
+                    );
+
+                    const referenceMatch =
+                        activeMatches.find(m =>
+                            m.otherLine === referenceLineIndex
+                        ) ||
+                        activeMatches
+                            .slice()
+                            .sort((a, b) => a.otherLine - b.otherLine)[0];
+
+                    if (
+                        referenceMatch &&
+                        Number.isInteger(referenceMatch.otherSegmentIndex)
+                    ) {
+                        const peerPoints = getPeerProjectedLine(
+                            referenceMatch.otherLine
+                        );
+
+                        const peerSegmentIndex =
+                            referenceMatch.otherSegmentIndex;
+
+                        if (
+                            peerPoints &&
+                            peerSegmentIndex >= 0 &&
+                            peerSegmentIndex + 1 < peerPoints.length
+                        ) {
+                            // 現在の路線の線分方向
+                            const currentDx =
+                                (projected[i + 1].x - projected[i].x) *
+                                currentDirectionSign;
+
+                            const currentDy =
+                                (projected[i + 1].y - projected[i].y) *
+                                currentDirectionSign;
+
+                            // 相手路線の線分方向
+                            const peerDirectionSign =
+                                getLineDirectionSign(peerPoints);
+
+                            const peerDx =
+                                (peerPoints[peerSegmentIndex + 1].x -
+                                peerPoints[peerSegmentIndex].x) *
+                                peerDirectionSign;
+
+                            const peerDy =
+                                (peerPoints[peerSegmentIndex + 1].y -
+                                peerPoints[peerSegmentIndex].y) *
+                                peerDirectionSign;
+
+                            // 両路線の進行方向が逆なら、オフセットの符号を反転する
+                            const dot =
+                                currentDx * peerDx +
+                                currentDy * peerDy;
+
+                            if (dot < 0) {
+                                offset *= -1;
+                            }
+                        }
+                    }
+                }
             }
 
             spans.push({
@@ -829,7 +939,8 @@ function createMap() {
         const displayCoordinates = createOffsetRailwayCoordinates(
             coordinates,
             index,
-            segmentMatches
+            segmentMatches,
+            renderLines
         );
 
         if (displayCoordinates.length < 2) return;
@@ -946,7 +1057,8 @@ function createMap() {
             const displayCoordinates = createOffsetRailwayCoordinates(
                 item.coordinates,
                 item.lineIndex,
-                item.segmentMatches
+                item.segmentMatches,
+                renderLines
             );
 
             item.railwayLine.setLatLngs(displayCoordinates);
