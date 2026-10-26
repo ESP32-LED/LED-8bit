@@ -399,16 +399,17 @@ textarea {
 
 #referenceSite {
     display: grid;
+    font-size: 14px;
 }
 
 #referenceSite label {
     font-family: var(--ui-font);
-    font-size: 10px;
+    font-size: 12px;
 }
 
 #explanation {
     color: var(--text);
-    font-size: 10px;
+    font-size: 14px;
 }
 
 #referenceSite {
@@ -1221,7 +1222,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 #explanationLabel {
-    font-size: 8px;
+    font-size: 12px;
     font-family: var(--ui-font);
 }
 
