@@ -830,6 +830,10 @@ main {
     border-radius:20px;
 }
 
+#messageBoard .ledFrame {
+    box-sizing: border-box;
+}
+
 #led {
     display: block;
 }
