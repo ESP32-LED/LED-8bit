@@ -3,9 +3,10 @@
 
     "explanation": "a",
 
+    "hasExplanation": "true",
     "hasType": true,
     "hasDestination": true,
-    "hasInformation": false,
+    "hasInformation": true,
     "hasInformation2": false,
     "hasLine": false,
     "hasNext": true,
@@ -18,14 +19,16 @@
     "carNumber": null,
     "informationPosition": "normal",
     "destinationPosition": "normal",
-    "hasNextFullScreen": false,
-    "hasScrollFullScreen": false,
     "information_ja_en": false,
+
+    "hasNextFullScreen": false,
+    "hasNextEnFullScreen": true,
+    "hasScrollFullScreen": false,
 
     "hasInformationCombined": false,
 
-    "destinationDistinction": false,
-    "nextModeDistinction": false,
+    "destinationDistinction": true,
+    "nextModeDistinction": true,
     "typeDistinction": false,
     "informationDistinction": false,
     "information2Distinction": false,
@@ -48,10 +51,13 @@
     "enAhead": false,
     "informationAhead": false,
 
+    "hasDestinationInformationCombined": true,
+
     "setSwitchingTime": false,
 
-    "next_normal": false,
+    "next_normal": true,
     "nextPosition": 16,
+    "enNextPosition": 19,
 
     "hasReferenceSite": true,
 
