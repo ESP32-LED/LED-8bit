@@ -1,12 +1,11 @@
 {
-    "name": "E233系1000番台",
+    "name": "6500",
 
-    "explanation": "筑駒鉄研にお越しくださりありがとうございます！ここでは、部員が心を込めてドット打ちしたものを使っております。お楽しみください、",
+    "explanation": "a",
 
-    "hasExplanation": "true",
     "hasType": true,
     "hasDestination": true,
-    "hasInformation": true,
+    "hasInformation": false,
     "hasInformation2": false,
     "hasLine": false,
     "hasNext": true,
@@ -19,16 +18,14 @@
     "carNumber": null,
     "informationPosition": "normal",
     "destinationPosition": "normal",
-    "information_ja_en": false,
-
     "hasNextFullScreen": false,
-    "hasNextEnFullScreen": true,
     "hasScrollFullScreen": false,
+    "information_ja_en": false,
 
     "hasInformationCombined": false,
 
-    "destinationDistinction": true,
-    "nextModeDistinction": true,
+    "destinationDistinction": false,
+    "nextModeDistinction": false,
     "typeDistinction": false,
     "informationDistinction": false,
     "information2Distinction": false,
@@ -51,15 +48,12 @@
     "enAhead": false,
     "informationAhead": false,
 
-    "hasDestinationInformationCombined": true,
-
     "setSwitchingTime": false,
 
-    "next_normal": true,
+    "next_normal": false,
     "nextPosition": 16,
-    "enNextPosition": 19,
 
-    "hasReferenceSite": false,
+    "hasReferenceSite": true,
 
     "ledShape": "circle"
 }
