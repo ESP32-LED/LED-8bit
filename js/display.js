@@ -1390,7 +1390,11 @@ function startDestinationScroll(lang) {
         typeScrollId = typeId;
         state.areaLeft = getTypeWidth(nullType, true);
     } else {
-        state.areaLeft = getTypeWidth(type, true);
+        if(type) {
+            state.areaLeft = getTypeWidth(type, true);
+        } else {
+            state.areaLeft = getTypeWidth(nullType, true);
+        }
     }
 
     // 行先の右端
