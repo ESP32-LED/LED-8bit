@@ -403,12 +403,12 @@ textarea {
 
 #referenceSite label {
     font-family: var(--ui-font);
-    font-size: 18px;
+    font-size: 10px;
 }
 
 #explanation {
     color: var(--text);
-    font-size: 18px;
+    font-size: 10px;
 }
 
 #referenceSite {
@@ -1092,7 +1092,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 #referenceSiteLink{
     display: grid;
-    font-size: 14;
+    font-size: 8px;
 }
 
 #referenceSite a::before {
@@ -1221,7 +1221,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 #explanationLabel {
-    font-size: 16px;
+    font-size: 8px;
     font-family: var(--ui-font);
 }
 
