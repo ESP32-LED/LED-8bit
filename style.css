@@ -1092,6 +1092,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 #referenceSiteLink{
     display: grid;
+    font-size: 14;
 }
 
 #referenceSite a::before {
