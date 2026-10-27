@@ -277,6 +277,10 @@ function applyLEDAging(x, y, color) {
     const aging = ledAging.data[y * ledAging.width + x];
     if (!aging) return color;
     if (aging.dead) return { r: 0, g: 0, b: 0 };
+    // 黒いLEDは暖色化しない
+    if (color.r === 0 && color.g === 0 && color.b === 0) {
+        return color;
+    }
     
     const red = color.r * aging.brightness * aging.colorR;
     const green = color.g * aging.brightness;
