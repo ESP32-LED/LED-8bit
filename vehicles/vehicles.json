@@ -714,6 +714,18 @@
         "site": "vehicles/metro8000/site.json"
     },
     {
+        "id": "m13000first",
+        "name": "東京メトロ13000系初期車・東武鉄道70000系・70090型",
+        "config": "vehicles/m13000first/config.json",
+        "led": "vehicles/m13000first/led.json",
+        "icons": [
+            "vehicles/m13000first/icons/icon1.png",
+            "vehicles/m13000first/icons/icon2.png",
+            "vehicles/m13000first/icons/icon3.png"
+        ],
+        "site": "vehicles/m13000first/site.json"
+    },
+    {
         "id": "m13000",
         "name": "東京メトロ13000系後期車",
         "config": "vehicles/m13000/config.json",
