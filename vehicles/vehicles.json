@@ -199,7 +199,7 @@
     },
     {
         "id": "mari_E233",
-        "name": "マリE233系",
+        "name": "E233系（千マリ）",
         "config": "vehicles/mari_E233/config.json",
         "led": "vehicles/mari_E233/led.json",
         "icons": [
