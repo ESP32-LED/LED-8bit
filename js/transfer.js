@@ -310,7 +310,7 @@ function getSlideMode() {
 
     if (!isMode2 && !isChoppy) return 0x57;
     if (isMode2 && !isChoppy) return 0x58;
-    if (!isMode2 && isChoppy) return 0x59;
+    if (!isMode2 && !isChoppy) return 0x59;
     if (isMode2 && isChoppy) return 0x5a;
     return 0x56;
 }
@@ -568,7 +568,6 @@ function createESP32MBScrollData(br, gam) {
     const imgData = ctx.getImageData(0, 0, textWidth, fontHeight).data;
     const sbuf = new Uint8Array(textWidth * fontHeight * 2);
     let sp = 0;
-    // 電光掲示板（メッセージボード）スクロールの転送色を白色(255, 255, 255)に変更
     const baseColor = { r: 255, g: 255, b: 255 };
 
     for (let px = 0; px < textWidth; px++) {
@@ -662,23 +661,17 @@ function createESP32MessageBoardPacket() {
     return packet;
 }
 
+// 直感的なフラグ判定ロジックに修復
 function getESP32TypeDestinationScrollStates() {
-    const states = [];
+    const isTypeActive = typeof typeScroll !== "undefined" ? !!typeScroll : false;
+    const isDestActive = typeof destinationScroll !== "undefined" ? !!destinationScroll : false;
 
-    if (typeof typeJaScrollState !== "undefined" && typeJaScrollState) {
-        states.push({ state: typeJaScrollState, kind: 0, lang: 0, category: "type", langName: "ja" });
-    }
-    if (typeof typeEnScrollState !== "undefined" && typeEnScrollState) {
-        states.push({ state: typeEnScrollState, kind: 0, lang: 1, category: "type", langName: "en" });
-    }
-    if (typeof destinationJaScrollState !== "undefined" && destinationJaScrollState) {
-        states.push({ state: destinationJaScrollState, kind: 1, lang: 0, category: "destination", langName: "ja" });
-    }
-    if (typeof destinationEnScrollState !== "undefined" && destinationEnScrollState) {
-        states.push({ state: destinationEnScrollState, kind: 1, lang: 1, category: "destination", langName: "en" });
-    }
-
-    return states;
+    return [
+        { kind: 0, lang: 0, category: "type", langName: "ja", active: isTypeActive },
+        { kind: 0, lang: 1, category: "type", langName: "en", active: isTypeActive },
+        { kind: 1, lang: 0, category: "destination", langName: "ja", active: isDestActive },
+        { kind: 1, lang: 1, category: "destination", langName: "en", active: isDestActive }
+    ];
 }
 
 function createESP32TypeDestinationScrollBitmap(view, br, gam) {
@@ -757,12 +750,12 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
 
         let bitmap = new Uint8Array(0);
 
-        if (info && info.state && isTypeDestinationScrollCategoryEnabled(info.category)) {
+        if (info && info.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
             let item = null;
             if (typeof getItem === "function") {
-                if (info.category === "type" && typeof typeId !== "undefined") {
+                if (info.category === "type" && typeof typeId !== "undefined" && typeId !== null) {
                     item = getItem("type", typeId);
-                } else if (info.category === "destination" && typeof destinationId !== "undefined") {
+                } else if (info.category === "destination" && typeof destinationId !== "undefined" && destinationId !== null) {
                     item = getItem("destination", destinationId);
                 }
             }
@@ -775,13 +768,17 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft ?? 0)));
-                const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight ?? pw)));
+                // 種別・行先のデフォルト表示エリア枠を計算
+                let defaultLeft = info.category === "type" ? 0 : 48;
+                let defaultRight = info.category === "type" ? 48 : pw;
+
+                const rawLeft = Math.min(pw, Math.max(0, defaultLeft));
+                const rawRight = Math.min(pw, Math.max(0, defaultRight));
 
                 descriptor.areaLeft = Math.min(hw, Math.max(0, rawLeft + margin));
                 descriptor.areaRight = Math.min(hw, Math.max(0, rawRight + margin));
-                descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop ?? 0));
-                descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom ?? 16));
+                descriptor.areaTop = 0;
+                descriptor.areaBottom = 16;
                 descriptor.dataLength = created.sbuf.length;
                 bitmap = created.sbuf;
             }
