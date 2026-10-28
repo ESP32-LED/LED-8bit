@@ -34,16 +34,13 @@
         });
     }
 
-    // 赤いエラー画面に表示する関数
     function showError(message) {
         attachErrorBox();
-
         errorBox.style.display = "block";
         errorBox.textContent += message + "\n\n";
         errorBox.scrollTop = errorBox.scrollHeight;
     }
 
-    // モバイルログ（debugLog）に表示する関数
     window.mobileLog = function (...args) {
         const log = document.getElementById("debugLog");
 
@@ -72,7 +69,6 @@
         log.scrollTop = log.scrollHeight;
     };
 
-    // 通常のJavaScriptエラー
     window.addEventListener("error", event => {
         if (event instanceof ErrorEvent) {
             const message =
@@ -83,12 +79,8 @@
                 `列: ${event.colno || "(不明)"}\n` +
                 `スタック:\n${event.error?.stack || "(取得できません)"}`;
 
-            // 従来の赤いエラー画面
             showError(message);
-
-            // モバイルログにも記録
             mobileLog(message);
-
         } else {
             const message =
                 `[リソース読み込みエラー]\n` +
@@ -99,19 +91,14 @@
         }
     }, true);
 
-    // async関数などの未処理エラー
     window.addEventListener("unhandledrejection", event => {
         const reason = event.reason;
-
         const message =
             `[未処理の非同期エラー]\n` +
             `メッセージ: ${reason?.message || String(reason)}\n` +
             `スタック:\n${reason?.stack || "(取得できません)"}`;
 
-        // 赤いエラー画面
         showError(message);
-
-        // モバイルログにも記録
         mobileLog(message);
     });
 
@@ -179,12 +166,7 @@ async function startVehicle() {
             if (config.hasTypeScroll) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
-                let view;
-                if (isTypeFullScreen(typeData)) {
-                    view = "full";
-                } else {
-                    view = "normal";
-                }
+                let view = isTypeFullScreen(typeData) ? "full" : "normal";
 
                 const typeJaWidth = typeData.view?.[view]?.ja?.width;
                 const typeEnWidth = typeData.view?.[view]?.en?.width;
@@ -206,16 +188,10 @@ async function startVehicle() {
                 }
             }
 
-            // すでに行先が選択されている場合、種別の幅が変わったので行先スクロールも再計算
             if (config.hasDestinationScroll && destinationId != null) {
                 const destinationData = getItem("destination", destinationId);
                 const nullDestination = getItem("destination", "null_destination");
-                let view;
-                if (isDestinationFullScreen(destinationData)) {
-                    view = "full";
-                } else {
-                    view = "normal";
-                }
+                let view = isDestinationFullScreen(destinationData) ? "full" : "normal";
 
                 const destinationJaWidth = destinationData.view?.[view]?.ja?.width;
                 const destinationEnWidth = destinationData.view?.[view]?.en?.width;
@@ -281,12 +257,7 @@ async function startVehicle() {
             if (config.hasDestinationScroll) {
                 const destinationData = getItem("destination", destinationId);
                 const nullDestination = getItem("destination", "null_destination");
-                let view;
-                if (isDestinationFullScreen(destinationData)) {
-                    view = "full";
-                } else {
-                    view = "normal";
-                }
+                let view = isDestinationFullScreen(destinationData) ? "full" : "normal";
 
                 const destinationJaWidth = destinationData.view?.[view]?.ja?.width;
                 const destinationEnWidth = destinationData.view?.[view]?.en?.width;
@@ -311,12 +282,7 @@ async function startVehicle() {
             if (config.hasTypeScroll && typeId != null) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
-                let view;
-                if (isTypeFullScreen(typeData)) {
-                    view = "full";
-                } else {
-                    view = "normal";
-                }
+                let view = isTypeFullScreen(typeData) ? "full" : "normal";
 
                 const typeJaWidth = typeData.view?.[view]?.ja?.width;
                 const typeEnWidth = typeData.view?.[view]?.en?.width;
@@ -629,7 +595,6 @@ function setupVehicleUI() {
         document.getElementById("scroll").hidden = true;
     }
 
-    // ===== 縦スライド切り替えUI（チェックボックス）の動的表示制御 =====
     const verticalSlide = document.getElementById("verticalSlide");
 
     if (config.hasVerticalSlide === true && config.verticalSlide === true) {
@@ -637,39 +602,18 @@ function setupVehicleUI() {
             verticalSlide.hidden = false;
             const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
-            if (verticalSlideLabel1) {
-                if (config.hasVerticalSlideLabel1) {
-                    verticalSlideLabel1.hidden = false;
-                } else {
-                    verticalSlideLabel1.hidden = true;
-                }
-            }
-            if (verticalSlideLabel2) {
-                if (config.hasVerticalSlideLabel2) {
-                    verticalSlideLabel2.hidden = false;
-                }else {
-                    verticalSlideLabel2.hidden = true;
-                }
-            }
+            if (verticalSlideLabel1) verticalSlideLabel1.hidden = !config.hasVerticalSlideLabel1;
+            if (verticalSlideLabel2) verticalSlideLabel2.hidden = !config.hasVerticalSlideLabel2;
+
             const verticalSlideCheck = document.getElementById("verticalSlideCheck");
             const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
             const choppyScrollCheck = document.getElementById("choppyScrollCheck");
-            if (config.verticalSlideCheckChecked) {
-                verticalSlideCheck.checked = true;
-            } else {
-                verticalSlideCheck.checked = false;
-            }
-            if (config.verticalSlideCheck2Checked) {
-                verticalSlideCheck2.checked = true;
-            } else {
-                verticalSlideCheck2.checked = false;
-            }
-            if (config.choppyScrollCheckChecked) {
-                choppyScrollCheck.checked = true;
-                choppyScroll = true;
-            } else {
-                choppyScrollCheck.checked = false;
-                choppyScroll = false;
+
+            if (verticalSlideCheck) verticalSlideCheck.checked = !!config.verticalSlideCheckChecked;
+            if (verticalSlideCheck2) verticalSlideCheck2.checked = !!config.verticalSlideCheck2Checked;
+            if (choppyScrollCheck) {
+                choppyScrollCheck.checked = !!config.choppyScrollCheckChecked;
+                choppyScroll = !!config.choppyScrollCheckChecked;
             }
         }
     } else {
@@ -677,24 +621,21 @@ function setupVehicleUI() {
             verticalSlide.hidden = true;
             const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
-            if (verticalSlideLabel1) {
-                verticalSlideLabel1.hidden = true;
-            }
-            if (verticalSlideLabel2) {
-                verticalSlideLabel2.hidden = true;
-            }
+            if (verticalSlideLabel1) verticalSlideLabel1.hidden = true;
+            if (verticalSlideLabel2) verticalSlideLabel2.hidden = true;
+
             const verticalSlideCheck = document.getElementById("verticalSlideCheck");
             const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
             const choppyScrollCheck = document.getElementById("choppyScrollCheck");
             choppyScroll = false;
-            verticalSlideCheck.checked = false;
-            verticalSlideCheck2.checked = false;
-            choppyScrollCheck.checked = false;
+            if (verticalSlideCheck) verticalSlideCheck.checked = false;
+            if (verticalSlideCheck2) verticalSlideCheck2.checked = false;
+            if (choppyScrollCheck) choppyScrollCheck.checked = false;
         }
     }
 
     const scrollText = document.getElementById("scrollText");
-    scrollText.value = config.scrollLabel;
+    if (scrollText) scrollText.value = config.scrollLabel || "";
 
     setVehicleSelectButton();
     resizeButtonText();
@@ -727,9 +668,7 @@ function startDestinationDisplayCycle() {
     buildTypeSceneList();
 
     destinationCycleNormalScene = sceneList.findIndex(
-        s => s.information === "destination" &&
-             s.lang === "ja" &&
-             s.next !== true
+        s => s.information === "destination" && s.lang === "ja" && s.next !== true
     );
 
     if (destinationCycleNormalScene < 0) {
@@ -739,9 +678,7 @@ function startDestinationDisplayCycle() {
     }
 
     destinationCycleInfoScene = sceneList.findIndex(
-        s => typeof s.information === "string" &&
-             s.information.startsWith("information") &&
-             s.lang === "ja"
+        s => typeof s.information === "string" && s.information.startsWith("information") && s.lang === "ja"
     );
 
     if (destinationCycleNormalScene < 0) {
@@ -785,21 +722,14 @@ function startDestinationCycleSmallSwitch() {
     destinationCycleSmallMode = "destination";
 
     destinationCycleSmallTimer = setInterval(() => {
-        if (
-            !destinationCycleActive ||
-            destinationCyclePhase !== "scroll" ||
-            scrollId === null
-        ) {
+        if (!destinationCycleActive || destinationCyclePhase !== "scroll" || scrollId === null) {
             clearInterval(destinationCycleSmallTimer);
             destinationCycleSmallTimer = null;
             return;
         }
 
         if (informationId != null) {
-            destinationCycleSmallMode =
-                destinationCycleSmallMode === "destination"
-                    ? "information"
-                    : "destination";
+            destinationCycleSmallMode = destinationCycleSmallMode === "destination" ? "information" : "destination";
         } else {
             destinationCycleSmallMode = "destination";
         }
@@ -834,7 +764,6 @@ function nextScene() {
 
             renderTimer = setTimeout(() => {
                 renderTimer = null;
-
                 if (!destinationCycleActive) return;
 
                 destinationCyclePhase = "scroll";
@@ -860,23 +789,21 @@ function nextScene() {
     const isSlideValid = typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && sceneList.length > 1 && frame > 0 && oldScene !== scene;
 
     if (isSlideValid) {
-        // 現在画面（キャプチャ用）の生成
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
         fromCanvas.getContext("2d").drawImage(cacheCanvas, 0, 0);
 
-        // 新シーンのレンダリング
         render();
 
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox2.checked) {
+        if (checkbox2?.checked) {
             startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
                 renderTimer = setTimeout(nextScene, 3000);
             });
-        } else if (checkbox.checked) {
+        } else if (checkbox?.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
                 renderTimer = setTimeout(nextScene, 3000);
             });
@@ -927,7 +854,6 @@ function startRenderLoop() {
         renderTimer = null;
     }
 
-    // ボタン押下などの手動更新時：アニメーションを即座にリセットしてノイズを防止
     if (verticalSlideAnimationId !== null) {
         cancelAnimationFrame(verticalSlideAnimationId);
         verticalSlideAnimationId = null;
@@ -935,7 +861,6 @@ function startRenderLoop() {
     }
 
     if (typeof isVerticalSlideEnabled === "function" && isVerticalSlideEnabled() && cacheCanvas.width > 0) {
-        // 退避用キャンバスの複製
         const fromCanvas = document.createElement("canvas");
         fromCanvas.width = cacheCanvas.width;
         fromCanvas.height = cacheCanvas.height;
@@ -954,14 +879,14 @@ function startRenderLoop() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox.checked) {
+        if (checkbox?.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
                 if (renderTimer === null) {
                     frame = 1;
                     renderTimer = setTimeout(nextScene, getSceneInterval());
                 }
             });
-        } else if (checkbox2.checked) {
+        } else if (checkbox2?.checked) {
             startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
                 if (renderTimer === null) {
                     frame = 1;
@@ -976,353 +901,131 @@ function startRenderLoop() {
 }
 
 function buildSceneList() {
-
     sceneList = [];
     const type = getItem("type", typeId);
 
     if (!config.type_destination_changed) {
-        if (information2Id != null) {
-            if (config.information2Position === "next") {
-                if (config.information2Ahead) {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "information2_next",
-                        next: false
-                    });
-                }
-            }
+        if (information2Id != null && config.information2Position === "next" && config.information2Ahead) {
+            sceneList.push({ lang: "ja", information: "information2_next", next: false });
         }
-        
-        if (informationId != null) {
-            if (config.informationPosition === "next") {
-                if (config.informationAhead) {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "information_next",
-                        next: false
-                    });
-                }
-            }
+        if (informationId != null && config.informationPosition === "next" && config.informationAhead) {
+            sceneList.push({ lang: "ja", information: "information_next", next: false });
         }
 
-        if(nextId != null) {
-            if (config.hasDestinationInformationCombined && informationId != null) {
-                sceneList.push({
-                    lang: "ja",
-                    information: "destination_information",
-                    next: true,
-                });
-            } else {
-                sceneList.push({
-                    lang: "ja",
-                    information: "destination",
-                    next: true,
-                });
-            }
+        if (nextId != null) {
+            sceneList.push({
+                lang: "ja",
+                information: (config.hasDestinationInformationCombined && informationId != null) ? "destination_information" : "destination",
+                next: true,
+            });
         } else {
             if (!config.informationAhead) {
                 if (destinationId != null) {
-                    if (config.destinationPosition === "normal") {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "destination",
-                            next: false,
-                        });
-                    }
-                    if (config.destinationPosition === "next") {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "destination_next",
-                            next: false,
-                        });
-                    }
-                } else {
                     sceneList.push({
                         lang: "ja",
-                        information: "destination",
+                        information: config.destinationPosition === "next" ? "destination_next" : "destination",
                         next: false,
                     });
+                } else {
+                    sceneList.push({ lang: "ja", information: "destination", next: false });
                 }
             } else {
                 if (informationId === null) {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "destination",
-                        next: false,
-                    });
+                    sceneList.push({ lang: "ja", information: "destination", next: false });
                 }
             }
         }
 
-        if (informationId != null) {
-            if (!config.hasDestinationInformationCombined) {
-                if (config.informationAhead) {
-                    if (hasEnglishInformation()) {
-                        sceneList.push({
-                            lang: "en",
-                            information: "information_next",
-                            next: false
-                        });
-                    }
-                }
-            }
+        if (informationId != null && !config.hasDestinationInformationCombined && config.informationAhead && hasEnglishInformation()) {
+            sceneList.push({ lang: "en", information: "information_next", next: false });
         }
 
         if (config.languageSwitching) {
             if (hasEnglishType()) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        if (informationId != null && config.hasDestinationInformationCombined) {
-                            if (hasEnglishInformation()) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination_information",
-                                    next: true
-                                });
-                            } else {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination",
-                                    next: true
-                                });
-                            }
-                        } else {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination",
-                                next: true
-                            });
-                        }
-                    }
-                } else {
-                    if (!config.destinationLanguageSwitching) {
-                        if (informationId === null) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination",
-                                next: false
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "en",
-                                information: "information",
-                                next: false
-                            });
-                        }
-                    } else {
                         sceneList.push({
                             lang: "en",
-                            information: "destination",
-                            next: false
+                            information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
+                            next: true
                         });
                     }
+                } else {
+                    sceneList.push({
+                        lang: "en",
+                        information: (!config.destinationLanguageSwitching && informationId !== null) ? "information" : "destination",
+                        next: false
+                    });
                 }
             }
             if (typeId === null) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        if (informationId != null && config.hasDestinationInformationCombined) {
-                            if (hasEnglishInformation()) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination_information",
-                                    next: true
-                                });
-                            }
-                        } else {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination",
-                                next: true
-                            });
-                        }
-                    }
-                } else {
-                    if (destinationId != null) {
-                        if (config.destinationPosition === "normal") {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination",
-                                next: false,
-                            });
-                        }
-                        if (config.destinationPosition === "next") {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination_next",
-                                next: false,
-                            });
-                        }
-                    } else {
                         sceneList.push({
                             lang: "en",
-                            information: "destination",
-                            next: false,
-                        });
-                    }
-                }
-            } else {
-                if (!hasEnglishType()) {
-                    if (nextId != null) {
-                        if (!config.nextJaOnly) {
-                            if (informationId != null && config.hasDestinationInformationCombined) {
-                                if (hasEnglishInformation()) {
-                                    sceneList.push({
-                                        lang: "en",
-                                        information: "destination_information",
-                                        next: true
-                                    });
-                                }
-                            } else {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination",
-                                    next: true
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            if (nextId != null || scrollId != null) {
-                if (!config.nextJaOnly) {
-                    if (informationId != null && config.hasDestinationInformationCombined) {
-                        if (hasEnglishInformation()) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "destination_information",
-                                next: true
-                            });
-                        }
-                    } else {
-                        sceneList.push({
-                            lang: "en",
-                            information: "destination",
+                            information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
                             next: true
                         });
                     }
+                } else {
+                    sceneList.push({
+                        lang: "en",
+                        information: (destinationId != null && config.destinationPosition === "next") ? "destination_next" : "destination",
+                        next: false
+                    });
                 }
+            } else {
+                if (!hasEnglishType() && nextId != null && !config.nextJaOnly) {
+                    sceneList.push({
+                        lang: "en",
+                        information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
+                        next: true
+                    });
+                }
+            }
+        } else {
+            if ((nextId != null || scrollId != null) && !config.nextJaOnly) {
+                sceneList.push({
+                    lang: "en",
+                    information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
+                    next: true
+                });
             }
         }
 
         if (config.destinationLanguageSwitching) {
             if (!config.languageSwitching) {
-                if (hasEnglishDestination()) {
-                    if (nextId === null) {
-                        sceneList.push({
-                            lang: "en",
-                            information: "destination",
-                            next: false
-                        });
-                    }
+                if (hasEnglishDestination() && nextId === null) {
+                    sceneList.push({ lang: "en", information: "destination", next: false });
                 }
             } else {
-                if (!hasEnglishType()) {
-                    if (nextId === null) {
-                        if (config.hasScroll) {
-                            if (scrollId === null) {
-                                if (!config.nextJaOnly) {
-                                    sceneList.push({
-                                        lang: "en",
-                                        information: "destination",
-                                        next: true
-                                    });
-                                }
-                            }
-                        } else {
-                            if (hasEnglishDestination()) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "destination",
-                                    next: false
-                                });
-                            }
+                if (!hasEnglishType() && nextId === null) {
+                    if (config.hasScroll) {
+                        if (scrollId === null && !config.nextJaOnly) {
+                            sceneList.push({ lang: "en", information: "destination", next: true });
                         }
+                    } else if (hasEnglishDestination()) {
+                        sceneList.push({ lang: "en", information: "destination", next: false });
                     }
                 }
             }
         }
 
         if (hasInformationDestination()) {
-            if (nextId != null) {
-                sceneList.push({
-                    lang: "info",
-                    information: "destination",
-                    next: true
-                });
-            } else {
-                sceneList.push({
-                    lang: "info",
-                    information: "destination",
-                    next: false
-                });
-            }
+            sceneList.push({ lang: "info", information: "destination", next: nextId != null });
         }
 
-        if (config.carNumberAhead) {
-            if (carNumberId != null) {
-                if (config.hasCarNumberFull) {
-                    if (nextId != null) {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber",
-                            next: true
-                        });
-                    } else {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber",
-                            next: false
-                        });
-                    }
-                    if (hasEnglishCarNumber()) {
-                        if (nextId != null) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "carNumber",
-                                next: true
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "en",
-                                information: "carNumber",
-                                next: false
-                            });
-                        }
-                    }
+        if (config.carNumberAhead && carNumberId != null) {
+            if (config.hasCarNumberFull) {
+                sceneList.push({ lang: "ja", information: "carNumber", next: nextId != null });
+                if (hasEnglishCarNumber()) {
+                    sceneList.push({ lang: "en", information: "carNumber", next: nextId != null });
                 }
-                if (!isTypeFullScreen(type)) {
-                    if (config.hasCarNumberNormal) {
-                        if (nextId != null) {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "carNumber_destination",
-                                next: true
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "carNumber_destination",
-                                next: false
-                            });
-                        }
-                        if (hasEnglishCarNumber()) {
-                            if (nextId != null) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "carNumber_destination",
-                                    next: true
-                                });
-                            } else {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "carNumber_destination",
-                                    next: false
-                                });
-                            }
-                        }
-                    }
+            }
+            if (!isTypeFullScreen(type) && config.hasCarNumberNormal) {
+                sceneList.push({ lang: "ja", information: "carNumber_destination", next: nextId != null });
+                if (hasEnglishCarNumber()) {
+                    sceneList.push({ lang: "en", information: "carNumber_destination", next: nextId != null });
                 }
             }
         }
@@ -1333,379 +1036,105 @@ function buildSceneList() {
                     if (nextId != null) {
                         if (!config.information_ja_en) {
                             if (information2Id === null) {
-                                if (!config.informationNormalOnNext) {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information",
-                                        next: true
-                                    });
-                                    if (config.informationLanguageSwitching) {
-                                        sceneList.push({
-                                            lang: "en",
-                                            information: "information",
-                                            next: true
-                                        });
-                                    }
-                                } else {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information",
-                                        next: false
-                                    });
-                                    if (config.informationLanguageSwitching) {
-                                        sceneList.push({
-                                            lang: "en",
-                                            information: "information",
-                                            next: false
-                                        });
-                                    }
+                                sceneList.push({ lang: "ja", information: "information", next: !config.informationNormalOnNext });
+                                if (config.informationLanguageSwitching) {
+                                    sceneList.push({ lang: "en", information: "information", next: !config.informationNormalOnNext });
                                 }
                             } else {
                                 if (config.hasInformationCombined) {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information_information2",
-                                        next: false
-                                    })
+                                    sceneList.push({ lang: "ja", information: "information_information2", next: false });
                                     if (config.informationLanguageSwitching) {
-                                        sceneList.push({
-                                            lang: "en",
-                                            information: "information_information2",
-                                            next: false
-                                        });
+                                        sceneList.push({ lang: "en", information: "information_information2", next: false });
                                     }
                                 } else {
-                                    if (!config.informationNormalOnNext) {
-                                        sceneList.push({
-                                            lang: "ja",
-                                            information: "information",
-                                            next: true
-                                        });
-                                        if (config.informationLanguageSwitching) {
-                                            sceneList.push({
-                                                lang: "en",
-                                                information: "information",
-                                                next: true
-                                            });
-                                        }
-                                    } else {
-                                        sceneList.push({
-                                            lang: "ja",
-                                            information: "information",
-                                            next: false
-                                        });
-                                        if (config.informationLanguageSwitching) {
-                                            sceneList.push({
-                                                lang: "en",
-                                                information: "information",
-                                                next: false
-                                            });
-                                        }
+                                    sceneList.push({ lang: "ja", information: "information", next: !config.informationNormalOnNext });
+                                    if (config.informationLanguageSwitching) {
+                                        sceneList.push({ lang: "en", information: "information", next: !config.informationNormalOnNext });
                                     }
                                 }
                             }
                         } else {
-                            if (config.informationNormalOnNext) {
-                                sceneList.push({
-                                    lang: "ja_en",
-                                    information: "information",
-                                    next: true
-                                });
-                            } else {
-                                sceneList.push({
-                                    lang: "ja_en",
-                                    information: "information",
-                                    next: false
-                                });
-                            }
+                            sceneList.push({ lang: "ja_en", information: "information", next: config.informationNormalOnNext });
                         }
                     } else {
                         if (!config.information_ja_en) {
-                            if (hasEnglishType()) {
-                                if (!config.languageSwitching || config.languageSwitching && config.destinationLanguageSwitching) {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information",
-                                        next: false
-                                    });
-                                    if (config.informationLanguageSwitching) {
-                                        if (hasEnglishInformation()) {
-                                            sceneList.push({
-                                                lang: "en",
-                                                information: "information",
-                                                next: false
-                                            });
-                                        }
-                                    }
-                                }
-                            } else {
-                                sceneList.push({
-                                    lang: "ja",
-                                    information: "information",
-                                    next: false
-                                });
-                                if (config.informationLanguageSwitching) {
-                                    if (hasEnglishInformation()) {
-                                        sceneList.push({
-                                            lang: "en",
-                                            information: "information",
-                                            next: false
-                                        });
-                                    }
-                                }
+                            sceneList.push({ lang: "ja", information: "information", next: false });
+                            if (config.informationLanguageSwitching && hasEnglishInformation()) {
+                                sceneList.push({ lang: "en", information: "information", next: false });
                             }
                         } else {
-                            sceneList.push({
-                                lang: "ja_en",
-                                information: "information",
-                                next: false
-                            });
+                            sceneList.push({ lang: "ja_en", information: "information", next: false });
                         }
                     }
                 } else {
-                    const info = getItem ("information", informationId);
-                    const hasInformationSmall1 = !!info.view.small1 || !!info.view.full_small1;
+                    const info = getItem("information", informationId);
+                    const hasInformationSmall1 = !!info?.view?.small1 || !!info?.view?.full_small1;
                     if (!hasInformationSmall1) {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "information",
-                            next: false
-                        });
+                        sceneList.push({ lang: "ja", information: "information", next: false });
                     } else {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "information_small1",
-                            next: false
-                        });
-                        sceneList.push({
-                            lang: "ja",
-                            information: "information_small2",
-                            next: false
-                        });
+                        sceneList.push({ lang: "ja", information: "information_small1", next: false });
+                        sceneList.push({ lang: "ja", information: "information_small2", next: false });
                     }
                 }
             }
-            if (config.informationPosition === "next") {
-                if (!config.informationAhead) {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "information_next",
-                        next: false
-                    });
-                    if (config.informationLanguageSwitching) {
-                        if (hasEnglishInformation()) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "information_next",
-                                next: false
-                            });
-                        }
-                    }
+            if (config.informationPosition === "next" && !config.informationAhead) {
+                sceneList.push({ lang: "ja", information: "information_next", next: false });
+                if (config.informationLanguageSwitching && hasEnglishInformation()) {
+                    sceneList.push({ lang: "en", information: "information_next", next: false });
                 }
             }
         }
 
-        if (information2Id != null) {
-            if (!config.information2Ahead) {
-                if (scrollId === null) {
-                    if (nextId != null) {
-                        if (informationId != null) {
-                            if (!config.informationNormalOnNext) {
-                                if (!config.hasInformationCombined) {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information2",
-                                        next: true
-                                    });
-                                }
-                            } else {
-                                if (!config.hasInformationCombined) {
-                                    sceneList.push({
-                                        lang: "ja",
-                                        information: "information2",
-                                        next: false
-                                    });
-                                }
-                            }
-                        } else {
-                            if (!config.informationNormalOnNext) {
-                                sceneList.push({
-                                    lang: "ja",
-                                    information: "information2",
-                                    next: true
-                                });
-                            } else {
-                                sceneList.push({
-                                    lang: "ja",
-                                    information: "information2",
-                                    next: false
-                                });
-                            }
-                        }
-                    } else {
-                        if (!config.informationNormalOnNext) {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "information2",
-                                next: true
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "information2",
-                                next: false
-                            });
-                        }
-                    }
-                } else {
-                    sceneList.push({
-                        lang: "ja",
-                        information: "information2",
-                        next: true
-                    });
-                }
-            }
+        if (information2Id != null && !config.information2Ahead) {
+            sceneList.push({ lang: "ja", information: "information2", next: nextId != null ? !config.informationNormalOnNext : true });
         }
 
         if (lineId != null) {
-            if (nextId != null) {
-                sceneList.push({
-                    lang: "ja",
-                    information: "line",
-                    next: true
-                });
-            } else {
-                sceneList.push({
-                    lang: "ja",
-                    information: "line",
-                    next: false
-                });
-            }
+            sceneList.push({ lang: "ja", information: "line", next: nextId != null });
         }
 
-        if (!config.carNumberAhead) {
-            if (carNumberId != null) {
-                if (config.hasCarNumberFull) {
-                    if (nextId != null) {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber",
-                            next: true
-                        });
-                    } else {
-                        sceneList.push({
-                            lang: "ja",
-                            information: "carNumber",
-                            next: false
-                        });
-                    }
-                    if (hasEnglishCarNumber()) {
-                        if (nextId != null) {
-                            sceneList.push({
-                                lang: "en",
-                                information: "carNumber",
-                                next: true
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "en",
-                                information: "carNumber",
-                                next: false
-                            });
-                        }
-                    }
+        if (!config.carNumberAhead && carNumberId != null) {
+            if (config.hasCarNumberFull) {
+                sceneList.push({ lang: "ja", information: "carNumber", next: nextId != null });
+                if (hasEnglishCarNumber()) {
+                    sceneList.push({ lang: "en", information: "carNumber", next: nextId != null });
                 }
-                if (!isTypeFullScreen(type)) {
-                    if (config.hasCarNumberNormal) {
-                        if (nextId != null) {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "carNumber_destination",
-                                next: true
-                            });
-                        } else {
-                            sceneList.push({
-                                lang: "ja",
-                                information: "carNumber_destination",
-                                next: false
-                            });
-                        }
-                        if (hasEnglishCarNumber()) {
-                            if (nextId != null) {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "carNumber_destination",
-                                    next: true
-                                });
-                            } else {
-                                sceneList.push({
-                                    lang: "en",
-                                    information: "carNumber_destination",
-                                    next: false
-                                });
-                            }
-                        }
-                    }
+            }
+            if (!isTypeFullScreen(type) && config.hasCarNumberNormal) {
+                sceneList.push({ lang: "ja", information: "carNumber_destination", next: nextId != null });
+                if (hasEnglishCarNumber()) {
+                    sceneList.push({ lang: "en", information: "carNumber_destination", next: nextId != null });
                 }
             }
         }
 
-        if (config.next_normal) {
-            if (nextId != null) {
-                sceneList.push({
-                    lang: "ja",
-                    information: "destination",
-                    next: false
-                });
-                if (config.destinationLanguageSwitching) {
-                    sceneList.push({
-                        lang: "en",
-                        information: "destination",
-                        next: false
-                    });
-                }
+        if (config.next_normal && nextId != null) {
+            sceneList.push({ lang: "ja", information: "destination", next: false });
+            if (config.destinationLanguageSwitching) {
+                sceneList.push({ lang: "en", information: "destination", next: false });
             }
         }
     } else {
         if (typeId === null && destinationId === null) {
-            sceneList.push({
-                lang: "ja",
-                information: "type",
-                next: false
-            });
+            sceneList.push({ lang: "ja", information: "type", next: false });
         }
         if (typeId != null) {
-            sceneList.push({
-                lang: "ja",
-                information: "type",
-                next: false
-            });
+            sceneList.push({ lang: "ja", information: "type", next: false });
             if (hasEnglishType()) {
-                sceneList.push({
-                    lang: "en",
-                    information: "type",
-                    next: false
-                });
+                sceneList.push({ lang: "en", information: "type", next: false });
             }
         }
         if (destinationId != null) {
-            sceneList.push({
-                lang: "ja",
-                information: "destination",
-                next: false
-            });
+            sceneList.push({ lang: "ja", information: "destination", next: false });
             if (hasEnglishDestination()) {
-                sceneList.push({
-                    lang: "en",
-                    information: "destination",
-                    next: false
-                });
+                sceneList.push({ lang: "en", information: "destination", next: false });
             }
         }
     }
 }
 
 function applyScene() {
+    if (!sceneList || sceneList.length === 0 || !sceneList[scene]) return;
     lang = sceneList[scene].lang;
     informationMode = sceneList[scene].information;
     showNext = sceneList[scene].next;
@@ -1722,6 +1151,7 @@ function buildTypeSceneList() {
 }
 
 function applyTypeScene() {
+    if (!typeSceneList || typeSceneList.length === 0 || !typeSceneList[typeScene]) return;
     typeMode = typeSceneList[typeScene].typeInfo;
 }
 
@@ -1806,16 +1236,18 @@ let dragging = false;
 let startX;
 let startWidth;
 
-resizer.addEventListener("mousedown", (e) => {
-    dragging = true;
-    startX = e.clientX;
-    startWidth = sidebar.offsetWidth;
-});
+if (resizer && sidebar) {
+    resizer.addEventListener("mousedown", (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startWidth = sidebar.offsetWidth;
+    });
+}
 
 let lastRender = 0;
 
 document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
+    if (!dragging || !sidebar) return;
 
     const dx = e.clientX - startX;
     let width = startWidth + dx;
@@ -1870,26 +1302,28 @@ document.querySelectorAll(".numberInput").forEach((container) => {
         repeatTimer = null;
     }
 
-    plus.addEventListener("pointerdown", () => {
-        startChanging(() => input.stepUp());
-    });
-
-    minus.addEventListener("pointerdown", () => {
-        startChanging(() => input.stepDown());
-    });
+    if (plus && input) {
+        plus.addEventListener("pointerdown", () => startChanging(() => input.stepUp()));
+    }
+    if (minus && input) {
+        minus.addEventListener("pointerdown", () => startChanging(() => input.stepDown()));
+    }
 
     document.addEventListener("pointerup", stopChanging);
     document.addEventListener("pointercancel", stopChanging);
 });
 
 const tittle = document.getElementById("tittle");
-tittle.addEventListener("click", returnToVehicleSelector);
-
+if (tittle) {
+    tittle.addEventListener("click", returnToVehicleSelector);
+    tittle.addEventListener("pointerup", () => {
+        tittle.style.backgroundColor = "white";
+    });
+}
 
 async function returnToVehicleSelector() {
     const returningFromMessageBoard = isMessageBoard;
 
-    // 画面切り替え中の二重実行を防ぐ
     const simulatorForGuard = document.getElementById("simulator");
     const messageBoardForGuard = document.getElementById("messageBoard");
 
@@ -1906,21 +1340,13 @@ async function returnToVehicleSelector() {
 
         if (!simulator || !vehicleSelector) return;
 
-        // 二重実行を防ぐ
         if (simulator.dataset.returning === "true") return;
         simulator.dataset.returning = "true";
 
         const hideIds = [
-            "scrollText",
-            "startScrollBtn",
-            "referenceSite",
-            "explanation",
-            "jaTime",
-            "enTime",
-            "infoTime",
-            "carNumberTime",
-            "setLedAgingLebel",
-            "verticalSlideCheckbox"
+            "scrollText", "startScrollBtn", "referenceSite", "explanation",
+            "jaTime", "enTime", "infoTime", "carNumberTime",
+            "setLedAgingLebel", "verticalSlideCheckbox"
         ];
 
         try {
@@ -1928,7 +1354,6 @@ async function returnToVehicleSelector() {
                 vehicleSelector,
                 simulator,
                 () => {
-                    // 画面切り替え完了後に初期化
                     initSimulator();
                     clearReferenceSite();
                     clearExplanation();
@@ -1938,30 +1363,22 @@ async function returnToVehicleSelector() {
                         if (element) element.hidden = true;
                     });
 
-                    const resetCheckboxes = [
-                        "scrollCheck",
-                        "choppyScrollCheck",
-                        "ledAgingCheck"
-                    ];
+                    const resetCheckboxes = ["scrollCheck", "choppyScrollCheck", "ledAgingCheck"];
 
                     resetCheckboxes.forEach(id => {
                         const element = document.getElementById(id);
                         if (element) element.checked = false;
                     });
 
-                    const agingLevel =
-                        document.getElementById("ledAgingLebel");
-                    const agingValue =
-                        document.getElementById("ledAgingLebelValue");
-                    const verticalSlideButton =
-                        document.getElementById("displayVerticalSlideBtn");
+                    const agingLevel = document.getElementById("ledAgingLebel");
+                    const agingValue = document.getElementById("ledAgingLebelValue");
+                    const verticalSlideButton = document.getElementById("displayVerticalSlideBtn");
 
                     if (agingLevel) agingLevel.value = 3;
                     if (agingValue) agingValue.textContent = "3";
 
                     if (verticalSlideButton) {
-                        verticalSlideButton.textContent =
-                            "縦スライド設定を表示する";
+                        verticalSlideButton.textContent = "縦スライド設定を表示する";
                     }
 
                     isDisplayVerticalSlide = false;
@@ -1983,7 +1400,6 @@ async function returnToVehicleSelector() {
 
                     resetDestinationCycle();
 
-                    // タイトルの表示状態を更新
                     document.body.classList.remove("simulatorMode");
                 }
             );
@@ -1996,14 +1412,10 @@ async function returnToVehicleSelector() {
 
         if (!messageBoard || !vehicleSelector) return;
 
-        // 二重実行を防ぐ
         if (messageBoard.dataset.returning === "true") return;
         messageBoard.dataset.returning = "true";
 
-        const hideIds = [
-            "messageBoardScrollText",
-            "startMessageBoardScrollBtn"
-        ];
+        const hideIds = ["messageBoardScrollText", "startMessageBoardScrollBtn"];
 
         try {
             const transitionPromise = showScreenSmoothly(
@@ -2015,10 +1427,7 @@ async function returnToVehicleSelector() {
                         if (element) element.hidden = true;
                     });
 
-                    const resetCheckboxes = [
-                        "timeCheck",
-                        "messageBoardScrollCheck"
-                    ];
+                    const resetCheckboxes = ["timeCheck", "messageBoardScrollCheck"];
 
                     resetCheckboxes.forEach(id => {
                         const element = document.getElementById(id);
@@ -2027,16 +1436,13 @@ async function returnToVehicleSelector() {
                 }
             );
 
-            // アニメーションを開始してから状態を更新
             isMessageBoard = false;
-
             await transitionPromise;
         } finally {
             delete messageBoard.dataset.returning;
         }
     }
 }
-
 
 function resetDestinationCycle() {
     if (destinationScrollTimer !== null) {
@@ -2070,170 +1476,142 @@ function setExplanation() {
         document.getElementById("explanation").hidden = true;
     }
     const explanationLabel = document.getElementById("explanationLabel");
-    const label = document.createElement("label");
-    label.textContent = config.explanation;
-    explanationLabel.appendChild(label);
+    if (explanationLabel) {
+        const label = document.createElement("label");
+        label.textContent = config.explanation;
+        explanationLabel.appendChild(label);
+    }
 }
 
 function clearExplanation() {
     const explanationLabel = document.getElementById("explanationLabel");
-    explanationLabel.innerHTML = "";
+    if (explanationLabel) explanationLabel.innerHTML = "";
 }
 
 function setReferenceSite() {
     document.getElementById("referenceSite").hidden = false;
     const referenceSiteLink = document.getElementById("referenceSiteLink");
 
-    siteData.forEach((element) => {
-        const a = document.createElement("a");
-        a.href = element.link;
-        a.textContent = element.name;
-        a.target = "_blank";
-        referenceSiteLink.appendChild(a);
-    });
+    if (referenceSiteLink && siteData) {
+        siteData.forEach((element) => {
+            const a = document.createElement("a");
+            a.href = element.link;
+            a.textContent = element.name;
+            a.target = "_blank";
+            referenceSiteLink.appendChild(a);
+        });
+    }
 }
 
 function clearReferenceSite() {
     const referenceSiteLink = document.getElementById("referenceSiteLink");
-    referenceSiteLink.innerHTML = "";
+    if (referenceSiteLink) referenceSiteLink.innerHTML = "";
 }
-
-tittle.addEventListener("pointerup", () => {
-    tittle.style.backgroundColor = "white";
-});
 
 const scrollCheck = document.getElementById("scrollCheck");
 const scrollText = document.getElementById("scrollText");
 const startScrollBtn = document.getElementById("startScrollBtn");
 
-scrollCheck.addEventListener("change", () => {
-    if (scrollCheck.checked) {
-        scrollText.hidden = false;
-        startScrollBtn.hidden = false;
-    } else {
-        scrollText.hidden = true;
-        startScrollBtn.hidden = true;
+if (scrollCheck) {
+    scrollCheck.addEventListener("change", () => {
+        if (scrollCheck.checked) {
+            if (scrollText) scrollText.hidden = false;
+            if (startScrollBtn) startScrollBtn.hidden = false;
+        } else {
+            if (scrollText) scrollText.hidden = true;
+            if (startScrollBtn) startScrollBtn.hidden = true;
 
-        stopScroll();
+            stopScroll();
 
-        if (destinationScrollTimer !== null) {
-            clearTimeout(destinationScrollTimer);
-            destinationScrollTimer = null;
+            if (destinationScrollTimer !== null) {
+                clearTimeout(destinationScrollTimer);
+                destinationScrollTimer = null;
+            }
+
+            if (destinationCycleSmallTimer !== null) {
+                clearInterval(destinationCycleSmallTimer);
+                destinationCycleSmallTimer = null;
+            }
+
+            if (renderTimer !== null) {
+                clearTimeout(renderTimer);
+                renderTimer = null;
+            }
+
+            destinationCycleActive = false;
+            destinationCyclePhase = "normal";
+            destinationCycleNormalScene = -1;
+            destinationCycleInfoScene = -1;
+            destinationCycleSmallMode = "destination";
+
+            startRenderLoop();
         }
-
-        if (destinationCycleSmallTimer !== null) {
-            clearInterval(destinationCycleSmallTimer);
-            destinationCycleSmallTimer = null;
-        }
-
-        if (renderTimer !== null) {
-            clearTimeout(renderTimer);
-            renderTimer = null;
-        }
-
-        destinationCycleActive = false;
-        destinationCyclePhase = "normal";
-        destinationCycleNormalScene = -1;
-        destinationCycleInfoScene = -1;
-        destinationCycleSmallMode = "destination";
-
-        startRenderLoop();
-    }
-});
+    });
+}
 
 const vCheck = document.getElementById("verticalSlideCheck");
 const vCheck2 = document.getElementById("verticalSlideCheck2");
-vCheck.addEventListener("change", () => {
-    vCheck2.checked = false;
-});
-vCheck2.addEventListener("change", () => {
-    vCheck.checked = false;
-});
+if (vCheck && vCheck2) {
+    vCheck.addEventListener("change", () => { vCheck2.checked = false; });
+    vCheck2.addEventListener("change", () => { vCheck.checked = false; });
+}
 
 const choppyScrollCheck = document.getElementById("choppyScrollCheck");
-choppyScrollCheck.addEventListener("change", () => {
-    if (choppyScrollCheck.checked) {
-        choppyScroll = true;
-    } else {
-        choppyScroll = false;
-    }
-});
+if (choppyScrollCheck) {
+    choppyScrollCheck.addEventListener("change", () => {
+        choppyScroll = choppyScrollCheck.checked;
+    });
+}
 
 const ledAgingCheck = document.getElementById("ledAgingCheck");
 const ledAgingLebel = document.getElementById("ledAgingLebel");
 const setLedAgingLebel = document.getElementById("setLedAgingLebel");
 const ledAgingLebelValue = document.getElementById("ledAgingLebelValue");
-ledAgingCheck.addEventListener("change", () => {
-    if (ledAgingCheck.checked) {
-        isLedAging = true;
-        setLedAgingLebel.hidden = false;
-    } else {
-        isLedAging = false;
-        setLedAgingLebel.hidden = true;
-    }
-});
+if (ledAgingCheck) {
+    ledAgingCheck.addEventListener("change", () => {
+        if (ledAgingCheck.checked) {
+            isLedAging = true;
+            if (setLedAgingLebel) setLedAgingLebel.hidden = false;
+        } else {
+            isLedAging = false;
+            if (setLedAgingLebel) setLedAgingLebel.hidden = true;
+        }
+    });
+}
 
-ledAgingLebel.addEventListener("input", () => {
-    ledAgingLebelValue.textContent = ledAgingLebel.value;
-});
+if (ledAgingLebel && ledAgingLebelValue) {
+    ledAgingLebel.addEventListener("input", () => {
+        ledAgingLebelValue.textContent = ledAgingLebel.value;
+    });
+}
 
-const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn") ;
-displayVerticalSlideBtn.addEventListener("click", () => {
-    if (isDisplayVerticalSlide === false) {
-        isDisplayVerticalSlide = true;
-        displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
-        verticalSlideCheckbox.hidden = false;
-        if (config.verticalSlideCheckChecked) {
-            verticalSlideCheck.checked = true;
+const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn");
+if (displayVerticalSlideBtn) {
+    displayVerticalSlideBtn.addEventListener("click", () => {
+        const verticalSlideCheckbox = document.getElementById("verticalSlideCheckbox");
+        if (isDisplayVerticalSlide === false) {
+            isDisplayVerticalSlide = true;
+            displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
+            if (verticalSlideCheckbox) verticalSlideCheckbox.hidden = false;
         } else {
-            verticalSlideCheck.checked = false;
+            isDisplayVerticalSlide = false;
+            displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
+            if (verticalSlideCheckbox) verticalSlideCheckbox.hidden = true;
         }
-        if (config.verticalSlideCheck2Checked) {
-            verticalSlideCheck2.checked = true;
-        } else {
-            verticalSlideCheck2.checked = false;
-        }
-        if (config.choppyScrollCheckChecked) {
-            choppyScrollCheck.checked = true;
-            choppyScroll = true;
-        } else {
-            choppyScrollCheck.checked = false;
-            choppyScroll = false;
-        }
-    } else {
-        isDisplayVerticalSlide = false;
-        displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
-        verticalSlideCheckbox.hidden = true;
-        if (config.verticalSlideCheckChecked) {
-            verticalSlideCheck.checked = true;
-        } else {
-            verticalSlideCheck.checked = false;
-        }
-        if (config.verticalSlideCheck2Checked) {
-            verticalSlideCheck2.checked = true;
-        } else {
-            verticalSlideCheck2.checked = false;
-        }
-        if (config.choppyScrollCheckChecked) {
-            choppyScrollCheck.checked = true;
-            choppyScroll = true;
-        } else {
-            choppyScrollCheck.checked = false;
-            choppyScroll = false;
-        }
-    }
-});
+    });
+}
 
 const debugConsole = document.getElementById("debugConsole");
 const displayLog = document.getElementById("displayLog");
 
-displayLog.addEventListener("click", () => {
-    isDisplayLog = !isDisplayLog;
-    debugConsole.hidden = !isDisplayLog;
-    displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
-});
+if (displayLog && debugConsole) {
+    displayLog.addEventListener("click", () => {
+        isDisplayLog = !isDisplayLog;
+        debugConsole.hidden = !isDisplayLog;
+        displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
+    });
+}
 
-// ===== LED設定の開閉トグル処理 =====
 document.addEventListener("DOMContentLoaded", () => {
     const toggleLedSettingsBtn = document.getElementById("toggleLedSettingsBtn");
     const ledSettings = document.getElementById("ledSettings");
@@ -2246,12 +1624,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// タイトルのスクロール連動アニメーション
 function setupTitleScrollAnimation() {
     const title = document.getElementById("tittle");
     if (!title) return;
 
-    // 二重登録を防止
     if (title.dataset.scrollAnimationReady === "true") return;
     title.dataset.scrollAnimationReady = "true";
 
@@ -2262,7 +1638,6 @@ function setupTitleScrollAnimation() {
     let latestTarget = null;
 
     function getScrollTop(target) {
-        // ページ内のスクロール領域
         if (
             target instanceof Element &&
             target !== document.documentElement &&
@@ -2272,7 +1647,6 @@ function setupTitleScrollAnimation() {
             return target.scrollTop;
         }
 
-        // ページ全体のスクロール
         return Math.max(
             window.scrollY || 0,
             document.documentElement.scrollTop || 0,
@@ -2285,7 +1659,6 @@ function setupTitleScrollAnimation() {
             mobileQuery.matches &&
             document.body.classList.contains("simulatorMode");
 
-        // スマホのシミュレーター画面では常に濃く表示
         if (isMobileSimulator) {
             title.style.opacity = "1";
             title.style.transform = "none";
@@ -2293,20 +1666,12 @@ function setupTitleScrollAnimation() {
             return;
         }
 
-        // 車両選択画面ではスマホでもスクロール連動
         const scrollTop = getScrollTop(target);
-
-        const progress = Math.min(
-            1,
-            Math.max(0, scrollTop / 360)
-        );
+        const progress = Math.min(1, Math.max(0, scrollTop / 360));
 
         title.style.opacity = String(1 - progress);
-        title.style.transform =
-            `translateY(${-16 * progress}px)`;
-
-        title.style.pointerEvents =
-            progress >= 1 ? "none" : "";
+        title.style.transform = `translateY(${-16 * progress}px)`;
+        title.style.pointerEvents = progress >= 1 ? "none" : "";
     }
 
     function onScroll(event) {
@@ -2320,52 +1685,32 @@ function setupTitleScrollAnimation() {
         });
     }
 
-    // ページ全体と内部のスクロール領域を監視
-    window.addEventListener("scroll", onScroll, {
-        passive: true
-    });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    window.addEventListener("resize", () => { updateTitle(latestTarget); }, { passive: true });
 
-    document.addEventListener("scroll", onScroll, {
-        passive: true,
-        capture: true
-    });
-
-    // 画面サイズ変更にも対応
-    window.addEventListener("resize", () => {
-        updateTitle(latestTarget);
-    }, { passive: true });
-
-    // simulatorModeの切り替えを検知
     const observer = new MutationObserver(() => {
         updateTitle();
-
-        // 画面切り替え時にも1フレーム後に再確認
         requestAnimationFrame(() => updateTitle());
     });
 
-    observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ["class"]
-    });
-
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     updateTitle();
 }
 
 if (document.readyState === "loading") {
-    document.addEventListener(
-        "DOMContentLoaded",
-        setupTitleScrollAnimation,
-        { once: true }
-    );
+    document.addEventListener("DOMContentLoaded", setupTitleScrollAnimation, { once: true });
 } else {
     setupTitleScrollAnimation();
 }
 
 const messageBoardBtn = document.getElementById("messageBoardBtn");
-messageBoardBtn.addEventListener("click", async () => {
-    isMessageBoard = true;
-    await startMessageBoard();
-});
+if (messageBoardBtn) {
+    messageBoardBtn.addEventListener("click", async () => {
+        isMessageBoard = true;
+        await startMessageBoard();
+    });
+}
 
 async function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
@@ -2379,8 +1724,6 @@ async function startMessageBoard() {
     try {
         await showScreenSmoothly(messageBoard, vehicleSelector);
         setVehicleSelectButton();
-
-        /* 表示された後にサイズを計算 */
         requestAnimationFrame(resizeMessageBoardLED);
     } finally {
         delete messageBoard.dataset.transitioning;
@@ -2393,7 +1736,6 @@ const messageBoardScrollText = document.getElementById("messageBoardScrollText")
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
 const messageBoardLedPreview = document.getElementById("messageBoardLedPreview");
 
-/* ===== メッセージボードLED設定 ===== */
 const MB_DISPLAY_CONFIG = {
     width: 192,
     height: 32,
@@ -2409,85 +1751,49 @@ const MB_LED_GAP = MB_DISPLAY_CONFIG.ledGap;
 const MB_PITCH = MB_LED_SIZE + MB_LED_GAP;
 const MB_DOT_RADIUS = MB_LED_SIZE / 2;
 
-/* ドット数・サイズ・間隔からキャンバスの実寸を計算 */
-const MB_CANVAS_WIDTH = Math.ceil(
-    (MB_WIDTH - 1) * MB_PITCH + MB_LED_SIZE
-);
-
-const MB_CANVAS_HEIGHT = Math.ceil(
-    (MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE
-);
-
+const MB_CANVAS_WIDTH = Math.ceil((MB_WIDTH - 1) * MB_PITCH + MB_LED_SIZE);
+const MB_CANVAS_HEIGHT = Math.ceil((MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE);
 const MB_SCROLL_SPEED = 450;
 
 let mbScrollActive = false;
 let mbScrollText = "";
 let mbScrollWidth = 0;
-
-/* スクロール文字画像の左端位置 */
 let mbScrollPixelX = 0;
 
 let mbPreviousFrameTime = 0;
 let mbAnimationFrame = null;
 
-/* スクロール文字を一度だけ描画するキャッシュ */
 const mbScrollCanvas = document.createElement("canvas");
-/* 文字を生成するための低解像度Canvas */
 const mbScrollSourceCanvas = document.createElement("canvas");
-
 const mbOutputContext = messageBoardLedPreview?.getContext("2d");
-
-/* ===== メッセージボード用JSONフォント ===== */
 
 let mbClockFont16 = null;
 let mbClockFont24 = null;
 
 async function loadMessageBoardClockFonts() {
     async function loadFont(path, size) {
-        const response = await fetch(
-            new URL(path, document.baseURI)
-        );
-
+        const response = await fetch(new URL(path, document.baseURI));
         if (!response.ok) {
-            throw new Error(
-                `フォント読み込み失敗: ${path} (${response.status})`
-            );
+            throw new Error(`フォント読み込み失敗: ${path} (${response.status})`);
         }
 
         const font = await response.json();
-
-        if (
-            font.width !== size ||
-            font.height !== size ||
-            !font.glyphs
-        ) {
-            throw new Error(
-                `${path} のwidth・height・glyphsを確認してください`
-            );
+        if (font.width !== size || font.height !== size || !font.glyphs) {
+            throw new Error(`${path} のwidth・height・glyphsを確認してください`);
         }
 
         for (const character of "0123456789:") {
             const rows = font.glyphs[character];
-
             if (!Array.isArray(rows) || rows.length !== size) {
-                throw new Error(
-                    `${path}: 文字「${character}」のデータがありません`
-                );
+                throw new Error(`${path}: 文字「${character}」のデータがありません`);
             }
 
             for (const row of rows) {
-                if (
-                    typeof row !== "string" ||
-                    !/^[0-9a-fA-F]+$/.test(row) ||
-                    row.length !== size / 4
-                ) {
-                    throw new Error(
-                        `${path}: 文字「${character}」の行データが不正です`
-                    );
+                if (typeof row !== "string" || !/^[0-9a-fA-F]+$/.test(row) || row.length !== size / 4) {
+                    throw new Error(`${path}: 文字「${character}」の行データが不正です`);
                 }
             }
         }
-
         return font;
     }
 
@@ -2498,7 +1804,6 @@ async function loadMessageBoardClockFonts() {
 
     mbClockFont16 = font16;
     mbClockFont24 = font24;
-
     return true;
 }
 
@@ -2511,17 +1816,13 @@ const mbTextCanvas = document.createElement("canvas");
 mbTextCanvas.width = MB_WIDTH;
 mbTextCanvas.height = MB_HEIGHT;
 
-const mbTextContext = mbTextCanvas.getContext("2d", {
-    willReadFrequently: true
-});
-
+const mbTextContext = mbTextCanvas.getContext("2d", { willReadFrequently: true });
 const mbBackgroundCanvas = document.createElement("canvas");
 
 mbBackgroundCanvas.width = MB_CANVAS_WIDTH;
 mbBackgroundCanvas.height = MB_CANVAS_HEIGHT;
 
-const mbBackgroundContext =
-    mbBackgroundCanvas.getContext("2d");
+const mbBackgroundContext = mbBackgroundCanvas.getContext("2d");
 
 if (messageBoardLedPreview && mbOutputContext) {
     messageBoardLedPreview.width = MB_CANVAS_WIDTH;
@@ -2532,24 +1833,13 @@ if (messageBoardLedPreview && mbBackgroundContext) {
     drawMessageBoardBackground();
 }
 
-/* LEDの消灯状態をあらかじめ描画する */
-/* 消灯ドットを白色で描画 */
 function drawMessageBoardBackground() {
     mbBackgroundContext.fillStyle = "rgb(0, 0, 0)";
-
-    mbBackgroundContext.fillRect(
-        0,
-        0,
-        MB_CANVAS_WIDTH,
-        MB_CANVAS_HEIGHT
-    );
-
-    mbBackgroundContext.fillStyle = "rgb(0, 0, 0)";
+    mbBackgroundContext.fillRect(0, 0, MB_CANVAS_WIDTH, MB_CANVAS_HEIGHT);
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
             mbBackgroundContext.beginPath();
-
             mbBackgroundContext.arc(
                 x * MB_PITCH + MB_DOT_RADIUS,
                 y * MB_PITCH + MB_DOT_RADIUS,
@@ -2557,24 +1847,18 @@ function drawMessageBoardBackground() {
                 0,
                 Math.PI * 2
             );
-
             mbBackgroundContext.fill();
         }
     }
 }
 
-/* 現在時刻を取得する */
 function getMessageBoardTime() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
-
     return `${hours}:${minutes}`;
 }
 
-/* 時刻を指定した位置・サイズで描画する */
-/* JSONのビットマップフォントで時刻を描画する */
-/* JSONフォントで時刻を縦横中央に描画 */
 function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
     if (!font) return;
 
@@ -2582,12 +1866,8 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
     const characterCount = time.length;
     const totalWidth = characterCount * displayWidth;
 
-    /* 横方向：文字列全体を中央に配置 */
     const startX = Math.floor((MB_WIDTH - totalWidth) / 2);
-
-    /* 縦方向：表示領域の中央に配置 */
     const startY = top + Math.floor((areaHeight - font.height) / 2);
-
     const hexLength = font.width / 4;
 
     mbTextContext.fillStyle = "#ffffff";
@@ -2597,19 +1877,11 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
         if (!rows) continue;
 
         for (let y = 0; y < font.height; y++) {
-            const rowBits = Number.parseInt(
-                rows[y].padStart(hexLength, "0"),
-                16
-            );
+            const rowBits = Number.parseInt(rows[y].padStart(hexLength, "0"), 16);
 
             for (let x = 0; x < displayWidth; x++) {
-                const sourceX = Math.floor(
-                    x * font.width / displayWidth
-                );
-
-                const bit = Math.floor(
-                    rowBits / (2 ** (font.width - 1 - sourceX))
-                ) % 2;
+                const sourceX = Math.floor(x * font.width / displayWidth);
+                const bit = Math.floor(rowBits / (2 ** (font.width - 1 - sourceX))) % 2;
 
                 if (bit !== 1) continue;
 
@@ -2624,27 +1896,14 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
     }
 }
 
-/* 24×24フォント：LED全体の中央 */
 function drawMessageBoardClockLarge() {
-    drawMessageBoardClockBitmap(
-        mbClockFont24,
-        24,
-        0,
-        MB_HEIGHT
-    );
+    drawMessageBoardClockBitmap(mbClockFont24, 24, 0, MB_HEIGHT);
 }
 
-/* 16×16フォント：上側16ドットの中央 */
 function drawMessageBoardClockSmall() {
-    drawMessageBoardClockBitmap(
-        mbClockFont16,
-        16,
-        0,
-        16
-    );
+    drawMessageBoardClockBitmap(mbClockFont16, 16, 0, 16);
 }
 
-/* スクロール文字をオフスクリーンCanvasに一度だけ描画 */
 function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
@@ -2653,61 +1912,35 @@ function createMessageBoardScrollCanvas() {
     const height = hasClock ? 16 : 24;
     const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
-    let ctx = mbScrollSourceCanvas.getContext("2d", {
-        willReadFrequently: true
-    });
-
+    let ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
     ctx.font = font;
 
-    const textWidth = Math.ceil(
-        ctx.measureText(mbScrollText).width
-    ) + 4;
+    const textWidth = Math.ceil(ctx.measureText(mbScrollText).width) + 4;
 
     mbScrollSourceCanvas.width = Math.max(1, textWidth);
     mbScrollSourceCanvas.height = MB_HEIGHT;
 
-    ctx = mbScrollSourceCanvas.getContext("2d", {
-        willReadFrequently: true
-    });
+    ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
     ctx.clearRect(0, 0, textWidth, MB_HEIGHT);
     ctx.font = font;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
 
-    ctx.fillText(
-        mbScrollText,
-        2,
-        top + height / 2
-    );
+    ctx.fillText(mbScrollText, 2, top + height / 2);
 
-    /* LEDドットの実寸でスクロール画像を作る */
-    mbScrollCanvas.width = Math.ceil(
-        (textWidth - 1) * MB_PITCH + MB_LED_SIZE
-    );
+    mbScrollCanvas.width = Math.ceil((textWidth - 1) * MB_PITCH + MB_LED_SIZE);
     mbScrollCanvas.height = MB_CANVAS_HEIGHT;
 
     const out = mbScrollCanvas.getContext("2d");
-    out.clearRect(
-        0,
-        0,
-        mbScrollCanvas.width,
-        mbScrollCanvas.height
-    );
+    out.clearRect(0, 0, mbScrollCanvas.width, mbScrollCanvas.height);
 
-    const pixels = ctx.getImageData(
-        0,
-        0,
-        textWidth,
-        MB_HEIGHT
-    ).data;
-
+    const pixels = ctx.getImageData(0, 0, textWidth, MB_HEIGHT).data;
     out.fillStyle = "rgb(255, 242, 0)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < textWidth; x++) {
             const index = (y * textWidth + x) * 4;
-
             if (pixels[index + 3] < 128) continue;
 
             out.beginPath();
@@ -2725,7 +1958,6 @@ function createMessageBoardScrollCanvas() {
     mbScrollWidth = mbScrollCanvas.width;
 }
 
-/* キャッシュした文字画像をスクロール位置に描画 */
 function drawMessageBoardScrollTextFrame() {
     const ctx = mbTextContext;
     const hasClock = !!timeCheck?.checked;
@@ -2734,16 +1966,10 @@ function drawMessageBoardScrollTextFrame() {
     const height = hasClock ? 16 : 24;
 
     ctx.save();
-
-    /* 上下の表示領域から文字がはみ出さないようにする */
     ctx.beginPath();
     ctx.rect(0, top, MB_WIDTH, height);
     ctx.clip();
 
-    /*
-     * 位置を整数に丸め、LEDのドット列に合わせて移動する。
-     * 文字そのものは毎回描き直さず、画像を移動させる。
-     */
     ctx.drawImage(
         mbScrollCanvas,
         Math.floor(mbScrollPixelX),
@@ -2753,27 +1979,17 @@ function drawMessageBoardScrollTextFrame() {
     ctx.restore();
 }
 
-/* 時刻・スクロール・その他のドットを色分けして描画 */
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
 
-    /* 消灯ドットを描く */
     mbOutputContext.drawImage(mbBackgroundCanvas, 0, 0);
 
-    /* 時刻を黒色LEDとして描画 */
-    const pixels = mbTextContext.getImageData(
-        0,
-        0,
-        MB_WIDTH,
-        MB_HEIGHT
-    ).data;
-
+    const pixels = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
     mbOutputContext.fillStyle = "rgb(255, 255, 255)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
             const index = (y * MB_WIDTH + x) * 4;
-
             if (pixels[index + 3] < 128) continue;
 
             mbOutputContext.beginPath();
@@ -2788,7 +2004,6 @@ function renderMessageBoardLEDs() {
         }
     }
 
-    /* スクロール画像を物理Canvas上で移動 */
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         const hasClock = !!timeCheck?.checked;
         const top = (hasClock ? 16 : 4) * MB_PITCH;
@@ -2796,38 +2011,19 @@ function renderMessageBoardLEDs() {
 
         mbOutputContext.save();
         mbOutputContext.beginPath();
-        mbOutputContext.rect(
-            0,
-            top,
-            MB_CANVAS_WIDTH,
-            height
-        );
+        mbOutputContext.rect(0, top, MB_CANVAS_WIDTH, height);
         mbOutputContext.clip();
 
-        /* LEDのドット間隔に合わせて描画位置を補正 */
-        const drawX =
-            Math.round(mbScrollPixelX / MB_PITCH) * MB_PITCH;
-
-        mbOutputContext.drawImage(
-            mbScrollCanvas,
-            drawX,
-            0
-        );
-
+        const drawX = Math.round(mbScrollPixelX / MB_PITCH) * MB_PITCH;
+        mbOutputContext.drawImage(mbScrollCanvas, drawX, 0);
         mbOutputContext.restore();
     }
 }
 
-/* 現在のチェック状態に応じて1画面分を描画する */
 function drawMessageBoardFrame() {
     if (!mbTextContext) return;
 
-    mbTextContext.clearRect(
-        0,
-        0,
-        MB_WIDTH,
-        MB_HEIGHT
-    );
+    mbTextContext.clearRect(0, 0, MB_WIDTH, MB_HEIGHT);
 
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         if (timeCheck?.checked) {
@@ -2840,7 +2036,6 @@ function drawMessageBoardFrame() {
     renderMessageBoardLEDs();
 }
 
-/* スクロールを停止する */
 function stopMessageBoardScroll() {
     mbScrollActive = false;
 
@@ -2859,8 +2054,6 @@ function stopMessageBoardScroll() {
     drawMessageBoardFrame();
 }
 
-/* スクロールアニメーション */
-/* スクロールアニメーション */
 function animateMessageBoardScroll(timestamp) {
     if (!mbScrollActive || !messageBoardScrollCheck?.checked) {
         mbAnimationFrame = null;
@@ -2868,45 +2061,32 @@ function animateMessageBoardScroll(timestamp) {
     }
 
     if (mbPreviousFrameTime !== 0) {
-        const deltaTime = Math.min(
-            (timestamp - mbPreviousFrameTime) / 1000,
-            0.05
-        );
-
-        /* 実際のCanvas座標で移動 */
+        const deltaTime = Math.min((timestamp - mbPreviousFrameTime) / 1000, 0.05);
         mbScrollPixelX -= MB_SCROLL_SPEED * deltaTime;
     }
 
     mbPreviousFrameTime = timestamp;
 
-    /* 32ドット分の空白を残して次の周回へ */
     const gap = 32 * MB_PITCH;
-
     if (mbScrollPixelX + mbScrollWidth < -gap) {
         mbScrollPixelX = MB_CANVAS_WIDTH;
     }
 
     drawMessageBoardFrame();
-
-    mbAnimationFrame = requestAnimationFrame(
-        animateMessageBoardScroll
-    );
+    mbAnimationFrame = requestAnimationFrame(animateMessageBoardScroll);
 }
 
-/* 開始ボタンが押されたとき */
 async function startMessageBoardScroll() {
     if (!messageBoardScrollCheck?.checked) return;
     if (!messageBoardScrollText || !mbTextContext) return;
 
-    mbScrollText = messageBoardScrollText.value
-        .replace(/\r?\n/g, " ");
+    mbScrollText = messageBoardScrollText.value.replace(/\r?\n/g, " ");
 
     if (!mbScrollText.trim()) {
         stopMessageBoardScroll();
         return;
     }
 
-    /* 以前のアニメーションを停止 */
     if (mbAnimationFrame !== null) {
         cancelAnimationFrame(mbAnimationFrame);
         mbAnimationFrame = null;
@@ -2914,10 +2094,8 @@ async function startMessageBoardScroll() {
 
     mbScrollActive = false;
 
-    /* 時刻表示に必要なJSONフォントの読み込みを待つ */
     if (timeCheck?.checked) {
         const fontsLoaded = await mbClockFontsReady;
-
         if (!fontsLoaded) {
             console.error("時刻用JSONフォントを確認してください。");
             drawMessageBoardFrame();
@@ -2925,10 +2103,8 @@ async function startMessageBoardScroll() {
         }
     }
 
-    /* スクロール文字の画像を作成する */
     createMessageBoardScrollCanvas();
 
-    /* 右端から開始 */
     mbScrollPixelX = MB_CANVAS_WIDTH;
     mbPreviousFrameTime = 0;
     mbScrollActive = true;
@@ -2938,13 +2114,9 @@ async function startMessageBoardScroll() {
     }
 
     drawMessageBoardFrame();
-
-    mbAnimationFrame = requestAnimationFrame(
-        animateMessageBoardScroll
-    );
+    mbAnimationFrame = requestAnimationFrame(animateMessageBoardScroll);
 }
 
-/* 時刻チェックの変更 */
 timeCheck?.addEventListener("change", () => {
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         startMessageBoardScroll();
@@ -2953,43 +2125,48 @@ timeCheck?.addEventListener("change", () => {
     }
 });
 
-/* スクロールチェックの変更 */
 messageBoardScrollCheck?.addEventListener("change", () => {
     if (messageBoardScrollCheck.checked) {
-        messageBoardScrollText.hidden = false;
-        startMessageBoardScrollBtn.hidden = false;
-
-        /* チェックしただけではスクロールを開始しない */
+        if (messageBoardScrollText) messageBoardScrollText.hidden = false;
+        if (startMessageBoardScrollBtn) startMessageBoardScrollBtn.hidden = false;
         drawMessageBoardFrame();
     } else {
-        messageBoardScrollText.hidden = true;
-        startMessageBoardScrollBtn.hidden = true;
-
+        if (messageBoardScrollText) messageBoardScrollText.hidden = true;
+        if (startMessageBoardScrollBtn) startMessageBoardScrollBtn.hidden = true;
         stopMessageBoardScroll();
     }
 });
 
-/* 開始ボタン */
-startMessageBoardScrollBtn?.addEventListener(
-    "click",
-    startMessageBoardScroll
-);
+startMessageBoardScrollBtn?.addEventListener("click", startMessageBoardScroll);
 
-/* スクロールしていない間も時刻を定期的に更新 */
+let lastAutomatedTimeStr = "";
+
+// ===== 時刻変更の自動転送タイマー（毎秒チェック） =====
 setInterval(() => {
+    const currentTimeStr = getMessageBoardTime();
+    const isMb = typeof isMessageBoard !== "undefined" && isMessageBoard;
+
     if (!mbScrollActive) {
         drawMessageBoardFrame();
     }
+
+    if (currentTimeStr !== lastAutomatedTimeStr) {
+        lastAutomatedTimeStr = currentTimeStr;
+        if (isMb && timeCheck?.checked) {
+            drawMessageBoardFrame();
+            if (typeof triggerAutoTransfer === "function") {
+                triggerAutoTransfer();
+            }
+        }
+    }
 }, 1000);
 
-/* 初期表示 */
 drawMessageBoardFrame();
 
 mbClockFontsReady.then(() => {
     drawMessageBoardFrame();
 });
 
-/* メッセージボードのLEDプレビューを自動調整 */
 function resizeMessageBoardLED() {
     const canvas = messageBoardLedPreview;
     const main = canvas?.closest("#messageBoard main");
@@ -3000,53 +2177,25 @@ function resizeMessageBoardLED() {
     const rect = main.getBoundingClientRect();
     const style = getComputedStyle(main);
 
-    const paddingX =
-        parseFloat(style.paddingLeft) +
-        parseFloat(style.paddingRight);
+    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const maxWidth = Math.max(1, main.clientWidth - paddingX - 24);
+    const maxHeight = Math.max(1, window.innerHeight - Math.max(0, rect.top) - 24);
 
-    /* 表示できる最大幅 */
-    const maxWidth = Math.max(
-        1,
-        main.clientWidth - paddingX - 24
-    );
+    const scale = Math.min(1, maxWidth / canvas.width, maxHeight / canvas.height);
 
-    /* 画面下端までに使える高さ */
-    const maxHeight = Math.max(
-        1,
-        window.innerHeight - Math.max(0, rect.top) - 24
-    );
-
-    /* 横幅・高さの両方から縮小率を決める */
-    const scale = Math.min(
-        1,
-        maxWidth / canvas.width,
-        maxHeight / canvas.height
-    );
-
-    /* 実際のCanvas解像度は維持し、表示サイズだけ変更 */
-    const displayWidth = Math.max(
-        1,
-        Math.floor(canvas.width * scale)
-    );
-
-    const displayHeight = Math.max(
-        1,
-        Math.floor(canvas.height * scale)
-    );
+    const displayWidth = Math.max(1, Math.floor(canvas.width * scale));
+    const displayHeight = Math.max(1, Math.floor(canvas.height * scale));
 
     canvas.style.width = `${displayWidth}px`;
     canvas.style.height = `${displayHeight}px`;
 }
 
-/* ウィンドウのサイズ変更に対応 */
 window.addEventListener("resize", resizeMessageBoardLED);
 
-/* 親要素のサイズ変更にも対応 */
 let mbMessageBoardResizeObserver = null;
 let mbResizeFrameId = null;
 
-const mbPreviewMain =
-    messageBoardLedPreview?.closest("#messageBoard main");
+const mbPreviewMain = messageBoardLedPreview?.closest("#messageBoard main");
 
 if (mbPreviewMain && "ResizeObserver" in window) {
     mbMessageBoardResizeObserver = new ResizeObserver(() => {
@@ -3063,5 +2212,4 @@ if (mbPreviewMain && "ResizeObserver" in window) {
     mbMessageBoardResizeObserver.observe(mbPreviewMain);
 }
 
-/* 初期表示時にも調整 */
 requestAnimationFrame(resizeMessageBoardLED);
