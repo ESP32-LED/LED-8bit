@@ -26,19 +26,17 @@ const transferTypeDestinationScrollSpeed = 14;
 function getDisplayMargin(hw, pw) {
     if (hw <= pw) return 0;
     
-    // 「位置」トグルスイッチ（OFF: 中央 / ON: 右）
     const alignToggle = document.getElementById("displayAlignToggle");
     if (alignToggle) {
         return alignToggle.checked ? (hw - pw) : Math.floor((hw - pw) / 2);
     }
     
-    // 互換性フォールバック（旧スライダー）
     const alignInput = document.getElementById("displayAlign");
     const alignVal = alignInput ? alignInput.value : "1";
     if (alignVal === "0") {
-        return Math.floor((hw - pw) / 2); // 中央寄せ
+        return Math.floor((hw - pw) / 2);
     }
-    return hw - pw; // 右寄せ
+    return hw - pw;
 }
 
 function compressLZ4(input) {
@@ -345,6 +343,7 @@ function getAgedColor(x, y, color) {
     return applyLEDAging(safeX, safeY, color);
 }
 
+/* UI操作・入力監視イベント（メッセージボード用UI要素も追加） */
 document.addEventListener("click", (e) => {
     if (!e.target) return;
     if (
@@ -355,6 +354,9 @@ document.addEventListener("click", (e) => {
         e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
+        e.target.id === "timeCheck" ||
+        e.target.id === "messageBoardScrollCheck" ||
+        e.target.id === "startMessageBoardScrollBtn" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
@@ -375,6 +377,7 @@ document.addEventListener("input", (e) => {
     if (!e.target) return;
     if (
         e.target.id === "scrollText" ||
+        e.target.id === "messageBoardScrollText" ||
         e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
@@ -399,6 +402,9 @@ document.addEventListener("change", (e) => {
     if (!e.target) return;
     if (
         e.target.id === "scrollCheck" ||
+        e.target.id === "timeCheck" ||
+        e.target.id === "messageBoardScrollCheck" ||
+        e.target.id === "messageBoardScrollText" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
@@ -439,6 +445,9 @@ function getNumberValue(id, defaultValue) {
 }
 
 function getHardwareWidth() {
+    if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+        return typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
+    }
     const hwVal = getNumberValue("hardwareWidth", 0);
     if (hwVal >= ESP32_MIN_WIDTH && hwVal <= ESP32_MAX_WIDTH) {
         return hwVal;
@@ -473,6 +482,118 @@ function getScrollColor() {
         g: parseInt(match[1].slice(2, 4), 16),
         b: parseInt(match[1].slice(4, 6), 16)
     };
+}
+
+/* 2D CanvasのRGBAピクセルデータをESP32用フレーム構造(8ビットプレーン×16行×HW列)に変換 */
+function imagePixelsToESP32Frame(imgData, width, height, hw, br, gam) {
+    const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
+
+    for (let y = 0; y < height && y < 32; y++) {
+        for (let x = 0; x < width && x < hw; x++) {
+            const idx = (y * width + x) * 4;
+            if (imgData[idx + 3] < 128) continue;
+
+            const rawColor = {
+                r: imgData[idx],
+                g: imgData[idx + 1],
+                b: imgData[idx + 2]
+            };
+
+            const pixel = getAgedColor(x, y, rawColor);
+
+            const r = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.r / 255, gam) * br * 255)));
+            const g = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.g / 255, gam) * br * 255)));
+            const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
+
+            for (let bit = 0; bit < 8; bit++) {
+                if ((r >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x01 : 0x08;
+                if ((g >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x02 : 0x10;
+                if ((b >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x04 : 0x20;
+            }
+        }
+    }
+
+    return frameToUint8Array(frame, hw);
+}
+
+/* 電光掲示板（Message Board）モード専用パケット生成関数 */
+function createESP32MessageBoardPacket() {
+    const hw = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
+    const margin = 0;
+    const br = getNumberValue("softBrightness", 1.0);
+    const gam = getNumberValue("gammaCorrection", 2.5);
+
+    const hasClock = !!timeCheck?.checked;
+    const hasScroll = !!messageBoardScrollCheck?.checked && !!messageBoardScrollText?.value.trim();
+
+    /* 1. スクロールなし（静止時刻表示など） */
+    if (!hasScroll) {
+        if (typeof drawMessageBoardFrame === "function") drawMessageBoardFrame();
+        const imgData = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
+
+        const header = createESP32Header(1, hw, margin, 0, transferScrollSpeed, 0, false);
+        const frameData = imagePixelsToESP32Frame(imgData, MB_WIDTH, MB_HEIGHT, hw, br, gam);
+
+        const packet = new Uint8Array(header.length + frameData.length);
+        packet.set(header, 0);
+        packet.set(frameData, header.length);
+        return packet;
+    }
+
+    /* 2. スクロールあり（時刻＋スクロール または スクロールのみ） */
+    mbTextContext.clearRect(0, 0, MB_WIDTH, MB_HEIGHT);
+    if (hasClock) {
+        if (typeof drawMessageBoardClockSmall === "function") drawMessageBoardClockSmall();
+    }
+    const bgImgData = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
+    const bgFrameData = imagePixelsToESP32Frame(bgImgData, MB_WIDTH, MB_HEIGHT, hw, br, gam);
+
+    if (typeof createMessageBoardScrollCanvas === "function") {
+        createMessageBoardScrollCanvas();
+    }
+
+    const scrollSrcCtx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
+    const sw = mbScrollSourceCanvas.width;
+    const sh = MB_HEIGHT;
+    const scrollImgData = scrollSrcCtx.getImageData(0, 0, sw, sh).data;
+
+    const srcYStart = hasClock ? 16 : 4;
+    const sbufHeight = 16;
+    const sbuf = new Uint8Array(sw * sbufHeight * 2);
+    let sp = 0;
+
+    for (let x = 0; x < sw; x++) {
+        for (let py = 0; py < sbufHeight; py++) {
+            const y = srcYStart + py;
+            let r = 0, g = 0, b = 0;
+            if (y < sh) {
+                const idx = (y * sw + x) * 4;
+                if (scrollImgData[idx + 3] >= 128) {
+                    const pr = scrollImgData[idx];
+                    const pg = scrollImgData[idx + 1];
+                    const pb = scrollImgData[idx + 2];
+                    const agedPixel = getAgedColor(x, py, { r: pr, g: pg, b: pb });
+                    r = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.r / 255, gam) * br * 255)));
+                    g = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.g / 255, gam) * br * 255)));
+                    b = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.b / 255, gam) * br * 255)));
+                }
+            }
+            const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+            sbuf[sp++] = rgb565 & 0xff;
+            sbuf[sp++] = (rgb565 >> 8) & 0xff;
+        }
+    }
+
+    const header = createESP32Header(1, hw, margin, sw, transferScrollSpeed, 0, false);
+
+    const packet = new Uint8Array(header.length + sbuf.length + bgFrameData.length);
+    packet.set(header, 0);
+    packet.set(sbuf, header.length);
+    packet.set(bgFrameData, header.length + sbuf.length);
+
+    if (typeof drawMessageBoardFrame === "function") drawMessageBoardFrame();
+
+    return packet;
 }
 
 function createESP32ScrollData(br, gam) {
@@ -642,7 +763,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                // info.state の座標範囲を基準表示幅(pw)内に収めてから margin を加算
                 const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft)));
                 const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight)));
 
@@ -1067,12 +1187,11 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
         slideModeVal |= 0x80;
     }
 
-    // 配置フラグの設定 (0x20: 右寄せならON、中央揃えならOFF)
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
     if (hw > pw) {
         const rightMargin = hw - pw;
         if (margin === rightMargin) {
-            slideModeVal |= 0x20; // 右寄せフラグON
+            slideModeVal |= 0x20;
         }
     }
 
@@ -1085,7 +1204,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     for (let i = 0; i < 6; i++) {
         let interval = defaultInterval;
-        if (config.setSwitchingTime) {
+        if (typeof config !== "undefined" && config && config.setSwitchingTime) {
             const jaTime = getNumberValue("jaTime", 3) * 1000;
             const enTime = getNumberValue("enTime", 3) * 1000;
             const infoTime = getNumberValue("infoTime", 3) * 1000;
@@ -1156,11 +1275,6 @@ async function transferToESP32() {
         return;
     }
 
-    if (typeof config === "undefined" || !config) {
-        updateTransferStatus("Bluetooth接続完了！車両を選択してください");
-        return;
-    }
-
     if (isBleTransferring) {
         return;
     }
@@ -1174,7 +1288,19 @@ async function transferToESP32() {
         ensureLEDAgingForTransfer();
 
         const prepStart = performance.now();
-        const rawPacket = createESP32Packet();
+        let rawPacket = null;
+
+        /* 電光掲示板（メッセージボード）モードかどうかの自動切り替え */
+        if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+            rawPacket = createESP32MessageBoardPacket();
+        } else {
+            if (typeof config === "undefined" || !config) {
+                updateTransferStatus("Bluetooth接続完了！車両を選択してください");
+                return;
+            }
+            rawPacket = createESP32Packet();
+        }
+
         if (!rawPacket || rawPacket.length === 0) {
             updateTransferStatus("表示シーンが選択されていません");
             return;
@@ -1185,13 +1311,16 @@ async function transferToESP32() {
 
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
-        const br = getNumberValue("softBrightness", 1.0);
-        const gam = getNumberValue("gammaCorrection", 2.5);
-        const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
+        /* 車両モード時のみ種別・行先スクロールの追加送信を実施 */
+        if (typeof isMessageBoard === "undefined" || !isMessageBoard) {
+            const br = getNumberValue("softBrightness", 1.0);
+            const gam = getNumberValue("gammaCorrection", 2.5);
+            const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
-        if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-            const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
-            await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
+            if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
+                const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
+                await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
+            }
         }
 
         const totalElapsed = Math.round(performance.now() - totalStart);
