@@ -480,7 +480,8 @@
         "icons": [
             "vehicles/227-500_urara/icons/icon1.png"
         ],
-        "site": "vehicles/227-500_urara/site.json"
+        "site": "vehicles/227-500_urara/site.json",
+        "description": "山陽本線・赤穂線・宇野線・伯備線など"
     },
     {
         "id": "227-500_kizashi",
@@ -490,7 +491,8 @@
         "icons": [
             "vehicles/227-500_kizashi/icons/icon1.png"
         ],
-        "site": "vehicles/227-500_kizashi/site.json"
+        "site": "vehicles/227-500_kizashi/site.json",
+        "description": "山陽本線"
     },
     {
         "id": "227-1000",
@@ -500,7 +502,8 @@
         "icons": [
             "vehicles/227-1000/icons/icon1.png"
         ],
-        "site": "vehicles/227-1000/site.json"
+        "site": "vehicles/227-1000/site.json",
+        "description": "紀勢本線・和歌山線・桜井線"
     },
     {
         "id": "323",
@@ -510,7 +513,8 @@
         "icons": [
             "vehicles/323/icons/icon1.png"
         ],
-        "site": "vehicles/323/site.json"
+        "site": "vehicles/323/site.json",
+        "description": "大阪環状線・桜島線"
     },
     {
         "id": "521-100",
@@ -520,7 +524,8 @@
         "icons": [
             "vehicles/521-100/icons/icon1.png"
         ],
-        "site": "vehicles/521-100/site.json"
+        "site": "vehicles/521-100/site.json",
+        "description": "七尾線"
     },
     {
         "id": "271",
@@ -530,7 +535,8 @@
         "icons": [
             "vehicles/271/icons/icon1.png"
         ],
-        "site": "vehicles/271/site.json"
+        "site": "vehicles/271/site.json",
+        "description": "特急はるか"
     },
     {
         "id": "273",
@@ -540,7 +546,8 @@
         "icons": [
             "vehicles/273/icons/icon1.png"
         ],
-        "site": "vehicles/273/site.json"
+        "site": "vehicles/273/site.json",
+        "description": "特急やくも"
     },
     {
         "id": "225・227",
@@ -571,7 +578,8 @@
             "vehicles/315/icons/icon1.png",
             "vehicles/315/icons/icon2.png"
         ],
-        "site": "vehicles/315/site.json"
+        "site": "vehicles/315/site.json",
+        "description": "東海道本線・中央本線・関西本線・武豊線など"
     },
     {
         "id": "2700",
@@ -581,7 +589,8 @@
         "icons": [
             "vehicles/2700/icons/icon1.png"
         ],
-        "site": "vehicles/2700/site.json"
+        "site": "vehicles/2700/site.json",
+        "description": "特急うずしお・特急しまんと・特急あしずり・特急南風"
     },
     {
         "id": "tobu100",
@@ -609,7 +618,8 @@
             "vehicles/20400/icons/icon2.png",
             "vehicles/20400/icons/icon3.png"
         ],
-        "site": "vehicles/20400/site.json"
+        "site": "vehicles/20400/site.json",
+        "description": "東武日光線・東武宇都宮線・東武鬼怒川線"
     },
     {
         "id": "50000",
