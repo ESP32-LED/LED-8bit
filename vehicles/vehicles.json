@@ -755,7 +755,8 @@
             "vehicles/m13000first/icons/icon2.png",
             "vehicles/m13000first/icons/icon3.png"
         ],
-        "site": "vehicles/m13000first/site.json"
+        "site": "vehicles/m13000first/site.json",
+        "description": "東京メトロ日比谷線・東武伊勢崎線・東武日光線"
     },
     {
         "id": "m13000",
@@ -765,7 +766,8 @@
         "icons": [
             "vehicles/m13000/icons/icon1.png"
         ],
-        "site": "vehicles/m13000/site.json"
+        "site": "vehicles/m13000/site.json",
+        "description": "東京メトロ日比谷線・東武伊勢崎線・東武日光線"
     },
     {
         "id": "keio90007000",
@@ -778,7 +780,8 @@
             "vehicles/keio90007000/icons/icon3.png",
             "vehicles/keio90007000/icons/icon4.png"
         ],
-        "site": "vehicles/keio90007000/site.json"
+        "site": "vehicles/keio90007000/site.json",
+        "description": "京王電鉄の各線・都営新宿線"
     },
     {
         "id": "keio8000",
@@ -788,7 +791,8 @@
         "icons": [
             "vehicles/keio8000/icons/icon1.png"
         ],
-        "site": "vehicles/keio8000/site.json"
+        "site": "vehicles/keio8000/site.json",
+        "description": "京王電鉄の各線・都営新宿線"
     },
     {
         "id": "keio2000",
@@ -796,10 +800,11 @@
         "config": "vehicles/keio2000/config.json",
         "led": "vehicles/keio2000/led.json",
         "icons": [
-            "vehicles/keio2000/icons/icon1.png"
+            "vehicles/keio2000/icons/icon1.png",
         ],
         "site": "vehicles/keio2000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "京王電鉄の各線"
     },
     {
         "id": "3000",
@@ -811,7 +816,8 @@
             "vehicles/3000/icons/icon2.png",
             "vehicles/3000/icons/icon3.png"
         ],
-        "site": "vehicles/3000/site.json"
+        "site": "vehicles/3000/site.json",
+        "description": "京成電鉄の各線・都営浅草線・京急線など"
     },
     {
         "id": "l00",
@@ -821,7 +827,8 @@
         "icons": [
             "vehicles/l00/icons/icon1.png"
         ],
-        "site": "vehicles/l00/site.json"
+        "site": "vehicles/l00/site.json",
+        "description": "西武山口線"
     },
     {
         "id": "odakyu4000",
