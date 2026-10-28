@@ -345,13 +345,18 @@ function getAgedColor(x, y, color) {
 
 document.addEventListener("click", (e) => {
     if (!e.target) return;
+    
+    // スクロール開始/更新ボタンは直接のイベントハンドラで発火させるため、クリックリスナーから除外
+    if (e.target.id === "startMessageBoardScrollBtn" || e.target.id === "startScrollBtn") {
+        return;
+    }
+
     if (
         e.target.tagName === "BUTTON" ||
         e.target.closest?.(".buttonGroup") ||
         e.target.closest?.(".selectGroup") ||
         e.target.closest?.(".numberInput") ||
         e.target.closest?.("#scroll") ||
-        e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
@@ -362,8 +367,7 @@ document.addEventListener("click", (e) => {
         e.target.id === "displayAlign" ||
         e.target.id === "displayAlignToggle" ||
         e.target.id === "timeCheck" ||
-        e.target.id === "messageBoardScrollCheck" ||
-        e.target.id === "startMessageBoardScrollBtn"
+        e.target.id === "messageBoardScrollCheck"
     ) {
         if (e.target.id === "isLedAging" || e.target.id === "ledAgingLebel" || e.target.id === "ledAgingLevel") {
             ledAging = null;
@@ -372,12 +376,10 @@ document.addEventListener("click", (e) => {
     }
 });
 
+// スクロール文字のリアルタイム入力を除外し、その他の設定変更時のみトリガー
 document.addEventListener("input", (e) => {
     if (!e.target) return;
     if (
-        e.target.id === "scrollText" ||
-        e.target.id === "messageBoardScrollText" ||
-        e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
@@ -406,9 +408,6 @@ document.addEventListener("change", (e) => {
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
-        e.target.id === "scrollText" ||
-        e.target.id === "messageBoardScrollText" ||
-        e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
@@ -534,17 +533,19 @@ function createESP32ScrollData(br, gam) {
     return { tw, sbuf };
 }
 
-// ===== 電光掲示板（メッセージボード）用パケット生成処理 =====
 function createESP32MBScrollData(br, gam) {
     const mbTextEl = document.getElementById("messageBoardScrollText");
     const text = mbTextEl ? mbTextEl.value.replace(/\r?\n/g, " ").trim() : "";
     const scrollCheck = document.getElementById("messageBoardScrollCheck");
+    const hasClock = !!document.getElementById("timeCheck")?.checked;
 
     if (!scrollCheck?.checked || !text) {
-        return { tw: 0, sbuf: new Uint8Array(0) };
+        return { tw: 0, sbuf: new Uint8Array(0), height: 16 };
     }
 
-    const fontSize = 16;
+    const fontSize = hasClock ? 16 : 24;
+    const fontHeight = hasClock ? 16 : 32;
+
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
@@ -555,26 +556,26 @@ function createESP32MBScrollData(br, gam) {
     }
 
     canvas.width = textWidth;
-    canvas.height = 16;
+    canvas.height = fontHeight;
 
     ctx.font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(text, 2, 8);
+    ctx.fillText(text, 2, fontHeight / 2);
 
-    const imgData = ctx.getImageData(0, 0, textWidth, 16).data;
-    const sbuf = new Uint8Array(textWidth * 16 * 2);
+    const imgData = ctx.getImageData(0, 0, textWidth, fontHeight).data;
+    const sbuf = new Uint8Array(textWidth * fontHeight * 2);
     let sp = 0;
     const baseColor = { r: 255, g: 242, b: 0 };
 
     for (let px = 0; px < textWidth; px++) {
-        for (let py = 0; py < 16; py++) {
+        for (let py = 0; py < fontHeight; py++) {
             const idx = (py * textWidth + px) * 4;
             let r = 0, g = 0, b = 0;
 
             if (imgData[idx + 3] >= 128) {
-                const agedPixel = getAgedColor(px, py + 16, baseColor);
+                const agedPixel = getAgedColor(px, py + (hasClock ? 16 : 0), baseColor);
                 r = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.r / 255, gam) * br * 255)));
                 g = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.g / 255, gam) * br * 255)));
                 b = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.b / 255, gam) * br * 255)));
@@ -586,35 +587,39 @@ function createESP32MBScrollData(br, gam) {
         }
     }
 
-    return { tw: textWidth, sbuf };
+    return { tw: textWidth, sbuf, height: fontHeight };
 }
 
-function createESP32FrameFromCanvasCtx(canvasCtx, hw) {
+function createESP32FrameFromCanvasCtx(canvasCtx, hw, margin = 0) {
     const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
-    const imgData = canvasCtx.getImageData(0, 0, Math.min(hw, MB_WIDTH), 32).data;
+    const MB_WIDTH_VAL = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
+    const imgData = canvasCtx.getImageData(0, 0, MB_WIDTH_VAL, 32).data;
 
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
 
     for (let y = 0; y < 32; y++) {
-        for (let x = 0; x < Math.min(hw, MB_WIDTH); x++) {
-            const idx = (y * MB_WIDTH + x) * 4;
+        for (let x = 0; x < MB_WIDTH_VAL; x++) {
+            const targetX = x + margin;
+            if (targetX < 0 || targetX >= hw) continue;
+
+            const idx = (y * MB_WIDTH_VAL + x) * 4;
             if (imgData[idx + 3] < 128) continue;
 
             const rawR = imgData[idx];
             const rawG = imgData[idx + 1];
             const rawB = imgData[idx + 2];
 
-            const pixel = getAgedColor(x, y, { r: rawR, g: rawG, b: rawB });
+            const pixel = getAgedColor(targetX, y, { r: rawR, g: rawG, b: rawB });
 
             const r = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.r / 255, gam) * br * 255)));
             const g = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.g / 255, gam) * br * 255)));
             const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
 
             for (let bit = 0; bit < 8; bit++) {
-                if ((r >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x01 : 0x08;
-                if ((g >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x02 : 0x10;
-                if ((b >> bit) & 1) frame[bit][y % 16][x] |= y < 16 ? 0x04 : 0x20;
+                if ((r >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x01 : 0x08;
+                if ((g >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x02 : 0x10;
+                if ((b >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x04 : 0x20;
             }
         }
     }
@@ -623,6 +628,9 @@ function createESP32FrameFromCanvasCtx(canvasCtx, hw) {
 
 function createESP32MessageBoardPacket() {
     const hw = getHardwareWidth();
+    const pw = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
+    const margin = getDisplayMargin(hw, pw);
+
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
 
@@ -630,10 +638,17 @@ function createESP32MessageBoardPacket() {
         drawMessageBoardFrame();
     }
 
+    const hasClock = !!document.getElementById("timeCheck")?.checked;
     const scrollData = createESP32MBScrollData(br, gam);
-    const header = createESP32Header(1, hw, 0, scrollData.tw, transferScrollSpeed, 0, false);
+    
+    // 電光掲示板（メッセージボード）スクロールは常にLED右端から左端まで全面(xOff=0)で流す
+    const xOff = 0;
 
-    const frame = createESP32FrameFromCanvasCtx(mbTextContext, hw);
+    const is32pxScroll = !hasClock && scrollData.tw > 0;
+
+    const header = createESP32Header(1, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false, is32pxScroll);
+
+    const frame = createESP32FrameFromCanvasCtx(mbTextContext, hw, margin);
     const sceneBuf = frameToUint8Array(frame, hw);
 
     const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneBuf.length);
@@ -1061,8 +1076,6 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
-        console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, typeIsFull=${typeIsFull}, hasTypeEn=${hasTypeEn}, 生成コマ数=${sceneCount}`);
-
         const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
 
@@ -1176,7 +1189,7 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) 
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false, is32pxScroll = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -1186,8 +1199,11 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     if (isSpecialScrollMode) {
         slideModeVal |= 0x80;
     }
+    if (is32pxScroll) {
+        slideModeVal |= 0x40;
+    }
 
-    const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
+    const pw = (typeof isMessageBoard !== "undefined" && isMessageBoard) ? (typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192) : ((typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160);
     if (hw > pw) {
         const rightMargin = hw - pw;
         if (margin === rightMargin) {
@@ -1343,3 +1359,20 @@ function lcm(a, b) {
     if (b === 0) return a;
     return Math.abs((a / gcd(a, b)) * b);
 }
+
+// 手動更新用ボタンのイベントリスナー設定
+document.addEventListener("DOMContentLoaded", () => {
+    const startMBSBtn = document.getElementById("startMessageBoardScrollBtn");
+    if (startMBSBtn) {
+        startMBSBtn.addEventListener("click", () => {
+            triggerAutoTransfer();
+        });
+    }
+
+    const startSBtn = document.getElementById("startScrollBtn");
+    if (startSBtn) {
+        startSBtn.addEventListener("click", () => {
+            triggerAutoTransfer();
+        });
+    }
+});
