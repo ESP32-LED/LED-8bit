@@ -1908,8 +1908,8 @@ function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
     const fontSize = hasClock ? 16 : 24;
-    const top = hasClock ? 16 : 4;
-    const height = hasClock ? 16 : 24;
+    const top = hasClock ? 16 : 0;
+    const height = hasClock ? 16 : 32;
     const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
     let ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
@@ -1958,27 +1958,6 @@ function createMessageBoardScrollCanvas() {
     mbScrollWidth = mbScrollCanvas.width;
 }
 
-function drawMessageBoardScrollTextFrame() {
-    const ctx = mbTextContext;
-    const hasClock = !!timeCheck?.checked;
-
-    const top = hasClock ? 16 : 4;
-    const height = hasClock ? 16 : 24;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, top, MB_WIDTH, height);
-    ctx.clip();
-
-    ctx.drawImage(
-        mbScrollCanvas,
-        Math.floor(mbScrollPixelX),
-        0
-    );
-
-    ctx.restore();
-}
-
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
 
@@ -2006,8 +1985,8 @@ function renderMessageBoardLEDs() {
 
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         const hasClock = !!timeCheck?.checked;
-        const top = (hasClock ? 16 : 4) * MB_PITCH;
-        const height = (hasClock ? 16 : 24) * MB_PITCH;
+        const top = (hasClock ? 16 : 0) * MB_PITCH;
+        const height = (hasClock ? 16 : 32) * MB_PITCH;
 
         mbOutputContext.save();
         mbOutputContext.beginPath();
@@ -2137,11 +2116,15 @@ messageBoardScrollCheck?.addEventListener("change", () => {
     }
 });
 
-startMessageBoardScrollBtn?.addEventListener("click", startMessageBoardScroll);
+startMessageBoardScrollBtn?.addEventListener("click", () => {
+    startMessageBoardScroll();
+    if (typeof triggerAutoTransfer === "function") {
+        triggerAutoTransfer();
+    }
+});
 
 let lastAutomatedTimeStr = "";
 
-// ===== 時刻変更の自動転送タイマー（毎秒チェック） =====
 setInterval(() => {
     const currentTimeStr = getMessageBoardTime();
     const isMb = typeof isMessageBoard !== "undefined" && isMessageBoard;
