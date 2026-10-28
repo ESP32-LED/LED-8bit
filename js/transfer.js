@@ -284,11 +284,11 @@ function triggerAutoTransfer() {
 }
 
 function isTypeScrollEnabled() {
-    return typeof typeScroll !== "undefined" ? typeScroll : true;
+    return typeof typeScroll !== "undefined" ? !!typeScroll : true;
 }
 
 function isDestinationScrollEnabled() {
-    return typeof destinationScroll !== "undefined" ? destinationScroll : true;
+    return typeof destinationScroll !== "undefined" ? !!destinationScroll : true;
 }
 
 function isTypeDestinationScrollCategoryEnabled(category) {
@@ -346,7 +346,6 @@ function getAgedColor(x, y, color) {
 document.addEventListener("click", (e) => {
     if (!e.target) return;
     
-    // スクロール開始/更新ボタンは直接のイベントハンドラで発火させるため、クリックリスナーから除外
     if (e.target.id === "startMessageBoardScrollBtn" || e.target.id === "startScrollBtn") {
         return;
     }
@@ -376,7 +375,6 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// スクロール文字のリアルタイム入力を除外し、その他の設定変更時のみトリガー
 document.addEventListener("input", (e) => {
     if (!e.target) return;
     if (
@@ -455,14 +453,17 @@ function getHardwareWidth() {
 
 function getScrollText() {
     const scrollText = document.getElementById("scrollText");
-    if (scrollText) return scrollText.value || "";
+    if (scrollText && scrollText.value) return scrollText.value;
     const oldScrollText = document.getElementById("scroll-text-input");
-    if (oldScrollText) return oldScrollText.value || "";
+    if (oldScrollText && oldScrollText.value) return oldScrollText.value;
+    if (typeof config !== "undefined" && config && config.scrollLabel) return config.scrollLabel;
     return "";
 }
 
 function isScrollEnabled() {
-    return typeof clickStartScrollBtn !== "undefined" ? clickStartScrollBtn : false;
+    const scrollCheck = document.getElementById("scrollCheck");
+    if (scrollCheck) return scrollCheck.checked;
+    return true;
 }
 
 function getScrollColor() {
@@ -491,7 +492,7 @@ function createESP32ScrollData(br, gam) {
     }
 
     if (typeof fontData === "undefined" || !fontData) {
-        throw new Error("スクロール用フォントデータ(fontData)が読み込まれていません");
+        return { tw: 0, sbuf: new Uint8Array(0) };
     }
 
     const chars = [...text];
@@ -567,7 +568,8 @@ function createESP32MBScrollData(br, gam) {
     const imgData = ctx.getImageData(0, 0, textWidth, fontHeight).data;
     const sbuf = new Uint8Array(textWidth * fontHeight * 2);
     let sp = 0;
-    const baseColor = { r: 255, g: 242, b: 0 };
+    // 電光掲示板（メッセージボード）スクロールの転送色を白色(255, 255, 255)に変更
+    const baseColor = { r: 255, g: 255, b: 255 };
 
     for (let px = 0; px < textWidth; px++) {
         for (let py = 0; py < fontHeight; py++) {
@@ -641,7 +643,6 @@ function createESP32MessageBoardPacket() {
     const hasClock = !!document.getElementById("timeCheck")?.checked;
     const scrollData = createESP32MBScrollData(br, gam);
     
-    // 電光掲示板（メッセージボード）スクロールは常にLED右端から左端まで全面(xOff=0)で流す
     const xOff = 0;
 
     const is32pxScroll = !hasClock && scrollData.tw > 0;
@@ -664,16 +665,16 @@ function createESP32MessageBoardPacket() {
 function getESP32TypeDestinationScrollStates() {
     const states = [];
 
-    if (typeof typeJaScrollState !== "undefined") {
+    if (typeof typeJaScrollState !== "undefined" && typeJaScrollState) {
         states.push({ state: typeJaScrollState, kind: 0, lang: 0, category: "type", langName: "ja" });
     }
-    if (typeof typeEnScrollState !== "undefined") {
+    if (typeof typeEnScrollState !== "undefined" && typeEnScrollState) {
         states.push({ state: typeEnScrollState, kind: 0, lang: 1, category: "type", langName: "en" });
     }
-    if (typeof destinationJaScrollState !== "undefined") {
+    if (typeof destinationJaScrollState !== "undefined" && destinationJaScrollState) {
         states.push({ state: destinationJaScrollState, kind: 1, lang: 0, category: "destination", langName: "ja" });
     }
-    if (typeof destinationEnScrollState !== "undefined") {
+    if (typeof destinationEnScrollState !== "undefined" && destinationEnScrollState) {
         states.push({ state: destinationEnScrollState, kind: 1, lang: 1, category: "destination", langName: "en" });
     }
 
@@ -756,7 +757,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
 
         let bitmap = new Uint8Array(0);
 
-        if (info && info.state && info.state.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
+        if (info && info.state && isTypeDestinationScrollCategoryEnabled(info.category)) {
             let item = null;
             if (typeof getItem === "function") {
                 if (info.category === "type" && typeof typeId !== "undefined") {
@@ -774,13 +775,13 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft)));
-                const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight)));
+                const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft ?? 0)));
+                const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight ?? pw)));
 
                 descriptor.areaLeft = Math.min(hw, Math.max(0, rawLeft + margin));
                 descriptor.areaRight = Math.min(hw, Math.max(0, rawRight + margin));
-                descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop));
-                descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom));
+                descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop ?? 0));
+                descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom ?? 16));
                 descriptor.dataLength = created.sbuf.length;
                 bitmap = created.sbuf;
             }
@@ -928,7 +929,7 @@ function createESP32Packet() {
     }
 
     const scrollText = getScrollText();
-    const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
+    const scrollActive = isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
     const oldNextId = typeof nextId !== "undefined" ? nextId : null;
 
@@ -1360,7 +1361,6 @@ function lcm(a, b) {
     return Math.abs((a / gcd(a, b)) * b);
 }
 
-// 手動更新用ボタンのイベントリスナー設定
 document.addEventListener("DOMContentLoaded", () => {
     const startMBSBtn = document.getElementById("startMessageBoardScrollBtn");
     if (startMBSBtn) {
