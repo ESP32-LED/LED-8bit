@@ -31,7 +31,7 @@
         ],
         "site": "vehicles/E129/site.json",
         "font": "fonts/font_E233.json",
-        "description": "信越本線（直江津〜新潟）・上越線（水上〜宮内）・白新線・越後線など"
+        "description": "信越本線（直江津〜新潟）・上越線・白新線・越後線など"
     },
     {
         "id": "E131-0",
@@ -470,7 +470,7 @@
             "vehicles/227-0/icons/icon1.png"
         ],
         "site": "vehicles/227-0/site.json",
-        "description": "山陽本線（福山〜新山口）・呉線・可部線"
+        "description": "山陽本線・呉線・可部線"
     },
     {
         "id": "227-500_urara",
