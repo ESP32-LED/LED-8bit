@@ -630,7 +630,8 @@
             "vehicles/50000/icons/icon1.png",
             "vehicles/50000/icons/icon2.png"
         ],
-        "site": "vehicles/50000/site.json"
+        "site": "vehicles/50000/site.json",
+        "description": "東武東上線"
     },
     {
         "id": "90000",
@@ -641,7 +642,8 @@
             "vehicles/90000/icons/icon1.png",
             "vehicles/90000/icons/icon2.png"
         ],
-        "site": "vehicles/90000/site.json"
+        "site": "vehicles/90000/site.json",
+        "description": "東武東上線・東京メトロ有楽町線・東京メトロ副都心線など"
     },
     {
         "id": "tokyu7000",
@@ -657,7 +659,8 @@
             "vehicles/tokyu7000/icons/icon6.png",
             "vehicles/tokyu7000/icons/icon7.png"
         ],
-        "site": "vehicles/tokyu7000/site.json"
+        "site": "vehicles/tokyu7000/site.json",
+        "description": "東急池上線・東急多摩川線"
     },
     {
         "id": "2020",
@@ -667,7 +670,8 @@
         "icons": [
             "vehicles/2020/icons/icon1.png"
         ],
-        "site": "vehicles/2020/site.json"
+        "site": "vehicles/2020/site.json",
+        "description": "東急田園都市線・東京メトロ半蔵門線・東武伊勢崎線など"
     },
     {
         "id": "tokyu5080",
@@ -680,7 +684,8 @@
             "vehicles/tokyu5080/icons/icon3.png",
             "vehicles/tokyu5080/icons/icon4.png"
         ],
-        "site": "vehicles/tokyu5080/site.json"
+        "site": "vehicles/tokyu5080/site.json",
+        "description": "東急目黒線・東急新横浜線・東京メトロ南北線・都営三田線など"
     },
     {
         "id": "3020",
@@ -690,7 +695,8 @@
         "icons": [
             "vehicles/3020/icons/icon1.png"
         ],
-        "site": "vehicles/3020/site.json"
+        "site": "vehicles/3020/site.json",
+        "description": "東急目黒線・東急新横浜線・東京メトロ南北線・都営三田線など"
     },
     {
         "id": "tokyu6000",
