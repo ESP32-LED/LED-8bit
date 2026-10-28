@@ -102,6 +102,16 @@
         "description": "鶴見線"
     },
     {
+        "id": "E231-3000",
+        "name": "E231系3000番台",
+        "config": "vehicles/E231-3000/config.json",
+        "led": "vehicles/E231-3000/led.json",
+        "icons": [
+            "vehicles/E231-3000/icons/icon1.png"
+        ],
+        "site": "vehicles/E231-3000/site.json"
+    },
+    {
         "id": "E233-0",
         "name": "E233系0番台",
         "config": "vehicles/E233-0/config.json",
