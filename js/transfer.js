@@ -465,7 +465,10 @@ function getScrollText() {
     return "";
 }
 
+/* ★スクロール有効判定の修正：UI上のscrollCheckがオン、またはclickStartScrollBtnがtrueの場合に有効とする */
 function isScrollEnabled() {
+    const scrollCheck = document.getElementById("scrollCheck");
+    if (scrollCheck && scrollCheck.checked) return true;
     return typeof clickStartScrollBtn !== "undefined" ? clickStartScrollBtn : false;
 }
 
@@ -523,7 +526,6 @@ function createESP32MessageBoardPacket() {
     const hasClock = !!timeCheck?.checked;
     const hasScroll = !!messageBoardScrollCheck?.checked && !!messageBoardScrollText?.value.trim();
 
-    /* 1. スクロールなし（静止時刻表示など） */
     if (!hasScroll) {
         if (typeof drawMessageBoardFrame === "function") drawMessageBoardFrame();
         const imgData = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
@@ -537,7 +539,6 @@ function createESP32MessageBoardPacket() {
         return packet;
     }
 
-    /* 2. スクロールあり */
     mbTextContext.clearRect(0, 0, MB_WIDTH, MB_HEIGHT);
     if (hasClock) {
         if (typeof drawMessageBoardClockSmall === "function") drawMessageBoardClockSmall();
@@ -554,7 +555,6 @@ function createESP32MessageBoardPacket() {
     const sh = MB_HEIGHT;
     const scrollImgData = scrollSrcCtx.getImageData(0, 0, sw, sh).data;
 
-    /* 時刻なし（スクロールのみ）の場合は 32px高さ（全高）のスクロールバッファを作成 */
     const is32pxScroll = !hasClock;
     const sbufHeight = is32pxScroll ? 32 : 16;
     const srcYStart = is32pxScroll ? 0 : 16;
@@ -1187,7 +1187,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
         slideModeVal |= 0x80;
     }
     if (is32pxScroll) {
-        slideModeVal |= 0x40; // 32px高さスクロール表示フラグ
+        slideModeVal |= 0x40;
     }
 
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
