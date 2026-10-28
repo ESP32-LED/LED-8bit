@@ -284,11 +284,11 @@ function triggerAutoTransfer() {
 }
 
 function isTypeScrollEnabled() {
-    return typeof typeScroll !== "undefined" ? !!typeScroll : true;
+    return typeof typeScroll !== "undefined" ? typeScroll : true;
 }
 
 function isDestinationScrollEnabled() {
-    return typeof destinationScroll !== "undefined" ? !!destinationScroll : true;
+    return typeof destinationScroll !== "undefined" ? destinationScroll : true;
 }
 
 function isTypeDestinationScrollCategoryEnabled(category) {
@@ -345,17 +345,13 @@ function getAgedColor(x, y, color) {
 
 document.addEventListener("click", (e) => {
     if (!e.target) return;
-    
-    if (e.target.id === "startMessageBoardScrollBtn" || e.target.id === "startScrollBtn") {
-        return;
-    }
-
     if (
         e.target.tagName === "BUTTON" ||
         e.target.closest?.(".buttonGroup") ||
         e.target.closest?.(".selectGroup") ||
         e.target.closest?.(".numberInput") ||
         e.target.closest?.("#scroll") ||
+        e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
@@ -364,9 +360,7 @@ document.addEventListener("click", (e) => {
         e.target.id === "ledAgingLebel" ||
         e.target.id === "ledAgingLevel" ||
         e.target.id === "displayAlign" ||
-        e.target.id === "displayAlignToggle" ||
-        e.target.id === "timeCheck" ||
-        e.target.id === "messageBoardScrollCheck"
+        e.target.id === "displayAlignToggle"
     ) {
         if (e.target.id === "isLedAging" || e.target.id === "ledAgingLebel" || e.target.id === "ledAgingLevel") {
             ledAging = null;
@@ -378,6 +372,8 @@ document.addEventListener("click", (e) => {
 document.addEventListener("input", (e) => {
     if (!e.target) return;
     if (
+        e.target.id === "scrollText" ||
+        e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
@@ -401,11 +397,11 @@ document.addEventListener("change", (e) => {
     if (!e.target) return;
     if (
         e.target.id === "scrollCheck" ||
-        e.target.id === "timeCheck" ||
-        e.target.id === "messageBoardScrollCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
+        e.target.id === "scrollText" ||
+        e.target.id === "scroll-text-input" ||
         e.target.id === "scroll-color" ||
         e.target.id === "scroll-speed" ||
         e.target.id === "hardwareWidth" ||
@@ -453,17 +449,14 @@ function getHardwareWidth() {
 
 function getScrollText() {
     const scrollText = document.getElementById("scrollText");
-    if (scrollText && scrollText.value) return scrollText.value;
+    if (scrollText) return scrollText.value || "";
     const oldScrollText = document.getElementById("scroll-text-input");
-    if (oldScrollText && oldScrollText.value) return oldScrollText.value;
-    if (typeof config !== "undefined" && config && config.scrollLabel) return config.scrollLabel;
+    if (oldScrollText) return oldScrollText.value || "";
     return "";
 }
 
 function isScrollEnabled() {
-    const scrollCheck = document.getElementById("scrollCheck");
-    if (scrollCheck) return scrollCheck.checked;
-    return true;
+    return typeof clickStartScrollBtn !== "undefined" ? clickStartScrollBtn : false;
 }
 
 function getScrollColor() {
@@ -492,7 +485,7 @@ function createESP32ScrollData(br, gam) {
     }
 
     if (typeof fontData === "undefined" || !fontData) {
-        return { tw: 0, sbuf: new Uint8Array(0) };
+        throw new Error("スクロール用フォントデータ(fontData)が読み込まれていません");
     }
 
     const chars = [...text];
@@ -534,189 +527,24 @@ function createESP32ScrollData(br, gam) {
     return { tw, sbuf };
 }
 
-function createESP32MBScrollData(br, gam) {
-    const mbTextEl = document.getElementById("messageBoardScrollText");
-    const text = mbTextEl ? mbTextEl.value.replace(/\r?\n/g, " ").trim() : "";
-    const scrollCheck = document.getElementById("messageBoardScrollCheck");
-    const hasClock = !!document.getElementById("timeCheck")?.checked;
-
-    if (!scrollCheck?.checked || !text) {
-        return { tw: 0, sbuf: new Uint8Array(0), height: 16 };
-    }
-
-    const fontSize = hasClock ? 16 : 24;
-    const fontHeight = hasClock ? 16 : 32;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
-
-    const textWidth = Math.max(1, Math.ceil(ctx.measureText(text).width) + 4);
-    if (textWidth > ESP32_MAX_SCROLL_WIDTH) {
-        throw new Error(`メッセージボードのスクロール文字が長すぎます（最大${ESP32_MAX_SCROLL_WIDTH}px）`);
-    }
-
-    canvas.width = textWidth;
-    canvas.height = fontHeight;
-
-    ctx.font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(text, 2, fontHeight / 2);
-
-    const imgData = ctx.getImageData(0, 0, textWidth, fontHeight).data;
-    const sbuf = new Uint8Array(textWidth * fontHeight * 2);
-    let sp = 0;
-    const baseColor = { r: 255, g: 255, b: 255 };
-
-    for (let px = 0; px < textWidth; px++) {
-        for (let py = 0; py < fontHeight; py++) {
-            const idx = (py * textWidth + px) * 4;
-            let r = 0, g = 0, b = 0;
-
-            if (imgData[idx + 3] >= 128) {
-                const agedPixel = getAgedColor(px, py + (hasClock ? 16 : 0), baseColor);
-                r = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.r / 255, gam) * br * 255)));
-                g = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.g / 255, gam) * br * 255)));
-                b = Math.min(255, Math.max(0, Math.round(Math.pow(agedPixel.b / 255, gam) * br * 255)));
-            }
-
-            const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-            sbuf[sp++] = rgb565 & 0xff;
-            sbuf[sp++] = (rgb565 >> 8) & 0xff;
-        }
-    }
-
-    return { tw: textWidth, sbuf, height: fontHeight };
-}
-
-function createESP32FrameFromCanvasCtx(canvasCtx, hw, margin = 0) {
-    const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
-    const MB_WIDTH_VAL = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
-    const imgData = canvasCtx.getImageData(0, 0, MB_WIDTH_VAL, 32).data;
-
-    const br = getNumberValue("softBrightness", 1.0);
-    const gam = getNumberValue("gammaCorrection", 2.5);
-
-    for (let y = 0; y < 32; y++) {
-        for (let x = 0; x < MB_WIDTH_VAL; x++) {
-            const targetX = x + margin;
-            if (targetX < 0 || targetX >= hw) continue;
-
-            const idx = (y * MB_WIDTH_VAL + x) * 4;
-            if (imgData[idx + 3] < 128) continue;
-
-            const rawR = imgData[idx];
-            const rawG = imgData[idx + 1];
-            const rawB = imgData[idx + 2];
-
-            const pixel = getAgedColor(targetX, y, { r: rawR, g: rawG, b: rawB });
-
-            const r = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.r / 255, gam) * br * 255)));
-            const g = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.g / 255, gam) * br * 255)));
-            const b = Math.min(255, Math.max(0, Math.round(Math.pow(pixel.b / 255, gam) * br * 255)));
-
-            for (let bit = 0; bit < 8; bit++) {
-                if ((r >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x01 : 0x08;
-                if ((g >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x02 : 0x10;
-                if ((b >> bit) & 1) frame[bit][y % 16][targetX] |= y < 16 ? 0x04 : 0x20;
-            }
-        }
-    }
-    return frame;
-}
-
-function createESP32MessageBoardPacket() {
-    const hw = getHardwareWidth();
-    const pw = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
-    const margin = getDisplayMargin(hw, pw);
-
-    const br = getNumberValue("softBrightness", 1.0);
-    const gam = getNumberValue("gammaCorrection", 2.5);
-
-    if (typeof drawMessageBoardFrame === "function") {
-        drawMessageBoardFrame();
-    }
-
-    const hasClock = !!document.getElementById("timeCheck")?.checked;
-    const scrollData = createESP32MBScrollData(br, gam);
-    
-    const xOff = 0;
-
-    const is32pxScroll = !hasClock && scrollData.tw > 0;
-
-    const header = createESP32Header(1, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false, is32pxScroll);
-
-    const frame = createESP32FrameFromCanvasCtx(mbTextContext, hw, margin);
-    const sceneBuf = frameToUint8Array(frame, hw);
-
-    const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneBuf.length);
-    packet.set(header, 0);
-    if (scrollData.sbuf.length > 0) {
-        packet.set(scrollData.sbuf, header.length);
-    }
-    packet.set(sceneBuf, header.length + scrollData.sbuf.length);
-
-    return packet;
-}
-
-// 案内・停車駅（information）と行先（destination）を包括的に取得
-function getTypeDestinationItem(category) {
-    if (typeof getItem !== "function") return null;
-
-    if (category === "type") {
-        if (typeof typeId !== "undefined" && typeId !== null) {
-            return getItem("type", typeId);
-        }
-    } else if (category === "destination") {
-        if (typeof informationId !== "undefined" && informationId !== null) {
-            const infoItem = getItem("information", informationId);
-            if (infoItem && infoItem.view) return infoItem;
-        }
-        if (typeof destinationId !== "undefined" && destinationId !== null) {
-            return getItem("destination", destinationId);
-        }
-    }
-    return null;
-}
-
-// view（normal/full/small1等）を柔軟・安全に抽出
-function getTypeDestinationView(item, category, langName) {
-    if (!item || !item.view) return null;
-
-    const viewsToTry = [];
-    if (category === "type" && typeof isTypeFullScreen === "function" && isTypeFullScreen(item)) {
-        viewsToTry.push("full", "normal");
-    } else if (category === "destination" && typeof isDestinationFullScreen === "function" && isDestinationFullScreen(item)) {
-        viewsToTry.push("full", "normal");
-    } else {
-        viewsToTry.push("normal", "full", "small1", "small2");
-    }
-
-    for (const vKey of viewsToTry) {
-        if (item.view[vKey]) {
-            const target = item.view[vKey][langName] || item.view[vKey]["ja"] || item.view[vKey];
-            if (target && target.data) return target;
-        }
-    }
-
-    if (item.view[langName] && item.view[langName].data) return item.view[langName];
-    if (item.view.ja && item.view.ja.data) return item.view.ja;
-
-    return null;
-}
-
+// 描画エンジン側の動的状態オブジェクトを直接参照（成功コードの核心）
 function getESP32TypeDestinationScrollStates() {
-    const hasType = typeof config !== "undefined" && config ? config.hasType !== false : true;
-    const hasDest = typeof config !== "undefined" && config ? config.hasDestination !== false : true;
+    const states = [];
 
-    return [
-        { kind: 0, lang: 0, category: "type", langName: "ja", active: hasType },
-        { kind: 0, lang: 1, category: "type", langName: "en", active: hasType },
-        { kind: 1, lang: 0, category: "destination", langName: "ja", active: hasDest },
-        { kind: 1, lang: 1, category: "destination", langName: "en", active: hasDest }
-    ];
+    if (typeof typeJaScrollState !== "undefined") {
+        states.push({ state: typeJaScrollState, kind: 0, lang: 0, category: "type", langName: "ja" });
+    }
+    if (typeof typeEnScrollState !== "undefined") {
+        states.push({ state: typeEnScrollState, kind: 0, lang: 1, category: "type", langName: "en" });
+    }
+    if (typeof destinationJaScrollState !== "undefined") {
+        states.push({ state: destinationJaScrollState, kind: 1, lang: 0, category: "destination", langName: "ja" });
+    }
+    if (typeof destinationEnScrollState !== "undefined") {
+        states.push({ state: destinationEnScrollState, kind: 1, lang: 1, category: "destination", langName: "en" });
+    }
+
+    return states;
 }
 
 function createESP32TypeDestinationScrollBitmap(view, br, gam) {
@@ -773,15 +601,6 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
             : 160;
     const margin = getDisplayMargin(hw, pw);
 
-    let typeWidth = 48;
-    if (typeof config !== "undefined" && config) {
-        if (Number.isFinite(Number(config.typeWidth))) {
-            typeWidth = Number(config.typeWidth);
-        } else if (Number.isFinite(Number(config.typeDestinationBoundary))) {
-            typeWidth = Number(config.typeDestinationBoundary);
-        }
-    }
-
     const descriptors = [];
     const bitmaps = [];
     let totalDataLength = 0;
@@ -804,34 +623,42 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
 
         let bitmap = new Uint8Array(0);
 
-        if (info && info.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
-            const item = getTypeDestinationItem(info.category);
-            const view = getTypeDestinationView(item, info.category, info.langName);
+        if (info && info.state && info.state.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
+            let item = null;
+            if (typeof getItem === "function") {
+                if (info.category === "type" && typeof typeId !== "undefined" && typeId !== null) {
+                    item = getItem("type", typeId);
+                } else if (info.category === "destination") {
+                    // 行先（destinationId）または停車駅案内（informationId）から取得
+                    if (typeof destinationId !== "undefined" && destinationId !== null) {
+                        item = getItem("destination", destinationId);
+                    }
+                    if (!item && typeof informationId !== "undefined" && informationId !== null) {
+                        item = getItem("information", informationId);
+                    }
+                }
+            }
+
+            // viewの参照を拡張（normal[lang], [lang], full[lang] の各パターンに対応）
+            let view = item?.view?.normal?.[info.langName] || item?.view?.[info.langName] || item?.view?.full?.[info.langName];
+            if (!view && item?.view) {
+                view = item.view.normal?.ja || item.view.ja;
+            }
+
             const created = createESP32TypeDestinationScrollBitmap(view, br, gam);
 
-            if (created && created.width > 0 && created.height > 0) {
+            if (created) {
                 descriptor.active = 1;
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                let defaultLeft = 0;
-                let defaultRight = pw;
-
-                if (info.category === "type") {
-                    defaultLeft = 0;
-                    defaultRight = typeWidth;
-                } else if (info.category === "destination") {
-                    defaultLeft = (typeof typeId !== "undefined" && typeId === null) ? 0 : typeWidth;
-                    defaultRight = pw;
-                }
-
-                const rawLeft = Math.min(pw, Math.max(0, defaultLeft));
-                const rawRight = Math.min(pw, Math.max(0, defaultRight));
+                const rawLeft = Math.min(pw, Math.max(0, Math.round(info.state.areaLeft)));
+                const rawRight = Math.min(pw, Math.max(0, Math.round(info.state.areaRight)));
 
                 descriptor.areaLeft = Math.min(hw, Math.max(0, rawLeft + margin));
                 descriptor.areaRight = Math.min(hw, Math.max(0, rawRight + margin));
-                descriptor.areaTop = 0;
-                descriptor.areaBottom = Math.min(32, created.height);
+                descriptor.areaTop = Math.max(0, Math.round(info.state.areaTop));
+                descriptor.areaBottom = Math.max(0, Math.round(info.state.areaBottom));
                 descriptor.dataLength = created.sbuf.length;
                 bitmap = created.sbuf;
             }
@@ -960,10 +787,6 @@ function detectTypeHasEn(typeItem) {
 }
 
 function createESP32Packet() {
-    if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
-        return createESP32MessageBoardPacket();
-    }
-
     if (
         typeof buildSceneList !== "function" ||
         typeof buildTypeSceneList !== "function" ||
@@ -979,7 +802,7 @@ function createESP32Packet() {
     }
 
     const scrollText = getScrollText();
-    const scrollActive = isScrollEnabled() && scrollText.length > 0;
+    const scrollActive = config.hasScroll === true && isScrollEnabled() && scrollText.length > 0;
     const oldScrollId = typeof scrollId !== "undefined" ? scrollId : null;
     const oldNextId = typeof nextId !== "undefined" ? nextId : null;
 
@@ -1127,6 +950,8 @@ function createESP32Packet() {
 
         let xOff = Math.max(0, Math.min(255, areaLeft + margin));
 
+        console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, typeIsFull=${typeIsFull}, hasTypeEn=${hasTypeEn}, 生成コマ数=${sceneCount}`);
+
         const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
 
@@ -1240,7 +1065,7 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) 
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false, is32pxScroll = false) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -1250,11 +1075,8 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     if (isSpecialScrollMode) {
         slideModeVal |= 0x80;
     }
-    if (is32pxScroll) {
-        slideModeVal |= 0x40;
-    }
 
-    const pw = (typeof isMessageBoard !== "undefined" && isMessageBoard) ? (typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192) : ((typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160);
+    const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
     if (hw > pw) {
         const rightMargin = hw - pw;
         if (margin === rightMargin) {
@@ -1271,7 +1093,7 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     for (let i = 0; i < 6; i++) {
         let interval = defaultInterval;
-        if (typeof config !== "undefined" && config && config.setSwitchingTime) {
+        if (config.setSwitchingTime) {
             const jaTime = getNumberValue("jaTime", 3) * 1000;
             const enTime = getNumberValue("enTime", 3) * 1000;
             const infoTime = getNumberValue("infoTime", 3) * 1000;
@@ -1342,7 +1164,7 @@ async function transferToESP32() {
         return;
     }
 
-    if (!isMessageBoard && (typeof config === "undefined" || !config)) {
+    if (typeof config === "undefined" || !config) {
         updateTransferStatus("Bluetooth接続完了！車両を選択してください");
         return;
     }
@@ -1371,18 +1193,16 @@ async function transferToESP32() {
 
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
-        // ESP32のLZ4展開＆画面更新完了を待つ（150msのウェイトを追加）
-        await new Promise((resolve) => setTimeout(resolve, 150));
+        // メイン送信完了後、ESP32がメモリ展開・適用を行うための安定ディレイ(100ms)を追加
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-        if (!isMessageBoard) {
-            const br = getNumberValue("softBrightness", 1.0);
-            const gam = getNumberValue("gammaCorrection", 2.5);
-            const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
+        const br = getNumberValue("softBrightness", 1.0);
+        const gam = getNumberValue("gammaCorrection", 2.5);
+        const rawTypeDestinationPacket = createESP32TypeDestinationScrollPacket(br, gam);
 
-            if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
-                const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
-                await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先・停車駅スクロール(RLE)");
-            }
+        if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
+            const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
+            await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先・停車駅スクロール(RLE)");
         }
 
         const totalElapsed = Math.round(performance.now() - totalStart);
@@ -1413,19 +1233,3 @@ function lcm(a, b) {
     if (b === 0) return a;
     return Math.abs((a / gcd(a, b)) * b);
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    const startMBSBtn = document.getElementById("startMessageBoardScrollBtn");
-    if (startMBSBtn) {
-        startMBSBtn.addEventListener("click", () => {
-            triggerAutoTransfer();
-        });
-    }
-
-    const startSBtn = document.getElementById("startScrollBtn");
-    if (startSBtn) {
-        startSBtn.addEventListener("click", () => {
-            triggerAutoTransfer();
-        });
-    }
-});
