@@ -706,7 +706,8 @@
         "icons": [
             "vehicles/tokyu6000/icons/icon1.png"
         ],
-        "site": "vehicles/tokyu6000/site.json"
+        "site": "vehicles/tokyu6000/site.json",
+        "description": "東急大井町線・東急田園都市線"
     },
     {
         "id": "tokyu9000",
@@ -718,7 +719,8 @@
             "vehicles/tokyu9000/icons/icon2.png",
             "vehicles/tokyu9000/icons/icon3.png"
         ],
-        "site": "vehicles/tokyu9000/site.json"
+        "site": "vehicles/tokyu9000/site.json",
+        "description": "東急大井町線・東急田園都市線"
     },
     {
         "id": "m1000",
@@ -728,7 +730,8 @@
         "icons": [
             "vehicles/m1000/icons/icon1.png"
         ],
-        "site": "vehicles/m1000/site.json"
+        "site": "vehicles/m1000/site.json",
+        "description": "東京メトロ銀座線"
     },
     {
         "id": "metro8000",
@@ -738,7 +741,9 @@
         "icons": [
             "vehicles/metro8000/icons/icon1.png"
         ],
-        "site": "vehicles/metro8000/site.json"
+        "site": "vehicles/metro8000/site.json",
+        "description": "東京メトロ半蔵門線・東急田園都市線・東武伊勢崎線など"
+        
     },
     {
         "id": "m13000first",
