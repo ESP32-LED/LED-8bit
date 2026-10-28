@@ -312,7 +312,7 @@ function getSlideMode() {
 
     if (!isMode2 && !isChoppy) return 0x57;
     if (isMode2 && !isChoppy) return 0x58;
-    if (!isMode2 && !isChoppy) return 0x59;
+    if (!isMode2 && isChoppy) return 0x59;
     if (isMode2 && isChoppy) return 0x5a;
     return 0x56;
 }
@@ -535,7 +535,7 @@ function createESP32MessageBoardPacket() {
         if (typeof drawMessageBoardFrame === "function") drawMessageBoardFrame();
         const imgData = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
 
-        const header = createESP32Header(1, hw, margin, 0, transferScrollSpeed, 0, false, false);
+        const header = createESP32Header(1, hw, margin, 0, transferScrollSpeed, 0, false);
         const frameData = imagePixelsToESP32Frame(imgData, MB_WIDTH, MB_HEIGHT, hw, br, gam);
 
         const packet = new Uint8Array(header.length + frameData.length);
@@ -589,7 +589,7 @@ function createESP32MessageBoardPacket() {
         }
     }
 
-    const header = createESP32Header(1, hw, margin, sw, transferScrollSpeed, 0, false, is32pxScroll);
+    const header = createESP32Header(1, hw, margin, sw, transferScrollSpeed, 0, false);
 
     const packet = new Uint8Array(header.length + sbuf.length + bgFrameData.length);
     packet.set(header, 0);
@@ -956,7 +956,7 @@ function createESP32Packet() {
             const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, Math.max(1, rawScrollCount));
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
-            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true, false);
+            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true);
 
             const sceneSize = 8 * 16 * hw;
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
@@ -1068,7 +1068,7 @@ function createESP32Packet() {
 
         console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, typeIsFull=${typeIsFull}, hasTypeEn=${hasTypeEn}, 生成コマ数=${sceneCount}`);
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false, false);
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -1181,7 +1181,7 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) 
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false, is32pxScroll = false) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -1190,9 +1190,6 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     let slideModeVal = getSlideMode();
     if (isSpecialScrollMode) {
         slideModeVal |= 0x80;
-    }
-    if (is32pxScroll) {
-        slideModeVal |= 0x40;
     }
 
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
