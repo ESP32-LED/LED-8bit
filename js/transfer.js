@@ -310,7 +310,7 @@ function getSlideMode() {
 
     if (!isMode2 && !isChoppy) return 0x57;
     if (isMode2 && !isChoppy) return 0x58;
-    if (!isMode2 && !isChoppy) return 0x59;
+    if (!isMode2 && isChoppy) return 0x59;
     if (isMode2 && isChoppy) return 0x5a;
     return 0x56;
 }
@@ -661,16 +661,36 @@ function createESP32MessageBoardPacket() {
     return packet;
 }
 
-// 直感的なフラグ判定ロジックに修復
+// view（normal/full）および言語に応じたビットマップデータを安全に抽出
+function getTypeDestinationView(item, category, langName) {
+    if (!item || !item.view) return null;
+
+    let viewKey = "normal";
+    if (category === "type" && typeof isTypeFullScreen === "function" && isTypeFullScreen(item)) {
+        viewKey = "full";
+    } else if (category === "destination" && typeof isDestinationFullScreen === "function" && isDestinationFullScreen(item)) {
+        viewKey = "full";
+    } else if (item.view.full && !item.view.normal) {
+        viewKey = "full";
+    }
+
+    let targetView = item.view[viewKey]?.[langName];
+    if (!targetView) {
+        targetView = item.view[viewKey]?.ja || item.view[langName] || item.view.ja;
+    }
+
+    return targetView;
+}
+
 function getESP32TypeDestinationScrollStates() {
-    const isTypeActive = typeof typeScroll !== "undefined" ? !!typeScroll : false;
-    const isDestActive = typeof destinationScroll !== "undefined" ? !!destinationScroll : false;
+    const hasType = typeof config !== "undefined" && config ? config.hasType !== false : true;
+    const hasDest = typeof config !== "undefined" && config ? config.hasDestination !== false : true;
 
     return [
-        { kind: 0, lang: 0, category: "type", langName: "ja", active: isTypeActive },
-        { kind: 0, lang: 1, category: "type", langName: "en", active: isTypeActive },
-        { kind: 1, lang: 0, category: "destination", langName: "ja", active: isDestActive },
-        { kind: 1, lang: 1, category: "destination", langName: "en", active: isDestActive }
+        { kind: 0, lang: 0, category: "type", langName: "ja", active: hasType },
+        { kind: 0, lang: 1, category: "type", langName: "en", active: hasType },
+        { kind: 1, lang: 0, category: "destination", langName: "ja", active: hasDest },
+        { kind: 1, lang: 1, category: "destination", langName: "en", active: hasDest }
     ];
 }
 
@@ -728,6 +748,15 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
             : 160;
     const margin = getDisplayMargin(hw, pw);
 
+    let typeWidth = 48;
+    if (typeof config !== "undefined" && config) {
+        if (Number.isFinite(Number(config.typeWidth))) {
+            typeWidth = Number(config.typeWidth);
+        } else if (Number.isFinite(Number(config.typeDestinationBoundary))) {
+            typeWidth = Number(config.typeDestinationBoundary);
+        }
+    }
+
     const descriptors = [];
     const bitmaps = [];
     let totalDataLength = 0;
@@ -760,17 +789,24 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 }
             }
 
-            const view = item?.view?.normal?.[info.langName];
+            const view = getTypeDestinationView(item, info.category, info.langName);
             const created = createESP32TypeDestinationScrollBitmap(view, br, gam);
 
-            if (created) {
+            if (created && created.width > 0 && created.height > 0) {
                 descriptor.active = 1;
                 descriptor.width = created.width;
                 descriptor.height = created.height;
 
-                // 種別・行先のデフォルト表示エリア枠を計算
-                let defaultLeft = info.category === "type" ? 0 : 48;
-                let defaultRight = info.category === "type" ? 48 : pw;
+                let defaultLeft = 0;
+                let defaultRight = pw;
+
+                if (info.category === "type") {
+                    defaultLeft = 0;
+                    defaultRight = typeWidth;
+                } else if (info.category === "destination") {
+                    defaultLeft = (typeof typeId !== "undefined" && typeId === null) ? 0 : typeWidth;
+                    defaultRight = pw;
+                }
 
                 const rawLeft = Math.min(pw, Math.max(0, defaultLeft));
                 const rawRight = Math.min(pw, Math.max(0, defaultRight));
@@ -778,7 +814,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
                 descriptor.areaLeft = Math.min(hw, Math.max(0, rawLeft + margin));
                 descriptor.areaRight = Math.min(hw, Math.max(0, rawRight + margin));
                 descriptor.areaTop = 0;
-                descriptor.areaBottom = 16;
+                descriptor.areaBottom = Math.min(32, created.height);
                 descriptor.dataLength = created.sbuf.length;
                 bitmap = created.sbuf;
             }
