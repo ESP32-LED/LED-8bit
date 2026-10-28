@@ -1032,6 +1032,10 @@ button.tap {
     display: none;
 }
 
+.timeSetting span {
+    font-size: 24px;
+}
+
 .numberInput {
     display: flex;
     align-items: center;
