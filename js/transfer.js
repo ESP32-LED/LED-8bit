@@ -26,17 +26,19 @@ const transferTypeDestinationScrollSpeed = 14;
 function getDisplayMargin(hw, pw) {
     if (hw <= pw) return 0;
     
+    // 「位置」トグルスイッチ（OFF: 中央 / ON: 右）
     const alignToggle = document.getElementById("displayAlignToggle");
     if (alignToggle) {
         return alignToggle.checked ? (hw - pw) : Math.floor((hw - pw) / 2);
     }
     
+    // 互換性フォールバック（旧スライダー）
     const alignInput = document.getElementById("displayAlign");
     const alignVal = alignInput ? alignInput.value : "1";
     if (alignVal === "0") {
-        return Math.floor((hw - pw) / 2);
+        return Math.floor((hw - pw) / 2); // 中央寄せ
     }
-    return hw - pw;
+    return hw - pw; // 右寄せ
 }
 
 function compressLZ4(input) {
@@ -310,7 +312,7 @@ function getSlideMode() {
 
     if (!isMode2 && !isChoppy) return 0x57;
     if (isMode2 && !isChoppy) return 0x58;
-    if (!isMode2 && isChoppy) return 0x59;
+    if (!isMode2 && !isChoppy) return 0x59;
     if (isMode2 && isChoppy) return 0x5a;
     return 0x56;
 }
@@ -465,7 +467,6 @@ function getScrollText() {
     return "";
 }
 
-/* ★スクロール有効判定の修正：UI上のscrollCheckがオン、またはclickStartScrollBtnがtrueの場合に有効とする */
 function isScrollEnabled() {
     const scrollCheck = document.getElementById("scrollCheck");
     if (scrollCheck && scrollCheck.checked) return true;
@@ -522,6 +523,10 @@ function createESP32MessageBoardPacket() {
     const margin = 0;
     const br = getNumberValue("softBrightness", 1.0);
     const gam = getNumberValue("gammaCorrection", 2.5);
+
+    const timeCheck = document.getElementById("timeCheck");
+    const messageBoardScrollCheck = document.getElementById("messageBoardScrollCheck");
+    const messageBoardScrollText = document.getElementById("messageBoardScrollText");
 
     const hasClock = !!timeCheck?.checked;
     const hasScroll = !!messageBoardScrollCheck?.checked && !!messageBoardScrollText?.value.trim();
@@ -1352,3 +1357,20 @@ function lcm(a, b) {
     if (b === 0) return a;
     return Math.abs((a / gcd(a, b)) * b);
 }
+
+/* ===== 伝言板（MessageBoard）時刻変化時の自動再転送監視 ===== */
+let lastTransferredMBTime = "";
+
+setInterval(() => {
+    if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+        const timeCheck = document.getElementById("timeCheck");
+        if (timeCheck && timeCheck.checked) {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+            if (currentTime !== lastTransferredMBTime) {
+                lastTransferredMBTime = currentTime;
+                triggerAutoTransfer();
+            }
+        }
+    }
+}, 1000);
