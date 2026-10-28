@@ -132,9 +132,7 @@ async function selectVehicle(vehicle) {
             if (typeof triggerAutoTransfer === "function") {
                 triggerAutoTransfer();
             }
-            const displayLog = document.getElementById("displayLog") {
-                displayLog.hidden = true;
-            }
+            document.getElementById("displayLog").hidden = true;
         } finally {
             delete simulator.dataset.loadingVehicle;
         }
