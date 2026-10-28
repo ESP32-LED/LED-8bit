@@ -397,7 +397,8 @@ async function startVehicle() {
                         const randomIndexGroups = Math.floor(Math.random() * information2Category.groups.length);
                         const groups = information2Category.groups[randomIndexGroups];
                         const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                        information2Id = groups.items[randomIndexItems].id;
+                        information2Id = groups.items[randomIndex2Category.items.length];
+                        information2Id = information2Category.items[randomIndex].id;
                     } else {
                         const randomIndex = Math.floor(Math.random() * information2Category.items.length);
                         information2Id = information2Category.items[randomIndex].id;
@@ -1936,7 +1937,8 @@ function createMessageBoardScrollCanvas() {
     out.clearRect(0, 0, mbScrollCanvas.width, mbScrollCanvas.height);
 
     const pixels = ctx.getImageData(0, 0, textWidth, MB_HEIGHT).data;
-    out.fillStyle = "rgb(255, 242, 0)";
+    // メッセージボードのWEBプレビュー描画色を白色(255, 255, 255)に変更
+    out.fillStyle = "rgb(255, 255, 255)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < textWidth; x++) {
