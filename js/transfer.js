@@ -343,7 +343,6 @@ function getAgedColor(x, y, color) {
     return applyLEDAging(safeX, safeY, color);
 }
 
-/* UI操作・入力監視イベント（メッセージボード用UI要素も追加） */
 document.addEventListener("click", (e) => {
     if (!e.target) return;
     if (
@@ -484,7 +483,6 @@ function getScrollColor() {
     };
 }
 
-/* 2D CanvasのRGBAピクセルデータをESP32用フレーム構造(8ビットプレーン×16行×HW列)に変換 */
 function imagePixelsToESP32Frame(imgData, width, height, hw, br, gam) {
     const frame = Array.from({ length: 8 }, () => Array.from({ length: 16 }, () => new Uint8Array(hw)));
 
@@ -516,7 +514,6 @@ function imagePixelsToESP32Frame(imgData, width, height, hw, br, gam) {
     return frameToUint8Array(frame, hw);
 }
 
-/* 電光掲示板（Message Board）モード専用パケット生成関数 */
 function createESP32MessageBoardPacket() {
     const hw = typeof MB_WIDTH !== "undefined" ? MB_WIDTH : 192;
     const margin = 0;
@@ -531,7 +528,7 @@ function createESP32MessageBoardPacket() {
         if (typeof drawMessageBoardFrame === "function") drawMessageBoardFrame();
         const imgData = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
 
-        const header = createESP32Header(1, hw, margin, 0, transferScrollSpeed, 0, false);
+        const header = createESP32Header(1, hw, margin, 0, transferScrollSpeed, 0, false, false);
         const frameData = imagePixelsToESP32Frame(imgData, MB_WIDTH, MB_HEIGHT, hw, br, gam);
 
         const packet = new Uint8Array(header.length + frameData.length);
@@ -540,7 +537,7 @@ function createESP32MessageBoardPacket() {
         return packet;
     }
 
-    /* 2. スクロールあり（時刻＋スクロール または スクロールのみ） */
+    /* 2. スクロールあり */
     mbTextContext.clearRect(0, 0, MB_WIDTH, MB_HEIGHT);
     if (hasClock) {
         if (typeof drawMessageBoardClockSmall === "function") drawMessageBoardClockSmall();
@@ -557,8 +554,11 @@ function createESP32MessageBoardPacket() {
     const sh = MB_HEIGHT;
     const scrollImgData = scrollSrcCtx.getImageData(0, 0, sw, sh).data;
 
-    const srcYStart = hasClock ? 16 : 4;
-    const sbufHeight = 16;
+    /* 時刻なし（スクロールのみ）の場合は 32px高さ（全高）のスクロールバッファを作成 */
+    const is32pxScroll = !hasClock;
+    const sbufHeight = is32pxScroll ? 32 : 16;
+    const srcYStart = is32pxScroll ? 0 : 16;
+
     const sbuf = new Uint8Array(sw * sbufHeight * 2);
     let sp = 0;
 
@@ -584,7 +584,7 @@ function createESP32MessageBoardPacket() {
         }
     }
 
-    const header = createESP32Header(1, hw, margin, sw, transferScrollSpeed, 0, false);
+    const header = createESP32Header(1, hw, margin, sw, transferScrollSpeed, 0, false, is32pxScroll);
 
     const packet = new Uint8Array(header.length + sbuf.length + bgFrameData.length);
     packet.set(header, 0);
@@ -951,7 +951,7 @@ function createESP32Packet() {
             const scrollSceneCount = Math.min(ESP32_MAX_SCENES - 1, Math.max(1, rawScrollCount));
             const totalSceneCount = Math.min(ESP32_MAX_SCENES, scrollSceneCount + 1);
 
-            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true);
+            const header = createESP32Header(totalSceneCount, hw, margin, scrollData.tw, transferSpecialScrollSpeed, xOff, true, false);
 
             const sceneSize = 8 * 16 * hw;
             const allSceneData = new Uint8Array(totalSceneCount * sceneSize);
@@ -1063,7 +1063,7 @@ function createESP32Packet() {
 
         console.log(`[ESP32転送解析] sCount=${sCount}, tCount=${tCount}, typeIsFull=${typeIsFull}, hasTypeEn=${hasTypeEn}, 生成コマ数=${sceneCount}`);
 
-        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false);
+        const header = createESP32Header(sceneCount, hw, margin, scrollData.tw, transferScrollSpeed, xOff, false, false);
         const sceneData = createAllESP32Scenes(sceneCount, hw, margin, hasTypeEn || hasDestEn);
 
         const packet = new Uint8Array(header.length + scrollData.sbuf.length + sceneData.length);
@@ -1176,7 +1176,7 @@ function createAllESP32Scenes(sceneCount, hw, margin, enableLangToggle = false) 
     return allData;
 }
 
-function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false) {
+function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSpeed, xOff, isSpecialScrollMode = false, is32pxScroll = false) {
     const header = new Uint8Array(ESP32_HEADER_SIZE);
     const defaultInterval = (typeof config !== "undefined" && config && config.sceneInterval) ? config.sceneInterval : 3000;
 
@@ -1185,6 +1185,9 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     let slideModeVal = getSlideMode();
     if (isSpecialScrollMode) {
         slideModeVal |= 0x80;
+    }
+    if (is32pxScroll) {
+        slideModeVal |= 0x40; // 32px高さスクロール表示フラグ
     }
 
     const pw = (typeof config !== "undefined" && config && Number.isFinite(Number(config.ledWidth))) ? Number(config.ledWidth) : 160;
@@ -1290,7 +1293,6 @@ async function transferToESP32() {
         const prepStart = performance.now();
         let rawPacket = null;
 
-        /* 電光掲示板（メッセージボード）モードかどうかの自動切り替え */
         if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
             rawPacket = createESP32MessageBoardPacket();
         } else {
@@ -1311,7 +1313,6 @@ async function transferToESP32() {
 
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
-        /* 車両モード時のみ種別・行先スクロールの追加送信を実施 */
         if (typeof isMessageBoard === "undefined" || !isMessageBoard) {
             const br = getNumberValue("softBrightness", 1.0);
             const gam = getNumberValue("gammaCorrection", 2.5);
