@@ -661,25 +661,50 @@ function createESP32MessageBoardPacket() {
     return packet;
 }
 
-// view（normal/full）および言語に応じたビットマップデータを安全に抽出
+// 案内・停車駅（information）と行先（destination）を包括的に取得
+function getTypeDestinationItem(category) {
+    if (typeof getItem !== "function") return null;
+
+    if (category === "type") {
+        if (typeof typeId !== "undefined" && typeId !== null) {
+            return getItem("type", typeId);
+        }
+    } else if (category === "destination") {
+        if (typeof informationId !== "undefined" && informationId !== null) {
+            const infoItem = getItem("information", informationId);
+            if (infoItem && infoItem.view) return infoItem;
+        }
+        if (typeof destinationId !== "undefined" && destinationId !== null) {
+            return getItem("destination", destinationId);
+        }
+    }
+    return null;
+}
+
+// view（normal/full/small1等）を柔軟・安全に抽出
 function getTypeDestinationView(item, category, langName) {
     if (!item || !item.view) return null;
 
-    let viewKey = "normal";
+    const viewsToTry = [];
     if (category === "type" && typeof isTypeFullScreen === "function" && isTypeFullScreen(item)) {
-        viewKey = "full";
+        viewsToTry.push("full", "normal");
     } else if (category === "destination" && typeof isDestinationFullScreen === "function" && isDestinationFullScreen(item)) {
-        viewKey = "full";
-    } else if (item.view.full && !item.view.normal) {
-        viewKey = "full";
+        viewsToTry.push("full", "normal");
+    } else {
+        viewsToTry.push("normal", "full", "small1", "small2");
     }
 
-    let targetView = item.view[viewKey]?.[langName];
-    if (!targetView) {
-        targetView = item.view[viewKey]?.ja || item.view[langName] || item.view.ja;
+    for (const vKey of viewsToTry) {
+        if (item.view[vKey]) {
+            const target = item.view[vKey][langName] || item.view[vKey]["ja"] || item.view[vKey];
+            if (target && target.data) return target;
+        }
     }
 
-    return targetView;
+    if (item.view[langName] && item.view[langName].data) return item.view[langName];
+    if (item.view.ja && item.view.ja.data) return item.view.ja;
+
+    return null;
 }
 
 function getESP32TypeDestinationScrollStates() {
@@ -705,7 +730,7 @@ function createESP32TypeDestinationScrollBitmap(view, br, gam) {
     if (width <= 0 || height <= 0) return null;
 
     if (width > ESP32_MAX_SCROLL_WIDTH) {
-        throw new Error(`種別・行先スクロール幅が長すぎます（最大${ESP32_MAX_SCROLL_WIDTH}px）`);
+        throw new Error(`種別・行先・停車駅スクロール幅が長すぎます（最大${ESP32_MAX_SCROLL_WIDTH}px）`);
     }
 
     const data = view.data;
@@ -780,15 +805,7 @@ function createESP32TypeDestinationScrollPacket(br, gam) {
         let bitmap = new Uint8Array(0);
 
         if (info && info.active && isTypeDestinationScrollCategoryEnabled(info.category)) {
-            let item = null;
-            if (typeof getItem === "function") {
-                if (info.category === "type" && typeof typeId !== "undefined" && typeId !== null) {
-                    item = getItem("type", typeId);
-                } else if (info.category === "destination" && typeof destinationId !== "undefined" && destinationId !== null) {
-                    item = getItem("destination", destinationId);
-                }
-            }
-
+            const item = getTypeDestinationItem(info.category);
             const view = getTypeDestinationView(item, info.category, info.langName);
             const created = createESP32TypeDestinationScrollBitmap(view, br, gam);
 
@@ -1354,6 +1371,9 @@ async function transferToESP32() {
 
         await sendChunkedData(bleRxCharacteristic, lz4Packet, "メイン表示(LZ4)");
 
+        // ESP32のLZ4展開＆画面更新完了を待つ（150msのウェイトを追加）
+        await new Promise((resolve) => setTimeout(resolve, 150));
+
         if (!isMessageBoard) {
             const br = getNumberValue("softBrightness", 1.0);
             const gam = getNumberValue("gammaCorrection", 2.5);
@@ -1361,7 +1381,7 @@ async function transferToESP32() {
 
             if (rawTypeDestinationPacket && rawTypeDestinationPacket.length > 0) {
                 const rleTypeDestPacket = compressTypeDestRLE(rawTypeDestinationPacket);
-                await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先スクロール(RLE)");
+                await sendChunkedData(bleRxCharacteristic, rleTypeDestPacket, "種別・行先・停車駅スクロール(RLE)");
             }
         }
 
