@@ -357,7 +357,7 @@ function createCarNumberButtons() {
     } else {
         container.classList.add("normalButtons");
     }
-    if (selectVehicle.id !== "keio1000") {
+    if (selectVehicle.id != "keio1000") {
         normalBtn.textContent = "号車なし";
     } else {
         normalBtn.textContent = "案内3なし";
@@ -370,7 +370,7 @@ function createCarNumberButtons() {
         carNumberId = null;
         clickTypeBtn = false;
         const carNumberLabel = document.getElementById("carNumber");
-        if (selectVehicle.id !== "keio1000") {
+        if (selectVehicle.id != "keio1000") {
             carNumberLabel.textContent = "号車:なし";
         } else {
             carNumberLabel.textContent = "案内3:なし";
@@ -405,7 +405,7 @@ function createCarNumberButtons() {
                         clickTypeBtn = false;
                         const carNumberLabel = document.getElementById("carNumber");
                         const carNumberName = getName("carNumber", carNumberId)
-                        if (selectVehicle.id !== "keio1000") {
+                        if (selectVehicle.id != "keio1000") {
                             carNumberLabel.textContent = "号車:" + carNumberName;
                         } else {
                             carNumberLabel.textContent = "案内3:" + carNumberName;
@@ -453,7 +453,7 @@ function createCarNumberButtons() {
                     clickTypeBtn = false;
                     const carNumberLabel = document.getElementById("carNumber");
                     const carNumberName = getName("carNumber", carNumberId)
-                    if (selectVehicle.id !== "keio1000") {
+                    if (selectVehicle.id != "keio1000") {
                         carNumberLabel.textContent = "号車:" + carNumberName;
                     } else {
                         carNumberLabel.textContent = "案内3:" + carNumberName;
@@ -489,7 +489,7 @@ function createCarNumberButtons() {
                 clickTypeBtn = false;
                 const carNumberLabel = document.getElementById("carNumber");
                 const carNumberName = getName("carNumber", carNumberId)
-                if (selectVehicle.id !== "keio1000") {
+                if (selectVehicle.id != "keio1000") {
                     carNumberLabel.textContent = "号車:" + carNumberName;
                 } else {
                     carNumberLabel.textContent = "案内3:" + carNumberName;
