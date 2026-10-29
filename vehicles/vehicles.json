@@ -849,7 +849,8 @@
         "icons": [
             "vehicles/odakyu4000/icons/icon1.png"
         ],
-        "site": "vehicles/odakyu4000/site.json"
+        "site": "vehicles/odakyu4000/site.json",
+        "description": "小田急小田原線・小田急多摩線・東京メトロ千代田線など"
     },
     {
         "id": "so9000",
@@ -862,7 +863,8 @@
             "vehicles/so9000/icons/icon3.png",
             "vehicles/so9000/icons/icon4.png"
         ],
-        "site": "vehicles/so9000/site.json"
+        "site": "vehicles/so9000/site.json",
+        "description": "相模鉄道の各線"
     },
     {
         "id": "so12000",
@@ -872,7 +874,8 @@
         "icons": [
             "vehicles/so12000/icons/icon1.png"
         ],
-        "site": "vehicles/so12000/site.json"
+        "site": "vehicles/so12000/site.json",
+        "description": "相模鉄道の各線・埼京線"
     },
     {
         "id": "toei10_300_3color",
@@ -882,7 +885,8 @@
         "icons": [
             "vehicles/toei10_300_3color/icons/icon1.png"
         ],
-        "site": "vehicles/toei10_300_3color/site.json"
+        "site": "vehicles/toei10_300_3color/site.json",
+        "description": "都営新宿線・京王電鉄の各線"
     },
     {
         "id": "6500",
@@ -892,7 +896,8 @@
         "icons": [
             "vehicles/6500/icons/icon1.png"
         ],
-        "site": "vehicles/6500/site.json"
+        "site": "vehicles/6500/site.json",
+        "description": "都営三田線・東急目黒線・東急新横浜線"
     },
     {
         "id": "tx1000・2000",
@@ -904,7 +909,8 @@
             "vehicles/tx1000・2000/icons/icon2.png",
             "vehicles/tx1000・2000/icons/icon3.png"
         ],
-        "site": "vehicles/tx1000・2000/site.json"
+        "site": "vehicles/tx1000・2000/site.json",
+        "description": "つくばエクスプレス線"
     },
     {
         "id": "tx3000",
@@ -914,7 +920,8 @@
         "icons": [
             "vehicles/tx3000/icons/icon1.png"
         ],
-        "site": "vehicles/tx3000/site.json"
+        "site": "vehicles/tx3000/site.json",
+        "description": "つくばエクスプレス線"
     },
     {
         "id": "sr1",
@@ -926,6 +933,7 @@
             "vehicles/sr1/icons/icon2.png"
         ],
         "site": "vehicles/sr1/site.json",
+        "description": "しなの鉄道線、信越本線（篠ノ井～長野）など",
         "font": "fonts/font_E233.json"
     },
     {
