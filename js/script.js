@@ -2653,6 +2653,8 @@ function drawMessageBoardClockSmall() {
 function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
+    // 時計なしのスクロール文字は20ドット相当で描画する。
+    // 時計ありは上段16ドットの領域に合わせて従来どおり16px。
     const fontSize = hasClock ? 16 : 20;
     const top = hasClock ? 16 : 6;
     const height = hasClock ? 16 : 20;
