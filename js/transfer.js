@@ -262,7 +262,11 @@ async function connectBluetooth() {
         updateBluetoothUIButtonState(true);
 
         setTimeout(() => {
-            transferToESP32();
+            if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+                requestMessageBoardTransfer(true);
+            } else {
+                transferToESP32();
+            }
         }, 200);
 
         return true;
@@ -275,6 +279,11 @@ async function connectBluetooth() {
 }
 
 function triggerAutoTransfer() {
+    // 電光掲示板モードのデータは専用パケットで転送する。
+    if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+        return;
+    }
+
     if (autoTransferTimeout) {
         clearTimeout(autoTransferTimeout);
     }
@@ -1152,6 +1161,234 @@ async function sendChunkedData(characteristic, uint8Array, label, chunkSize = 49
     console.log(`[BLE送信ログ] ${label}: ${total}バイト (${packetCount}パケット) -> 送信時間: ${elapsed}ms`);
 }
 
+// ===== 電光掲示板専用転送 =====
+// script 側の192×32ドット描画を、既存のESP32メインフレーム形式へ変換する。
+let pendingMessageBoardTransfer = null;
+
+function isMessageBoardTransferMode() {
+    return typeof isMessageBoard !== "undefined" && isMessageBoard;
+}
+
+function createESP32MessageBoardFramePacket(preserveMessageBoardScroll = false) {
+    if (typeof MB_WIDTH === "undefined" || typeof MB_HEIGHT === "undefined" ||
+        typeof mbTextContext === "undefined" || !mbTextContext) {
+        throw new Error("電光掲示板の描画データがまだ準備できていません");
+    }
+
+    const width = Number(MB_WIDTH);
+    const height = Number(MB_HEIGHT);
+    if (width < ESP32_MIN_WIDTH || width > ESP32_MAX_WIDTH || height !== 32) {
+        throw new Error(`電光掲示板のサイズが未対応です: ${width}×${height}`);
+    }
+
+    const rgba = mbTextContext.getImageData(0, 0, width, height).data;
+    const frameData = new Uint8Array(8 * 16 * width);
+
+    // ESP32の既存フォーマットに合わせ、RGBの8bit-planeへ変換する。
+    for (let y = 0; y < 32; y++) {
+        for (let x = 0; x < width; x++) {
+            const p = (y * width + x) * 4;
+            if (rgba[p + 3] < 128) continue;
+
+            const r = rgba[p];
+            const g = rgba[p + 1];
+            const b = rgba[p + 2];
+
+            for (let bit = 0; bit < 8; bit++) {
+                const offset = (bit * 16 + (y % 16)) * width + x;
+                if ((r >> bit) & 1) frameData[offset] |= y < 16 ? 0x01 : 0x08;
+                if ((g >> bit) & 1) frameData[offset] |= y < 16 ? 0x02 : 0x10;
+                if ((b >> bit) & 1) frameData[offset] |= y < 16 ? 0x04 : 0x20;
+            }
+        }
+    }
+
+    const header = new Uint8Array(ESP32_HEADER_SIZE);
+    header[0] = 0xaa;
+    header[1] = 0x56; // 縦スライドなし
+    header[2] = 1;    // 静止画1シーン
+    header[3] = transferScrollSpeed;
+    header[4] = 0;    // 通常スクロールは使わず、TSCRスクロールを使う
+    header[5] = 0;
+    header[6] = 0;
+
+    // 1シーンのままにしておく。最大値に近い間隔なので自動切替は実質発生しない。
+    for (let i = 0; i < 6; i++) {
+        header[7 + i * 2] = 0xff;
+        header[8 + i * 2] = 0xff;
+    }
+    // 時刻だけを更新する時は、使われない第6シーンの間隔欄に「MB」識別子を入れる。
+    // ESP32側はこの印がある場合、稼働中のスクロール位置を保持する。
+    if (preserveMessageBoardScroll) {
+        header[17] = 0x4d; // M
+        header[18] = 0x42; // B
+    }
+
+    header[19] = Math.max(0, Math.min(255, Math.round(getNumberValue("hwBrightness", 20))));
+    header[20] = width & 0xff;
+    header[21] = (width >> 8) & 0xff;
+
+    const packet = new Uint8Array(header.length + frameData.length);
+    packet.set(header, 0);
+    packet.set(frameData, header.length);
+    return packet;
+}
+
+function createESP32MessageBoardScrollPacket() {
+    const magic = ESP32_TYPE_DESTINATION_SCROLL_MAGIC;
+    const version = ESP32_TYPE_DESTINATION_SCROLL_VERSION;
+    const count = ESP32_TYPE_DESTINATION_SCROLL_COUNT;
+    const active = !!(
+        typeof mbScrollActive !== "undefined" && mbScrollActive &&
+        typeof messageBoardScrollCheck !== "undefined" && messageBoardScrollCheck?.checked &&
+        typeof mbScrollSourceCanvas !== "undefined" && mbScrollSourceCanvas
+    );
+
+    let bitmap = new Uint8Array(0);
+    let scrollWidth = 0;
+    let scrollHeight = 0;
+    let areaTop = 0;
+    let areaBottom = 0;
+
+    if (active) {
+        const hasClock = typeof timeCheck !== "undefined" && !!timeCheck?.checked;
+        areaTop = hasClock ? 16 : 4;
+        areaBottom = hasClock ? 32 : 28;
+        scrollHeight = areaBottom - areaTop;
+        scrollWidth = Number(mbScrollSourceCanvas.width);
+
+        if (!Number.isFinite(scrollWidth) || scrollWidth <= 0 || scrollWidth > ESP32_MAX_SCROLL_WIDTH) {
+            throw new Error(`電光掲示板のスクロール幅が未対応です: ${scrollWidth}px`);
+        }
+
+        const ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
+        const rgba = ctx.getImageData(0, areaTop, scrollWidth, scrollHeight).data;
+        bitmap = new Uint8Array(scrollWidth * scrollHeight * 2);
+        let offset = 0;
+
+        // スクロールは常に白色。アンチエイリアスの濃淡はLEDの点灯/消灯に二値化する。
+        for (let x = 0; x < scrollWidth; x++) {
+            for (let y = 0; y < scrollHeight; y++) {
+                const p = (y * scrollWidth + x) * 4;
+                const rgb565 = rgba[p + 3] >= 128 ? 0xffff : 0x0000;
+                bitmap[offset++] = rgb565 & 0xff;
+                bitmap[offset++] = (rgb565 >> 8) & 0xff;
+            }
+        }
+    }
+
+    const headerLength = ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE +
+        count * ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE;
+    const packet = new Uint8Array(headerLength + bitmap.length);
+    let offset = 0;
+
+    packet.set(magic, offset);
+    offset += 4;
+    packet[offset++] = version;
+    packet[offset++] = count;
+    packet[offset++] = transferTypeDestinationScrollSpeed & 0xff;
+    packet[offset++] = 0;
+
+    for (let i = 0; i < count; i++) {
+        const useScroll = active && i === 0;
+        packet[offset++] = useScroll ? 1 : 0; // active
+        packet[offset++] = 2;                 // kind: message-board scroll
+        packet[offset++] = 0;                 // language
+        const w = useScroll ? scrollWidth : 0;
+        packet[offset++] = w & 0xff;
+        packet[offset++] = (w >> 8) & 0xff;
+        packet[offset++] = useScroll ? scrollHeight : 0;
+        const left = useScroll ? 0 : 0;
+        const right = useScroll ? Number(MB_WIDTH) : 0;
+        packet[offset++] = left & 0xff;
+        packet[offset++] = (left >> 8) & 0xff;
+        packet[offset++] = right & 0xff;
+        packet[offset++] = (right >> 8) & 0xff;
+        packet[offset++] = useScroll ? areaTop : 0;
+        packet[offset++] = useScroll ? areaBottom : 0;
+        const dataLength = useScroll ? bitmap.length : 0;
+        packet[offset++] = dataLength & 0xff;
+        packet[offset++] = (dataLength >> 8) & 0xff;
+        packet[offset++] = (dataLength >> 16) & 0xff;
+        packet[offset++] = (dataLength >> 24) & 0xff;
+    }
+
+    if (bitmap.length) packet.set(bitmap, headerLength);
+    return packet;
+}
+
+function requestMessageBoardTransfer(includeScroll = true) {
+    if (!isMessageBoardTransferMode()) return;
+
+    if (isBleTransferring) {
+        // スクロール設定を含む転送要求を優先してキューに残す。
+        pendingMessageBoardTransfer = pendingMessageBoardTransfer === null
+            ? !!includeScroll
+            : (pendingMessageBoardTransfer || !!includeScroll);
+        return;
+    }
+
+    void transferMessageBoardToESP32(includeScroll);
+}
+
+function flushPendingMessageBoardTransfer() {
+    if (isBleTransferring || pendingMessageBoardTransfer === null) return;
+    const includeScroll = pendingMessageBoardTransfer;
+    pendingMessageBoardTransfer = null;
+    setTimeout(() => transferMessageBoardToESP32(includeScroll), 30);
+}
+
+async function transferMessageBoardToESP32(includeScroll = true) {
+    if (!isMessageBoardTransferMode()) return;
+
+    if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt?.connected) {
+        updateTransferStatus("電光掲示板の転送待ち：先にBluetooth接続してください");
+        return;
+    }
+
+    if (isBleTransferring) {
+        pendingMessageBoardTransfer = pendingMessageBoardTransfer === null
+            ? !!includeScroll
+            : (pendingMessageBoardTransfer || !!includeScroll);
+        return;
+    }
+
+    isBleTransferring = true;
+    try {
+        if (typeof mbClockFontsReady !== "undefined") {
+            await mbClockFontsReady;
+        }
+        if (typeof drawMessageBoardFrame === "function") {
+            drawMessageBoardFrame();
+        }
+
+        updateTransferStatus("電光掲示板データ作成中...");
+        const rawFramePacket = createESP32MessageBoardFramePacket(!includeScroll);
+        await sendChunkedData(
+            bleRxCharacteristic,
+            compressLZ4(rawFramePacket),
+            "電光掲示板表示(LZ4)"
+        );
+
+        if (includeScroll) {
+            const rawScrollPacket = createESP32MessageBoardScrollPacket();
+            await sendChunkedData(
+                bleRxCharacteristic,
+                compressTypeDestRLE(rawScrollPacket),
+                "電光掲示板スクロール(RLE)"
+            );
+        }
+
+        updateTransferStatus("電光掲示板を転送しました");
+    } catch (error) {
+        console.error("電光掲示板転送エラー:", error);
+        updateTransferStatus("電光掲示板転送失敗: " + (error?.message || error));
+    } finally {
+        isBleTransferring = false;
+        flushPendingMessageBoardTransfer();
+    }
+}
+
 async function transferToESP32() {
     if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt.connected) {
         updateTransferStatus("未接続：「Bluetooth接続」ボタンを押してください");
@@ -1205,6 +1442,7 @@ async function transferToESP32() {
         updateTransferStatus("転送失敗: " + (error?.message || error));
     } finally {
         isBleTransferring = false;
+        flushPendingMessageBoardTransfer();
     }
 }
 
