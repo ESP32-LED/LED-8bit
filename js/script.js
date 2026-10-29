@@ -380,13 +380,13 @@ async function startVehicle() {
             const carNumberLabel = document.getElementById("carNumber");
             if (carNumberId != null) {
                 const carNumberName = getName("carNumber", carNumberId);
-                if (selectedvehicle.id != "keio1000") {
+                if (selectedVehicle.id != "keio1000") {
                     carNumberLabel.textContent = "号車:" + carNumberName;
                 } else {
                     carNumberLabel.textContent = "案内3:" + carNumberName;
                 }
             } else {
-                if (selectedvehicle.id != "keio1000") {
+                if (selectedVehicle.id != "keio1000") {
                     carNumberLabel.textContent = "号車:なし";
                 } else {
                     carNumberLabel.textContent = "案内3:なし";
