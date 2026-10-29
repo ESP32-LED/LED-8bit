@@ -1068,6 +1068,9 @@ function createESP32Packet() {
         const scrollData = createESP32ScrollData(br, gam);
 
         let areaLeft = 48;
+        if(selectVehicle.id === "TRC") {
+            areLeft = 30;
+        }
         if (scrollActive && typeIsFull) {
             scrollData.tw = 0;
             scrollData.sbuf = new Uint8Array(0);
