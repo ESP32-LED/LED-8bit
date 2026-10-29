@@ -800,7 +800,7 @@
         "config": "vehicles/keio2000/config.json",
         "led": "vehicles/keio2000/led.json",
         "icons": [
-            "vehicles/keio2000/icons/icon1.png",
+            "vehicles/keio2000/icons/icon1.png"
         ],
         "site": "vehicles/keio2000/site.json",
         "font": "fonts/font_E233.json",
