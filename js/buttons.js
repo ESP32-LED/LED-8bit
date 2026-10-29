@@ -357,7 +357,11 @@ function createCarNumberButtons() {
     } else {
         container.classList.add("normalButtons");
     }
-    normalBtn.textContent = "号車なし";
+    if (selectVehicle.id != "keio1000") {
+        normalBtn.textContent = "号車なし";
+    } else {
+        normalBtn.textContent = "案内3なし";
+    }
     normalBtn.addEventListener ("click", () => {
         setSelected(container, normalBtn);
         if (carNumberId === null) {
@@ -366,7 +370,11 @@ function createCarNumberButtons() {
         carNumberId = null;
         clickTypeBtn = false;
         const carNumberLabel = document.getElementById("carNumber");
-        carNumberLabel.textContent = "号車:なし"
+        if (selectVehicle.id != "keio1000") {
+            carNumberLabel.textContent = "号車:なし";
+        } else {
+            carNumberLabel.textContent = "案内3:なし";
+        }
         frame = 0;
         if (config.setSwitchingTime) {
             setTimeSetting();
@@ -397,7 +405,11 @@ function createCarNumberButtons() {
                         clickTypeBtn = false;
                         const carNumberLabel = document.getElementById("carNumber");
                         const carNumberName = getName("carNumber", carNumberId)
-                        carNumberLabel.textContent = "号車:" + carNumberName
+                        if (selectVehicle.id != "keio1000") {
+                            carNumberLabel.textContent = "号車:" + carNumberName;
+                        } else {
+                            carNumberLabel.textContent = "案内3:" + carNumberName;
+                        }
                         frame = 0;
                         if (config.setSwitchingTime) {
                             setTimeSetting();
@@ -441,7 +453,11 @@ function createCarNumberButtons() {
                     clickTypeBtn = false;
                     const carNumberLabel = document.getElementById("carNumber");
                     const carNumberName = getName("carNumber", carNumberId)
-                    carNumberLabel.textContent = "号車:" + carNumberName
+                    if (selectVehicle.id != "keio1000") {
+                        carNumberLabel.textContent = "号車:" + carNumberName;
+                    } else {
+                        carNumberLabel.textContent = "案内3:" + carNumberName;
+                    }
                     frame = 0;
                     if (config.setSwitchingTime) {
                         setTimeSetting();
@@ -473,7 +489,11 @@ function createCarNumberButtons() {
                 clickTypeBtn = false;
                 const carNumberLabel = document.getElementById("carNumber");
                 const carNumberName = getName("carNumber", carNumberId)
-                carNumberLabel.textContent = "号車:" + carNumberName
+                if (selectVehicle.id != "keio1000") {
+                    carNumberLabel.textContent = "号車:" + carNumberName;
+                } else {
+                    carNumberLabel.textContent = "案内3:" + carNumberName;
+                }
                 frame = 0;
                 if (config.setSwitchingTime) {
                     setTimeSetting();
