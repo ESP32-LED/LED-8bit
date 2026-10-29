@@ -357,6 +357,7 @@ function createCarNumberButtons() {
     } else {
         container.classList.add("normalButtons");
     }
+    console.log(selectVehicle.id);
     if (selectVehicle.id != "keio1000") {
         normalBtn.textContent = "号車なし";
     } else {
