@@ -655,7 +655,7 @@ function createMessageBoardScrollPacket(br, gam) {
             packet[offset++] = margin & 0xff;
             packet[offset++] = (margin >> 8) & 0xff;
 
-            const areaRight = margin + pw;
+            const areaRight = margin + hw;
             packet[offset++] = areaRight & 0xff;
             packet[offset++] = (areaRight >> 8) & 0xff;
 
