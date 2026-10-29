@@ -2900,7 +2900,7 @@ startMessageBoardScrollBtn?.addEventListener(
     startMessageBoardScroll
 );
 
-/* 【追加機能】時刻（分）の切り替わりを記録する変数 */
+/* 時刻（分）の切り替わりを記録する変数 */
 let lastMbTime = "";
 
 /* スクロールしていない間も時刻を定期的に更新 & 分変更時に自動再転送 */
@@ -2912,7 +2912,6 @@ setInterval(() => {
         drawMessageBoardFrame();
     }
 
-    // 時計表示がオンで分が更新された場合に自動転送を発火
     if (timeCheck?.checked && timeChanged) {
         lastMbTime = currentTime;
         if (typeof triggerAutoTransfer === "function") {
