@@ -944,7 +944,8 @@
         "icons": [
             "vehicles/AB900/icons/icon1.png"
         ],
-        "site": "vehicles/AB900/site.json"
+        "site": "vehicles/AB900/site.json",
+        "description": "阿武隈急行線・東北本線"
     },
     {
         "id": "IGR7000",
@@ -955,7 +956,8 @@
             "vehicles/IGR7000/icons/icon1.png",
             "vehicles/IGR7000/icons/icon2.png"
         ],
-        "site": "vehicles/IGR7000/site.json"
+        "site": "vehicles/IGR7000/site.json",
+        "description": "IGRいわて銀河鉄道線・青い森鉄道線"
     },
     {
         "id": "703",
@@ -965,7 +967,8 @@
         "icons": [
             "vehicles/703/icons/icon1.png"
         ],
-        "site": "vehicles/703/site.json"
+        "site": "vehicles/703/site.json",
+        "description": "IGRいわて銀河鉄道線・青い森鉄道線"
     },
     {
         "id": "1000・2000",
@@ -1029,7 +1032,8 @@
             "vehicles/hanshin9000/icons/icon1.png"
         ],
         "site": "vehicles/hanshin9000/site.json",
-        "font": "fonts/font_E233.json"
+        "font": "fonts/font_E233.json",
+        "description": "阪神本線・阪神なんば線・近鉄奈良線など"
     },
     {
         "id": "metro400",
@@ -1039,7 +1043,8 @@
         "icons": [
             "vehicles/metro400/icons/icon1.png"
         ],
-        "site": "vehicles/metro400/site.json"
+        "site": "vehicles/metro400/site.json",
+        "description": "大阪メトロ中央線・近鉄けいはんな線"
     },
     {
         "id": "MT-4000",
