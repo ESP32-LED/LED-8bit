@@ -770,6 +770,17 @@
         "description": "東京メトロ日比谷線・東武伊勢崎線・東武日光線"
     },
     {
+        "id": "keio1000",
+        "name": "京王1000系後期車",
+        "config": "vehicles/keio1000/config.json",
+        "led": "vehicles/keio1000/led.json",
+        "icons": [
+            "vehicles/keio1000/icons/icon1.png"
+        ],
+        "site": "vehicles/keio1000/site.json",
+        "description": "京王井の頭線"
+    },
+    {
         "id": "keio90007000",
         "name": "京王9000系・7000系　FCLED車",
         "config": "vehicles/keio90007000/config.json",
