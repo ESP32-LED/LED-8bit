@@ -36,6 +36,7 @@
 
     function showError(message) {
         attachErrorBox();
+
         errorBox.style.display = "block";
         errorBox.textContent += message + "\n\n";
         errorBox.scrollTop = errorBox.scrollHeight;
@@ -81,6 +82,7 @@
 
             showError(message);
             mobileLog(message);
+
         } else {
             const message =
                 `[リソース読み込みエラー]\n` +
@@ -93,6 +95,7 @@
 
     window.addEventListener("unhandledrejection", event => {
         const reason = event.reason;
+
         const message =
             `[未処理の非同期エラー]\n` +
             `メッセージ: ${reason?.message || String(reason)}\n` +
@@ -166,7 +169,12 @@ async function startVehicle() {
             if (config.hasTypeScroll) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
-                let view = isTypeFullScreen(typeData) ? "full" : "normal";
+                let view;
+                if (isTypeFullScreen(typeData)) {
+                    view = "full";
+                } else {
+                    view = "normal";
+                }
 
                 const typeJaWidth = typeData.view?.[view]?.ja?.width;
                 const typeEnWidth = typeData.view?.[view]?.en?.width;
@@ -191,7 +199,12 @@ async function startVehicle() {
             if (config.hasDestinationScroll && destinationId != null) {
                 const destinationData = getItem("destination", destinationId);
                 const nullDestination = getItem("destination", "null_destination");
-                let view = isDestinationFullScreen(destinationData) ? "full" : "normal";
+                let view;
+                if (isDestinationFullScreen(destinationData)) {
+                    view = "full";
+                } else {
+                    view = "normal";
+                }
 
                 const destinationJaWidth = destinationData.view?.[view]?.ja?.width;
                 const destinationEnWidth = destinationData.view?.[view]?.en?.width;
@@ -257,7 +270,12 @@ async function startVehicle() {
             if (config.hasDestinationScroll) {
                 const destinationData = getItem("destination", destinationId);
                 const nullDestination = getItem("destination", "null_destination");
-                let view = isDestinationFullScreen(destinationData) ? "full" : "normal";
+                let view;
+                if (isDestinationFullScreen(destinationData)) {
+                    view = "full";
+                } else {
+                    view = "normal";
+                }
 
                 const destinationJaWidth = destinationData.view?.[view]?.ja?.width;
                 const destinationEnWidth = destinationData.view?.[view]?.en?.width;
@@ -282,7 +300,12 @@ async function startVehicle() {
             if (config.hasTypeScroll && typeId != null) {
                 const typeData = getItem("type", typeId);
                 const nullType = getItem("type", "null_type");
-                let view = isTypeFullScreen(typeData) ? "full" : "normal";
+                let view;
+                if (isTypeFullScreen(typeData)) {
+                    view = "full";
+                } else {
+                    view = "normal";
+                }
 
                 const typeJaWidth = typeData.view?.[view]?.ja?.width;
                 const typeEnWidth = typeData.view?.[view]?.en?.width;
@@ -397,8 +420,7 @@ async function startVehicle() {
                         const randomIndexGroups = Math.floor(Math.random() * information2Category.groups.length);
                         const groups = information2Category.groups[randomIndexGroups];
                         const randomIndexItems = Math.floor(Math.random() * groups.items.length);
-                        information2Id = groups.items[randomIndex2Category.items.length];
-                        information2Id = information2Category.items[randomIndex].id;
+                        information2Id = groups.items[randomIndexItems].id;
                     } else {
                         const randomIndex = Math.floor(Math.random() * information2Category.items.length);
                         information2Id = information2Category.items[randomIndex].id;
@@ -603,18 +625,39 @@ function setupVehicleUI() {
             verticalSlide.hidden = false;
             const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
-            if (verticalSlideLabel1) verticalSlideLabel1.hidden = !config.hasVerticalSlideLabel1;
-            if (verticalSlideLabel2) verticalSlideLabel2.hidden = !config.hasVerticalSlideLabel2;
-
+            if (verticalSlideLabel1) {
+                if (config.hasVerticalSlideLabel1) {
+                    verticalSlideLabel1.hidden = false;
+                } else {
+                    verticalSlideLabel1.hidden = true;
+                }
+            }
+            if (verticalSlideLabel2) {
+                if (config.hasVerticalSlideLabel2) {
+                    verticalSlideLabel2.hidden = false;
+                }else {
+                    verticalSlideLabel2.hidden = true;
+                }
+            }
             const verticalSlideCheck = document.getElementById("verticalSlideCheck");
             const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
             const choppyScrollCheck = document.getElementById("choppyScrollCheck");
-
-            if (verticalSlideCheck) verticalSlideCheck.checked = !!config.verticalSlideCheckChecked;
-            if (verticalSlideCheck2) verticalSlideCheck2.checked = !!config.verticalSlideCheck2Checked;
-            if (choppyScrollCheck) {
-                choppyScrollCheck.checked = !!config.choppyScrollCheckChecked;
-                choppyScroll = !!config.choppyScrollCheckChecked;
+            if (config.verticalSlideCheckChecked) {
+                verticalSlideCheck.checked = true;
+            } else {
+                verticalSlideCheck.checked = false;
+            }
+            if (config.verticalSlideCheck2Checked) {
+                verticalSlideCheck2.checked = true;
+            } else {
+                verticalSlideCheck2.checked = false;
+            }
+            if (config.choppyScrollCheckChecked) {
+                choppyScrollCheck.checked = true;
+                choppyScroll = true;
+            } else {
+                choppyScrollCheck.checked = false;
+                choppyScroll = false;
             }
         }
     } else {
@@ -622,21 +665,24 @@ function setupVehicleUI() {
             verticalSlide.hidden = true;
             const verticalSlideLabel1 = document.getElementById("verticalSlideLabel1");
             const verticalSlideLabel2 = document.getElementById("verticalSlideLabel2");
-            if (verticalSlideLabel1) verticalSlideLabel1.hidden = true;
-            if (verticalSlideLabel2) verticalSlideLabel2.hidden = true;
-
+            if (verticalSlideLabel1) {
+                verticalSlideLabel1.hidden = true;
+            }
+            if (verticalSlideLabel2) {
+                verticalSlideLabel2.hidden = true;
+            }
             const verticalSlideCheck = document.getElementById("verticalSlideCheck");
             const verticalSlideCheck2 = document.getElementById("verticalSlideCheck2");
             const choppyScrollCheck = document.getElementById("choppyScrollCheck");
             choppyScroll = false;
-            if (verticalSlideCheck) verticalSlideCheck.checked = false;
-            if (verticalSlideCheck2) verticalSlideCheck2.checked = false;
-            if (choppyScrollCheck) choppyScrollCheck.checked = false;
+            verticalSlideCheck.checked = false;
+            verticalSlideCheck2.checked = false;
+            choppyScrollCheck.checked = false;
         }
     }
 
     const scrollText = document.getElementById("scrollText");
-    if (scrollText) scrollText.value = config.scrollLabel || "";
+    scrollText.value = config.scrollLabel;
 
     setVehicleSelectButton();
     resizeButtonText();
@@ -669,7 +715,9 @@ function startDestinationDisplayCycle() {
     buildTypeSceneList();
 
     destinationCycleNormalScene = sceneList.findIndex(
-        s => s.information === "destination" && s.lang === "ja" && s.next !== true
+        s => s.information === "destination" &&
+             s.lang === "ja" &&
+             s.next !== true
     );
 
     if (destinationCycleNormalScene < 0) {
@@ -679,7 +727,9 @@ function startDestinationDisplayCycle() {
     }
 
     destinationCycleInfoScene = sceneList.findIndex(
-        s => typeof s.information === "string" && s.information.startsWith("information") && s.lang === "ja"
+        s => typeof s.information === "string" &&
+             s.information.startsWith("information") &&
+             s.lang === "ja"
     );
 
     if (destinationCycleNormalScene < 0) {
@@ -723,14 +773,21 @@ function startDestinationCycleSmallSwitch() {
     destinationCycleSmallMode = "destination";
 
     destinationCycleSmallTimer = setInterval(() => {
-        if (!destinationCycleActive || destinationCyclePhase !== "scroll" || scrollId === null) {
+        if (
+            !destinationCycleActive ||
+            destinationCyclePhase !== "scroll" ||
+            scrollId === null
+        ) {
             clearInterval(destinationCycleSmallTimer);
             destinationCycleSmallTimer = null;
             return;
         }
 
         if (informationId != null) {
-            destinationCycleSmallMode = destinationCycleSmallMode === "destination" ? "information" : "destination";
+            destinationCycleSmallMode =
+                destinationCycleSmallMode === "destination"
+                    ? "information"
+                    : "destination";
         } else {
             destinationCycleSmallMode = "destination";
         }
@@ -765,6 +822,7 @@ function nextScene() {
 
             renderTimer = setTimeout(() => {
                 renderTimer = null;
+
                 if (!destinationCycleActive) return;
 
                 destinationCyclePhase = "scroll";
@@ -800,11 +858,11 @@ function nextScene() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox2?.checked) {
+        if (checkbox2.checked) {
             startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
                 renderTimer = setTimeout(nextScene, 3000);
             });
-        } else if (checkbox?.checked) {
+        } else if (checkbox.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
                 renderTimer = setTimeout(nextScene, 3000);
             });
@@ -880,14 +938,14 @@ function startRenderLoop() {
         const checkbox = document.getElementById("verticalSlideCheck");
         const checkbox2 = document.getElementById("verticalSlideCheck2");
 
-        if (checkbox?.checked) {
+        if (checkbox.checked) {
             startVerticalSlideAnimation(fromCanvas, cacheCanvas, () => {
                 if (renderTimer === null) {
                     frame = 1;
                     renderTimer = setTimeout(nextScene, getSceneInterval());
                 }
             });
-        } else if (checkbox2?.checked) {
+        } else if (checkbox2.checked) {
             startVerticalSlideAnimation2(fromCanvas, cacheCanvas, () => {
                 if (renderTimer === null) {
                     frame = 1;
@@ -906,127 +964,348 @@ function buildSceneList() {
     const type = getItem("type", typeId);
 
     if (!config.type_destination_changed) {
-        if (information2Id != null && config.information2Position === "next" && config.information2Ahead) {
-            sceneList.push({ lang: "ja", information: "information2_next", next: false });
-        }
-        if (informationId != null && config.informationPosition === "next" && config.informationAhead) {
-            sceneList.push({ lang: "ja", information: "information_next", next: false });
-        }
-
-        if (nextId != null) {
-            sceneList.push({
-                lang: "ja",
-                information: (config.hasDestinationInformationCombined && informationId != null) ? "destination_information" : "destination",
-                next: true,
-            });
-        } else {
-            if (!config.informationAhead) {
-                if (destinationId != null) {
+        if (information2Id != null) {
+            if (config.information2Position === "next") {
+                if (config.information2Ahead) {
                     sceneList.push({
                         lang: "ja",
-                        information: config.destinationPosition === "next" ? "destination_next" : "destination",
-                        next: false,
+                        information: "information2_next",
+                        next: false
                     });
-                } else {
-                    sceneList.push({ lang: "ja", information: "destination", next: false });
                 }
-            } else {
-                if (informationId === null) {
-                    sceneList.push({ lang: "ja", information: "destination", next: false });
+            }
+        }
+        
+        if (informationId != null) {
+            if (config.informationPosition === "next") {
+                if (config.informationAhead) {
+                    sceneList.push({
+                        lang: "ja",
+                        information: "information_next",
+                        next: false
+                    });
                 }
             }
         }
 
-        if (informationId != null && !config.hasDestinationInformationCombined && config.informationAhead && hasEnglishInformation()) {
-            sceneList.push({ lang: "en", information: "information_next", next: false });
+        if(nextId != null) {
+            if (config.hasDestinationInformationCombined && informationId != null) {
+                sceneList.push({
+                    lang: "ja",
+                    information: "destination_information",
+                    next: true,
+                });
+            } else {
+                sceneList.push({
+                    lang: "ja",
+                    information: "destination",
+                    next: true,
+                });
+            }
+        } else {
+            if (!config.informationAhead) {
+                if (destinationId != null) {
+                    if (config.destinationPosition === "normal") {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "destination",
+                            next: false,
+                        });
+                    }
+                    if (config.destinationPosition === "next") {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "destination_next",
+                            next: false,
+                        });
+                    }
+                } else {
+                    sceneList.push({
+                        lang: "ja",
+                        information: "destination",
+                        next: false,
+                    });
+                }
+            } else {
+                if (informationId === null) {
+                    sceneList.push({
+                        lang: "ja",
+                        information: "destination",
+                        next: false,
+                    });
+                }
+            }
+        }
+
+        if (informationId != null) {
+            if (!config.hasDestinationInformationCombined) {
+                if (config.informationAhead) {
+                    if (hasEnglishInformation()) {
+                        sceneList.push({
+                            lang: "en",
+                            information: "information_next",
+                            next: false
+                        });
+                    }
+                }
+            }
         }
 
         if (config.languageSwitching) {
             if (hasEnglishType()) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        sceneList.push({
-                            lang: "en",
-                            information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
-                            next: true
-                        });
+                        if (informationId != null && config.hasDestinationInformationCombined) {
+                            if (hasEnglishInformation()) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination_information",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination",
+                                    next: true
+                                });
+                            }
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination",
+                                next: true
+                            });
+                        }
                     }
                 } else {
-                    sceneList.push({
-                        lang: "en",
-                        information: (!config.destinationLanguageSwitching && informationId !== null) ? "information" : "destination",
-                        next: false
-                    });
+                    if (!config.destinationLanguageSwitching) {
+                        if (informationId === null) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination",
+                                next: false
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "information",
+                                next: false
+                            });
+                        }
+                    } else {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: false
+                        });
+                    }
                 }
             }
             if (typeId === null) {
                 if (nextId != null) {
                     if (!config.nextJaOnly) {
-                        sceneList.push({
-                            lang: "en",
-                            information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
-                            next: true
-                        });
+                        if (informationId != null && config.hasDestinationInformationCombined) {
+                            if (hasEnglishInformation()) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination_information",
+                                    next: true
+                                });
+                            }
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination",
+                                next: true
+                            });
+                        }
                     }
                 } else {
-                    sceneList.push({
-                        lang: "en",
-                        information: (destinationId != null && config.destinationPosition === "next") ? "destination_next" : "destination",
-                        next: false
-                    });
+                    if (destinationId != null) {
+                        if (config.destinationPosition === "normal") {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination",
+                                next: false,
+                            });
+                        }
+                        if (config.destinationPosition === "next") {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination_next",
+                                next: false,
+                            });
+                        }
+                    } else {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: false,
+                        });
+                    }
                 }
             } else {
-                if (!hasEnglishType() && nextId != null && !config.nextJaOnly) {
-                    sceneList.push({
-                        lang: "en",
-                        information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
-                        next: true
-                    });
+                if (!hasEnglishType()) {
+                    if (nextId != null) {
+                        if (!config.nextJaOnly) {
+                            if (informationId != null && config.hasDestinationInformationCombined) {
+                                if (hasEnglishInformation()) {
+                                    sceneList.push({
+                                        lang: "en",
+                                        information: "destination_information",
+                                        next: true
+                                    });
+                                }
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination",
+                                    next: true
+                                });
+                            }
+                        }
+                    }
                 }
             }
         } else {
-            if ((nextId != null || scrollId != null) && !config.nextJaOnly) {
-                sceneList.push({
-                    lang: "en",
-                    information: (informationId != null && config.hasDestinationInformationCombined && hasEnglishInformation()) ? "destination_information" : "destination",
-                    next: true
-                });
+            if (nextId != null || scrollId != null) {
+                if (!config.nextJaOnly) {
+                    if (informationId != null && config.hasDestinationInformationCombined) {
+                        if (hasEnglishInformation()) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "destination_information",
+                                next: true
+                            });
+                        }
+                    } else {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: true
+                        });
+                    }
+                }
             }
         }
 
         if (config.destinationLanguageSwitching) {
             if (!config.languageSwitching) {
-                if (hasEnglishDestination() && nextId === null) {
-                    sceneList.push({ lang: "en", information: "destination", next: false });
+                if (hasEnglishDestination()) {
+                    if (nextId === null) {
+                        sceneList.push({
+                            lang: "en",
+                            information: "destination",
+                            next: false
+                        });
+                    }
                 }
             } else {
-                if (!hasEnglishType() && nextId === null) {
-                    if (config.hasScroll) {
-                        if (scrollId === null && !config.nextJaOnly) {
-                            sceneList.push({ lang: "en", information: "destination", next: true });
+                if (!hasEnglishType()) {
+                    if (nextId === null) {
+                        if (config.hasScroll) {
+                            if (scrollId === null) {
+                                if (!config.nextJaOnly) {
+                                    sceneList.push({
+                                        lang: "en",
+                                        information: "destination",
+                                        next: true
+                                    });
+                                }
+                            }
+                        } else {
+                            if (hasEnglishDestination()) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "destination",
+                                    next: false
+                                });
+                            }
                         }
-                    } else if (hasEnglishDestination()) {
-                        sceneList.push({ lang: "en", information: "destination", next: false });
                     }
                 }
             }
         }
 
         if (hasInformationDestination()) {
-            sceneList.push({ lang: "info", information: "destination", next: nextId != null });
+            if (nextId != null) {
+                sceneList.push({
+                    lang: "info",
+                    information: "destination",
+                    next: true
+                });
+            } else {
+                sceneList.push({
+                    lang: "info",
+                    information: "destination",
+                    next: false
+                });
+            }
         }
 
-        if (config.carNumberAhead && carNumberId != null) {
-            if (config.hasCarNumberFull) {
-                sceneList.push({ lang: "ja", information: "carNumber", next: nextId != null });
-                if (hasEnglishCarNumber()) {
-                    sceneList.push({ lang: "en", information: "carNumber", next: nextId != null });
+        if (config.carNumberAhead) {
+            if (carNumberId != null) {
+                if (config.hasCarNumberFull) {
+                    if (nextId != null) {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: true
+                        });
+                    } else {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: false
+                        });
+                    }
+                    if (hasEnglishCarNumber()) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: false
+                            });
+                        }
+                    }
                 }
-            }
-            if (!isTypeFullScreen(type) && config.hasCarNumberNormal) {
-                sceneList.push({ lang: "ja", information: "carNumber_destination", next: nextId != null });
-                if (hasEnglishCarNumber()) {
-                    sceneList.push({ lang: "en", information: "carNumber_destination", next: nextId != null });
+                if (!isTypeFullScreen(type)) {
+                    if (config.hasCarNumberNormal) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: false
+                            });
+                        }
+                        if (hasEnglishCarNumber()) {
+                            if (nextId != null) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: false
+                                });
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1037,105 +1316,379 @@ function buildSceneList() {
                     if (nextId != null) {
                         if (!config.information_ja_en) {
                             if (information2Id === null) {
-                                sceneList.push({ lang: "ja", information: "information", next: !config.informationNormalOnNext });
-                                if (config.informationLanguageSwitching) {
-                                    sceneList.push({ lang: "en", information: "information", next: !config.informationNormalOnNext });
+                                if (!config.informationNormalOnNext) {
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information",
+                                        next: true
+                                    });
+                                    if (config.informationLanguageSwitching) {
+                                        sceneList.push({
+                                            lang: "en",
+                                            information: "information",
+                                            next: true
+                                        });
+                                    }
+                                } else {
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information",
+                                        next: false
+                                    });
+                                    if (config.informationLanguageSwitching) {
+                                        sceneList.push({
+                                            lang: "en",
+                                            information: "information",
+                                            next: false
+                                        });
+                                    }
                                 }
                             } else {
                                 if (config.hasInformationCombined) {
-                                    sceneList.push({ lang: "ja", information: "information_information2", next: false });
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information_information2",
+                                        next: false
+                                    })
                                     if (config.informationLanguageSwitching) {
-                                        sceneList.push({ lang: "en", information: "information_information2", next: false });
+                                        sceneList.push({
+                                            lang: "en",
+                                            information: "information_information2",
+                                            next: false
+                                        });
                                     }
                                 } else {
-                                    sceneList.push({ lang: "ja", information: "information", next: !config.informationNormalOnNext });
-                                    if (config.informationLanguageSwitching) {
-                                        sceneList.push({ lang: "en", information: "information", next: !config.informationNormalOnNext });
+                                    if (!config.informationNormalOnNext) {
+                                        sceneList.push({
+                                            lang: "ja",
+                                            information: "information",
+                                            next: true
+                                        });
+                                        if (config.informationLanguageSwitching) {
+                                            sceneList.push({
+                                                lang: "en",
+                                                information: "information",
+                                                next: true
+                                            });
+                                        }
+                                    } else {
+                                        sceneList.push({
+                                            lang: "ja",
+                                            information: "information",
+                                            next: false
+                                        });
+                                        if (config.informationLanguageSwitching) {
+                                            sceneList.push({
+                                                lang: "en",
+                                                information: "information",
+                                                next: false
+                                            });
+                                        }
                                     }
                                 }
                             }
                         } else {
-                            sceneList.push({ lang: "ja_en", information: "information", next: config.informationNormalOnNext });
+                            if (config.informationNormalOnNext) {
+                                sceneList.push({
+                                    lang: "ja_en",
+                                    information: "information",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "ja_en",
+                                    information: "information",
+                                    next: false
+                                });
+                            }
                         }
                     } else {
                         if (!config.information_ja_en) {
-                            sceneList.push({ lang: "ja", information: "information", next: false });
-                            if (config.informationLanguageSwitching && hasEnglishInformation()) {
-                                sceneList.push({ lang: "en", information: "information", next: false });
+                            if (hasEnglishType()) {
+                                if (!config.languageSwitching || config.languageSwitching && config.destinationLanguageSwitching) {
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information",
+                                        next: false
+                                    });
+                                    if (config.informationLanguageSwitching) {
+                                        if (hasEnglishInformation()) {
+                                            sceneList.push({
+                                                lang: "en",
+                                                information: "information",
+                                                next: false
+                                            });
+                                        }
+                                    }
+                                }
+                            } else {
+                                sceneList.push({
+                                    lang: "ja",
+                                    information: "information",
+                                    next: false
+                                });
+                                if (config.informationLanguageSwitching) {
+                                    if (hasEnglishInformation()) {
+                                        sceneList.push({
+                                            lang: "en",
+                                            information: "information",
+                                            next: false
+                                        });
+                                    }
+                                }
                             }
                         } else {
-                            sceneList.push({ lang: "ja_en", information: "information", next: false });
+                            sceneList.push({
+                                lang: "ja_en",
+                                information: "information",
+                                next: false
+                            });
                         }
                     }
                 } else {
-                    const info = getItem("information", informationId);
-                    const hasInformationSmall1 = !!info?.view?.small1 || !!info?.view?.full_small1;
+                    const info = getItem ("information", informationId);
+                    const hasInformationSmall1 = !!info.view.small1 || !!info.view.full_small1;
                     if (!hasInformationSmall1) {
-                        sceneList.push({ lang: "ja", information: "information", next: false });
+                        sceneList.push({
+                            lang: "ja",
+                            information: "information",
+                            next: false
+                        });
                     } else {
-                        sceneList.push({ lang: "ja", information: "information_small1", next: false });
-                        sceneList.push({ lang: "ja", information: "information_small2", next: false });
+                        sceneList.push({
+                            lang: "ja",
+                            information: "information_small1",
+                            next: false
+                        });
+                        sceneList.push({
+                            lang: "ja",
+                            information: "information_small2",
+                            next: false
+                        });
                     }
                 }
             }
-            if (config.informationPosition === "next" && !config.informationAhead) {
-                sceneList.push({ lang: "ja", information: "information_next", next: false });
-                if (config.informationLanguageSwitching && hasEnglishInformation()) {
-                    sceneList.push({ lang: "en", information: "information_next", next: false });
+            if (config.informationPosition === "next") {
+                if (!config.informationAhead) {
+                    sceneList.push({
+                        lang: "ja",
+                        information: "information_next",
+                        next: false
+                    });
+                    if (config.informationLanguageSwitching) {
+                        if (hasEnglishInformation()) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "information_next",
+                                next: false
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        if (information2Id != null && !config.information2Ahead) {
-            sceneList.push({ lang: "ja", information: "information2", next: nextId != null ? !config.informationNormalOnNext : true });
+        if (information2Id != null) {
+            if (!config.information2Ahead) {
+                if (scrollId === null) {
+                    if (nextId != null) {
+                        if (informationId != null) {
+                            if (!config.informationNormalOnNext) {
+                                if (!config.hasInformationCombined) {
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information2",
+                                        next: true
+                                    });
+                                }
+                            } else {
+                                if (!config.hasInformationCombined) {
+                                    sceneList.push({
+                                        lang: "ja",
+                                        information: "information2",
+                                        next: false
+                                    });
+                                }
+                            }
+                        } else {
+                            if (!config.informationNormalOnNext) {
+                                sceneList.push({
+                                    lang: "ja",
+                                    information: "information2",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "ja",
+                                    information: "information2",
+                                    next: false
+                                });
+                            }
+                        }
+                    } else {
+                        if (!config.informationNormalOnNext) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "information2",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "information2",
+                                next: false
+                            });
+                        }
+                    }
+                } else {
+                    sceneList.push({
+                        lang: "ja",
+                        information: "information2",
+                        next: true
+                    });
+                }
+            }
         }
 
         if (lineId != null) {
-            sceneList.push({ lang: "ja", information: "line", next: nextId != null });
-        }
-
-        if (!config.carNumberAhead && carNumberId != null) {
-            if (config.hasCarNumberFull) {
-                sceneList.push({ lang: "ja", information: "carNumber", next: nextId != null });
-                if (hasEnglishCarNumber()) {
-                    sceneList.push({ lang: "en", information: "carNumber", next: nextId != null });
-                }
-            }
-            if (!isTypeFullScreen(type) && config.hasCarNumberNormal) {
-                sceneList.push({ lang: "ja", information: "carNumber_destination", next: nextId != null });
-                if (hasEnglishCarNumber()) {
-                    sceneList.push({ lang: "en", information: "carNumber_destination", next: nextId != null });
-                }
+            if (nextId != null) {
+                sceneList.push({
+                    lang: "ja",
+                    information: "line",
+                    next: true
+                });
+            } else {
+                sceneList.push({
+                    lang: "ja",
+                    information: "line",
+                    next: false
+                });
             }
         }
 
-        if (config.next_normal && nextId != null) {
-            sceneList.push({ lang: "ja", information: "destination", next: false });
-            if (config.destinationLanguageSwitching) {
-                sceneList.push({ lang: "en", information: "destination", next: false });
+        if (!config.carNumberAhead) {
+            if (carNumberId != null) {
+                if (config.hasCarNumberFull) {
+                    if (nextId != null) {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: true
+                        });
+                    } else {
+                        sceneList.push({
+                            lang: "ja",
+                            information: "carNumber",
+                            next: false
+                        });
+                    }
+                    if (hasEnglishCarNumber()) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "en",
+                                information: "carNumber",
+                                next: false
+                            });
+                        }
+                    }
+                }
+                if (!isTypeFullScreen(type)) {
+                    if (config.hasCarNumberNormal) {
+                        if (nextId != null) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: true
+                            });
+                        } else {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "carNumber_destination",
+                                next: false
+                            });
+                        }
+                        if (hasEnglishCarNumber()) {
+                            if (nextId != null) {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: true
+                                });
+                            } else {
+                                sceneList.push({
+                                    lang: "en",
+                                    information: "carNumber_destination",
+                                    next: false
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (config.next_normal) {
+            if (nextId != null) {
+                sceneList.push({
+                    lang: "ja",
+                    information: "destination",
+                    next: false
+                });
+                if (config.destinationLanguageSwitching) {
+                    sceneList.push({
+                        lang: "en",
+                        information: "destination",
+                        next: false
+                    });
+                }
             }
         }
     } else {
         if (typeId === null && destinationId === null) {
-            sceneList.push({ lang: "ja", information: "type", next: false });
+            sceneList.push({
+                lang: "ja",
+                information: "type",
+                next: false
+            });
         }
         if (typeId != null) {
-            sceneList.push({ lang: "ja", information: "type", next: false });
+            sceneList.push({
+                lang: "ja",
+                information: "type",
+                next: false
+            });
             if (hasEnglishType()) {
-                sceneList.push({ lang: "en", information: "type", next: false });
+                sceneList.push({
+                    lang: "en",
+                    information: "type",
+                    next: false
+                });
             }
         }
         if (destinationId != null) {
-            sceneList.push({ lang: "ja", information: "destination", next: false });
+            sceneList.push({
+                lang: "ja",
+                information: "destination",
+                next: false
+            });
             if (hasEnglishDestination()) {
-                sceneList.push({ lang: "en", information: "destination", next: false });
+                sceneList.push({
+                    lang: "en",
+                    information: "destination",
+                    next: false
+                });
             }
         }
     }
 }
 
 function applyScene() {
-    if (!sceneList || sceneList.length === 0 || !sceneList[scene]) return;
     lang = sceneList[scene].lang;
     informationMode = sceneList[scene].information;
     showNext = sceneList[scene].next;
@@ -1152,7 +1705,6 @@ function buildTypeSceneList() {
 }
 
 function applyTypeScene() {
-    if (!typeSceneList || typeSceneList.length === 0 || !typeSceneList[typeScene]) return;
     typeMode = typeSceneList[typeScene].typeInfo;
 }
 
@@ -1237,18 +1789,16 @@ let dragging = false;
 let startX;
 let startWidth;
 
-if (resizer && sidebar) {
-    resizer.addEventListener("mousedown", (e) => {
-        dragging = true;
-        startX = e.clientX;
-        startWidth = sidebar.offsetWidth;
-    });
-}
+resizer.addEventListener("mousedown", (e) => {
+    dragging = true;
+    startX = e.clientX;
+    startWidth = sidebar.offsetWidth;
+});
 
 let lastRender = 0;
 
 document.addEventListener("mousemove", (e) => {
-    if (!dragging || !sidebar) return;
+    if (!dragging) return;
 
     const dx = e.clientX - startX;
     let width = startWidth + dx;
@@ -1303,24 +1853,20 @@ document.querySelectorAll(".numberInput").forEach((container) => {
         repeatTimer = null;
     }
 
-    if (plus && input) {
-        plus.addEventListener("pointerdown", () => startChanging(() => input.stepUp()));
-    }
-    if (minus && input) {
-        minus.addEventListener("pointerdown", () => startChanging(() => input.stepDown()));
-    }
+    plus.addEventListener("pointerdown", () => {
+        startChanging(() => input.stepUp());
+    });
+
+    minus.addEventListener("pointerdown", () => {
+        startChanging(() => input.stepDown());
+    });
 
     document.addEventListener("pointerup", stopChanging);
     document.addEventListener("pointercancel", stopChanging);
 });
 
 const tittle = document.getElementById("tittle");
-if (tittle) {
-    tittle.addEventListener("click", returnToVehicleSelector);
-    tittle.addEventListener("pointerup", () => {
-        tittle.style.backgroundColor = "white";
-    });
-}
+tittle.addEventListener("click", returnToVehicleSelector);
 
 async function returnToVehicleSelector() {
     const returningFromMessageBoard = isMessageBoard;
@@ -1345,9 +1891,16 @@ async function returnToVehicleSelector() {
         simulator.dataset.returning = "true";
 
         const hideIds = [
-            "scrollText", "startScrollBtn", "referenceSite", "explanation",
-            "jaTime", "enTime", "infoTime", "carNumberTime",
-            "setLedAgingLebel", "verticalSlideCheckbox"
+            "scrollText",
+            "startScrollBtn",
+            "referenceSite",
+            "explanation",
+            "jaTime",
+            "enTime",
+            "infoTime",
+            "carNumberTime",
+            "setLedAgingLebel",
+            "verticalSlideCheckbox"
         ];
 
         try {
@@ -1364,22 +1917,30 @@ async function returnToVehicleSelector() {
                         if (element) element.hidden = true;
                     });
 
-                    const resetCheckboxes = ["scrollCheck", "choppyScrollCheck", "ledAgingCheck"];
+                    const resetCheckboxes = [
+                        "scrollCheck",
+                        "choppyScrollCheck",
+                        "ledAgingCheck"
+                    ];
 
                     resetCheckboxes.forEach(id => {
                         const element = document.getElementById(id);
                         if (element) element.checked = false;
                     });
 
-                    const agingLevel = document.getElementById("ledAgingLebel");
-                    const agingValue = document.getElementById("ledAgingLebelValue");
-                    const verticalSlideButton = document.getElementById("displayVerticalSlideBtn");
+                    const agingLevel =
+                        document.getElementById("ledAgingLebel");
+                    const agingValue =
+                        document.getElementById("ledAgingLebelValue");
+                    const verticalSlideButton =
+                        document.getElementById("displayVerticalSlideBtn");
 
                     if (agingLevel) agingLevel.value = 3;
                     if (agingValue) agingValue.textContent = "3";
 
                     if (verticalSlideButton) {
-                        verticalSlideButton.textContent = "縦スライド設定を表示する";
+                        verticalSlideButton.textContent =
+                            "縦スライド設定を表示する";
                     }
 
                     isDisplayVerticalSlide = false;
@@ -1416,7 +1977,10 @@ async function returnToVehicleSelector() {
         if (messageBoard.dataset.returning === "true") return;
         messageBoard.dataset.returning = "true";
 
-        const hideIds = ["messageBoardScrollText", "startMessageBoardScrollBtn"];
+        const hideIds = [
+            "messageBoardScrollText",
+            "startMessageBoardScrollBtn"
+        ];
 
         try {
             const transitionPromise = showScreenSmoothly(
@@ -1428,7 +1992,10 @@ async function returnToVehicleSelector() {
                         if (element) element.hidden = true;
                     });
 
-                    const resetCheckboxes = ["timeCheck", "messageBoardScrollCheck"];
+                    const resetCheckboxes = [
+                        "timeCheck",
+                        "messageBoardScrollCheck"
+                    ];
 
                     resetCheckboxes.forEach(id => {
                         const element = document.getElementById(id);
@@ -1438,6 +2005,7 @@ async function returnToVehicleSelector() {
             );
 
             isMessageBoard = false;
+
             await transitionPromise;
         } finally {
             delete messageBoard.dataset.returning;
@@ -1477,141 +2045,168 @@ function setExplanation() {
         document.getElementById("explanation").hidden = true;
     }
     const explanationLabel = document.getElementById("explanationLabel");
-    if (explanationLabel) {
-        const label = document.createElement("label");
-        label.textContent = config.explanation;
-        explanationLabel.appendChild(label);
-    }
+    const label = document.createElement("label");
+    label.textContent = config.explanation;
+    explanationLabel.appendChild(label);
 }
 
 function clearExplanation() {
     const explanationLabel = document.getElementById("explanationLabel");
-    if (explanationLabel) explanationLabel.innerHTML = "";
+    explanationLabel.innerHTML = "";
 }
 
 function setReferenceSite() {
     document.getElementById("referenceSite").hidden = false;
     const referenceSiteLink = document.getElementById("referenceSiteLink");
 
-    if (referenceSiteLink && siteData) {
-        siteData.forEach((element) => {
-            const a = document.createElement("a");
-            a.href = element.link;
-            a.textContent = element.name;
-            a.target = "_blank";
-            referenceSiteLink.appendChild(a);
-        });
-    }
+    siteData.forEach((element) => {
+        const a = document.createElement("a");
+        a.href = element.link;
+        a.textContent = element.name;
+        a.target = "_blank";
+        referenceSiteLink.appendChild(a);
+    });
 }
 
 function clearReferenceSite() {
     const referenceSiteLink = document.getElementById("referenceSiteLink");
-    if (referenceSiteLink) referenceSiteLink.innerHTML = "";
+    referenceSiteLink.innerHTML = "";
 }
+
+tittle.addEventListener("pointerup", () => {
+    tittle.style.backgroundColor = "white";
+});
 
 const scrollCheck = document.getElementById("scrollCheck");
 const scrollText = document.getElementById("scrollText");
 const startScrollBtn = document.getElementById("startScrollBtn");
 
-if (scrollCheck) {
-    scrollCheck.addEventListener("change", () => {
-        if (scrollCheck.checked) {
-            if (scrollText) scrollText.hidden = false;
-            if (startScrollBtn) startScrollBtn.hidden = false;
-        } else {
-            if (scrollText) scrollText.hidden = true;
-            if (startScrollBtn) startScrollBtn.hidden = true;
+scrollCheck.addEventListener("change", () => {
+    if (scrollCheck.checked) {
+        scrollText.hidden = false;
+        startScrollBtn.hidden = false;
+    } else {
+        scrollText.hidden = true;
+        startScrollBtn.hidden = true;
 
-            stopScroll();
+        stopScroll();
 
-            if (destinationScrollTimer !== null) {
-                clearTimeout(destinationScrollTimer);
-                destinationScrollTimer = null;
-            }
-
-            if (destinationCycleSmallTimer !== null) {
-                clearInterval(destinationCycleSmallTimer);
-                destinationCycleSmallTimer = null;
-            }
-
-            if (renderTimer !== null) {
-                clearTimeout(renderTimer);
-                renderTimer = null;
-            }
-
-            destinationCycleActive = false;
-            destinationCyclePhase = "normal";
-            destinationCycleNormalScene = -1;
-            destinationCycleInfoScene = -1;
-            destinationCycleSmallMode = "destination";
-
-            startRenderLoop();
+        if (destinationScrollTimer !== null) {
+            clearTimeout(destinationScrollTimer);
+            destinationScrollTimer = null;
         }
-    });
-}
+
+        if (destinationCycleSmallTimer !== null) {
+            clearInterval(destinationCycleSmallTimer);
+            destinationCycleSmallTimer = null;
+        }
+
+        if (renderTimer !== null) {
+            clearTimeout(renderTimer);
+            renderTimer = null;
+        }
+
+        destinationCycleActive = false;
+        destinationCyclePhase = "normal";
+        destinationCycleNormalScene = -1;
+        destinationCycleInfoScene = -1;
+        destinationCycleSmallMode = "destination";
+
+        startRenderLoop();
+    }
+});
 
 const vCheck = document.getElementById("verticalSlideCheck");
 const vCheck2 = document.getElementById("verticalSlideCheck2");
-if (vCheck && vCheck2) {
-    vCheck.addEventListener("change", () => { vCheck2.checked = false; });
-    vCheck2.addEventListener("change", () => { vCheck.checked = false; });
-}
+vCheck.addEventListener("change", () => {
+    vCheck2.checked = false;
+});
+vCheck2.addEventListener("change", () => {
+    vCheck.checked = false;
+});
 
 const choppyScrollCheck = document.getElementById("choppyScrollCheck");
-if (choppyScrollCheck) {
-    choppyScrollCheck.addEventListener("change", () => {
-        choppyScroll = choppyScrollCheck.checked;
-    });
-}
+choppyScrollCheck.addEventListener("change", () => {
+    if (choppyScrollCheck.checked) {
+        choppyScroll = true;
+    } else {
+        choppyScroll = false;
+    }
+});
 
 const ledAgingCheck = document.getElementById("ledAgingCheck");
 const ledAgingLebel = document.getElementById("ledAgingLebel");
 const setLedAgingLebel = document.getElementById("setLedAgingLebel");
 const ledAgingLebelValue = document.getElementById("ledAgingLebelValue");
-if (ledAgingCheck) {
-    ledAgingCheck.addEventListener("change", () => {
-        if (ledAgingCheck.checked) {
-            isLedAging = true;
-            if (setLedAgingLebel) setLedAgingLebel.hidden = false;
-        } else {
-            isLedAging = false;
-            if (setLedAgingLebel) setLedAgingLebel.hidden = true;
-        }
-    });
-}
+ledAgingCheck.addEventListener("change", () => {
+    if (ledAgingCheck.checked) {
+        isLedAging = true;
+        setLedAgingLebel.hidden = false;
+    } else {
+        isLedAging = false;
+        setLedAgingLebel.hidden = true;
+    }
+});
 
-if (ledAgingLebel && ledAgingLebelValue) {
-    ledAgingLebel.addEventListener("input", () => {
-        ledAgingLebelValue.textContent = ledAgingLebel.value;
-    });
-}
+ledAgingLebel.addEventListener("input", () => {
+    ledAgingLebelValue.textContent = ledAgingLebel.value;
+});
 
-const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn");
-if (displayVerticalSlideBtn) {
-    displayVerticalSlideBtn.addEventListener("click", () => {
-        const verticalSlideCheckbox = document.getElementById("verticalSlideCheckbox");
-        if (isDisplayVerticalSlide === false) {
-            isDisplayVerticalSlide = true;
-            displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
-            if (verticalSlideCheckbox) verticalSlideCheckbox.hidden = false;
+const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn") ;
+displayVerticalSlideBtn.addEventListener("click", () => {
+    if (isDisplayVerticalSlide === false) {
+        isDisplayVerticalSlide = true;
+        displayVerticalSlideBtn.textContent = "縦スライド設定を非表示にする";
+        verticalSlideCheckbox.hidden = false;
+        if (config.verticalSlideCheckChecked) {
+            verticalSlideCheck.checked = true;
         } else {
-            isDisplayVerticalSlide = false;
-            displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
-            if (verticalSlideCheckbox) verticalSlideCheckbox.hidden = true;
+            verticalSlideCheck.checked = false;
         }
-    });
-}
+        if (config.verticalSlideCheck2Checked) {
+            verticalSlideCheck2.checked = true;
+        } else {
+            verticalSlideCheck2.checked = false;
+        }
+        if (config.choppyScrollCheckChecked) {
+            choppyScrollCheck.checked = true;
+            choppyScroll = true;
+        } else {
+            choppyScrollCheck.checked = false;
+            choppyScroll = false;
+        }
+    } else {
+        isDisplayVerticalSlide = false;
+        displayVerticalSlideBtn.textContent = "縦スライド設定を表示する";
+        verticalSlideCheckbox.hidden = true;
+        if (config.verticalSlideCheckChecked) {
+            verticalSlideCheck.checked = true;
+        } else {
+            verticalSlideCheck.checked = false;
+        }
+        if (config.verticalSlideCheck2Checked) {
+            verticalSlideCheck2.checked = true;
+        } else {
+            verticalSlideCheck2.checked = false;
+        }
+        if (config.choppyScrollCheckChecked) {
+            choppyScrollCheck.checked = true;
+            choppyScroll = true;
+        } else {
+            choppyScrollCheck.checked = false;
+            choppyScroll = false;
+        }
+    }
+});
 
 const debugConsole = document.getElementById("debugConsole");
 const displayLog = document.getElementById("displayLog");
 
-if (displayLog && debugConsole) {
-    displayLog.addEventListener("click", () => {
-        isDisplayLog = !isDisplayLog;
-        debugConsole.hidden = !isDisplayLog;
-        displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
-    });
-}
+displayLog.addEventListener("click", () => {
+    isDisplayLog = !isDisplayLog;
+    debugConsole.hidden = !isDisplayLog;
+    displayLog.textContent = isDisplayLog ? "ログを非表示にする" : "ログを表示する";
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     const toggleLedSettingsBtn = document.getElementById("toggleLedSettingsBtn");
@@ -1668,11 +2263,18 @@ function setupTitleScrollAnimation() {
         }
 
         const scrollTop = getScrollTop(target);
-        const progress = Math.min(1, Math.max(0, scrollTop / 360));
+
+        const progress = Math.min(
+            1,
+            Math.max(0, scrollTop / 360)
+        );
 
         title.style.opacity = String(1 - progress);
-        title.style.transform = `translateY(${-16 * progress}px)`;
-        title.style.pointerEvents = progress >= 1 ? "none" : "";
+        title.style.transform =
+            `translateY(${-16 * progress}px)`;
+
+        title.style.pointerEvents =
+            progress >= 1 ? "none" : "";
     }
 
     function onScroll(event) {
@@ -1686,32 +2288,47 @@ function setupTitleScrollAnimation() {
         });
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    window.addEventListener("resize", () => { updateTitle(latestTarget); }, { passive: true });
+    window.addEventListener("scroll", onScroll, {
+        passive: true
+    });
+
+    document.addEventListener("scroll", onScroll, {
+        passive: true,
+        capture: true
+    });
+
+    window.addEventListener("resize", () => {
+        updateTitle(latestTarget);
+    }, { passive: true });
 
     const observer = new MutationObserver(() => {
         updateTitle();
         requestAnimationFrame(() => updateTitle());
     });
 
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+
     updateTitle();
 }
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupTitleScrollAnimation, { once: true });
+    document.addEventListener(
+        "DOMContentLoaded",
+        setupTitleScrollAnimation,
+        { once: true }
+    );
 } else {
     setupTitleScrollAnimation();
 }
 
 const messageBoardBtn = document.getElementById("messageBoardBtn");
-if (messageBoardBtn) {
-    messageBoardBtn.addEventListener("click", async () => {
-        isMessageBoard = true;
-        await startMessageBoard();
-    });
-}
+messageBoardBtn.addEventListener("click", async () => {
+    isMessageBoard = true;
+    await startMessageBoard();
+});
 
 async function startMessageBoard() {
     const vehicleSelector = document.getElementById("vehicleSelector");
@@ -1725,6 +2342,7 @@ async function startMessageBoard() {
     try {
         await showScreenSmoothly(messageBoard, vehicleSelector);
         setVehicleSelectButton();
+
         requestAnimationFrame(resizeMessageBoardLED);
     } finally {
         delete messageBoard.dataset.transitioning;
@@ -1737,6 +2355,7 @@ const messageBoardScrollText = document.getElementById("messageBoardScrollText")
 const startMessageBoardScrollBtn = document.getElementById("startMessageBoardScrollBtn");
 const messageBoardLedPreview = document.getElementById("messageBoardLedPreview");
 
+/* ===== メッセージボードLED設定 ===== */
 const MB_DISPLAY_CONFIG = {
     width: 192,
     height: 32,
@@ -1752,13 +2371,20 @@ const MB_LED_GAP = MB_DISPLAY_CONFIG.ledGap;
 const MB_PITCH = MB_LED_SIZE + MB_LED_GAP;
 const MB_DOT_RADIUS = MB_LED_SIZE / 2;
 
-const MB_CANVAS_WIDTH = Math.ceil((MB_WIDTH - 1) * MB_PITCH + MB_LED_SIZE);
-const MB_CANVAS_HEIGHT = Math.ceil((MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE);
+const MB_CANVAS_WIDTH = Math.ceil(
+    (MB_WIDTH - 1) * MB_PITCH + MB_LED_SIZE
+);
+
+const MB_CANVAS_HEIGHT = Math.ceil(
+    (MB_HEIGHT - 1) * MB_PITCH + MB_LED_SIZE
+);
+
 const MB_SCROLL_SPEED = 450;
 
 let mbScrollActive = false;
 let mbScrollText = "";
 let mbScrollWidth = 0;
+
 let mbScrollPixelX = 0;
 
 let mbPreviousFrameTime = 0;
@@ -1766,35 +2392,60 @@ let mbAnimationFrame = null;
 
 const mbScrollCanvas = document.createElement("canvas");
 const mbScrollSourceCanvas = document.createElement("canvas");
+
 const mbOutputContext = messageBoardLedPreview?.getContext("2d");
+
+/* ===== メッセージボード用JSONフォント ===== */
 
 let mbClockFont16 = null;
 let mbClockFont24 = null;
 
 async function loadMessageBoardClockFonts() {
     async function loadFont(path, size) {
-        const response = await fetch(new URL(path, document.baseURI));
+        const response = await fetch(
+            new URL(path, document.baseURI)
+        );
+
         if (!response.ok) {
-            throw new Error(`フォント読み込み失敗: ${path} (${response.status})`);
+            throw new Error(
+                `フォント読み込み失敗: ${path} (${response.status})`
+            );
         }
 
         const font = await response.json();
-        if (font.width !== size || font.height !== size || !font.glyphs) {
-            throw new Error(`${path} のwidth・height・glyphsを確認してください`);
+
+        if (
+            font.width !== size ||
+            font.height !== size ||
+            !font.glyphs
+        ) {
+            throw new Error(
+                `${path} のwidth・height・glyphsを確認してください`
+            );
         }
 
         for (const character of "0123456789:") {
             const rows = font.glyphs[character];
+
             if (!Array.isArray(rows) || rows.length !== size) {
-                throw new Error(`${path}: 文字「${character}」のデータがありません`);
+                throw new Error(
+                    `${path}: 文字「${character}」のデータがありません`
+                );
             }
 
             for (const row of rows) {
-                if (typeof row !== "string" || !/^[0-9a-fA-F]+$/.test(row) || row.length !== size / 4) {
-                    throw new Error(`${path}: 文字「${character}」の行データが不正です`);
+                if (
+                    typeof row !== "string" ||
+                    !/^[0-9a-fA-F]+$/.test(row) ||
+                    row.length !== size / 4
+                ) {
+                    throw new Error(
+                        `${path}: 文字「${character}」の行データが不正です`
+                    );
                 }
             }
         }
+
         return font;
     }
 
@@ -1805,6 +2456,7 @@ async function loadMessageBoardClockFonts() {
 
     mbClockFont16 = font16;
     mbClockFont24 = font24;
+
     return true;
 }
 
@@ -1817,13 +2469,17 @@ const mbTextCanvas = document.createElement("canvas");
 mbTextCanvas.width = MB_WIDTH;
 mbTextCanvas.height = MB_HEIGHT;
 
-const mbTextContext = mbTextCanvas.getContext("2d", { willReadFrequently: true });
+const mbTextContext = mbTextCanvas.getContext("2d", {
+    willReadFrequently: true
+});
+
 const mbBackgroundCanvas = document.createElement("canvas");
 
 mbBackgroundCanvas.width = MB_CANVAS_WIDTH;
 mbBackgroundCanvas.height = MB_CANVAS_HEIGHT;
 
-const mbBackgroundContext = mbBackgroundCanvas.getContext("2d");
+const mbBackgroundContext =
+    mbBackgroundCanvas.getContext("2d");
 
 if (messageBoardLedPreview && mbOutputContext) {
     messageBoardLedPreview.width = MB_CANVAS_WIDTH;
@@ -1836,11 +2492,20 @@ if (messageBoardLedPreview && mbBackgroundContext) {
 
 function drawMessageBoardBackground() {
     mbBackgroundContext.fillStyle = "rgb(0, 0, 0)";
-    mbBackgroundContext.fillRect(0, 0, MB_CANVAS_WIDTH, MB_CANVAS_HEIGHT);
+
+    mbBackgroundContext.fillRect(
+        0,
+        0,
+        MB_CANVAS_WIDTH,
+        MB_CANVAS_HEIGHT
+    );
+
+    mbBackgroundContext.fillStyle = "rgb(0, 0, 0)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
             mbBackgroundContext.beginPath();
+
             mbBackgroundContext.arc(
                 x * MB_PITCH + MB_DOT_RADIUS,
                 y * MB_PITCH + MB_DOT_RADIUS,
@@ -1848,6 +2513,7 @@ function drawMessageBoardBackground() {
                 0,
                 Math.PI * 2
             );
+
             mbBackgroundContext.fill();
         }
     }
@@ -1857,6 +2523,7 @@ function getMessageBoardTime() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
+
     return `${hours}:${minutes}`;
 }
 
@@ -1868,7 +2535,9 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
     const totalWidth = characterCount * displayWidth;
 
     const startX = Math.floor((MB_WIDTH - totalWidth) / 2);
+
     const startY = top + Math.floor((areaHeight - font.height) / 2);
+
     const hexLength = font.width / 4;
 
     mbTextContext.fillStyle = "#ffffff";
@@ -1878,11 +2547,19 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
         if (!rows) continue;
 
         for (let y = 0; y < font.height; y++) {
-            const rowBits = Number.parseInt(rows[y].padStart(hexLength, "0"), 16);
+            const rowBits = Number.parseInt(
+                rows[y].padStart(hexLength, "0"),
+                16
+            );
 
             for (let x = 0; x < displayWidth; x++) {
-                const sourceX = Math.floor(x * font.width / displayWidth);
-                const bit = Math.floor(rowBits / (2 ** (font.width - 1 - sourceX))) % 2;
+                const sourceX = Math.floor(
+                    x * font.width / displayWidth
+                );
+
+                const bit = Math.floor(
+                    rowBits / (2 ** (font.width - 1 - sourceX))
+                ) % 2;
 
                 if (bit !== 1) continue;
 
@@ -1898,51 +2575,85 @@ function drawMessageBoardClockBitmap(font, displayWidth, top, areaHeight) {
 }
 
 function drawMessageBoardClockLarge() {
-    drawMessageBoardClockBitmap(mbClockFont24, 24, 0, MB_HEIGHT);
+    drawMessageBoardClockBitmap(
+        mbClockFont24,
+        24,
+        0,
+        MB_HEIGHT
+    );
 }
 
 function drawMessageBoardClockSmall() {
-    drawMessageBoardClockBitmap(mbClockFont16, 16, 0, 16);
+    drawMessageBoardClockBitmap(
+        mbClockFont16,
+        16,
+        0,
+        16
+    );
 }
 
 function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
-    const fontSize = hasClock ? 16 : 24;
-    const top = hasClock ? 16 : 0;
-    const height = hasClock ? 16 : 32;
+    const fontSize = hasClock ? 16 : 20;
+    const top = hasClock ? 16 : 6;
+    const height = hasClock ? 16 : 20;
     const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
-    let ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
+    let ctx = mbScrollSourceCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
+
     ctx.font = font;
 
-    const textWidth = Math.ceil(ctx.measureText(mbScrollText).width) + 4;
+    const textWidth = Math.ceil(
+        ctx.measureText(mbScrollText).width
+    ) + 4;
 
     mbScrollSourceCanvas.width = Math.max(1, textWidth);
     mbScrollSourceCanvas.height = MB_HEIGHT;
 
-    ctx = mbScrollSourceCanvas.getContext("2d", { willReadFrequently: true });
+    ctx = mbScrollSourceCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
     ctx.clearRect(0, 0, textWidth, MB_HEIGHT);
     ctx.font = font;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
 
-    ctx.fillText(mbScrollText, 2, top + height / 2);
+    ctx.fillText(
+        mbScrollText,
+        2,
+        top + height / 2
+    );
 
-    mbScrollCanvas.width = Math.ceil((textWidth - 1) * MB_PITCH + MB_LED_SIZE);
+    mbScrollCanvas.width = Math.ceil(
+        (textWidth - 1) * MB_PITCH + MB_LED_SIZE
+    );
     mbScrollCanvas.height = MB_CANVAS_HEIGHT;
 
     const out = mbScrollCanvas.getContext("2d");
-    out.clearRect(0, 0, mbScrollCanvas.width, mbScrollCanvas.height);
+    out.clearRect(
+        0,
+        0,
+        mbScrollCanvas.width,
+        mbScrollCanvas.height
+    );
 
-    const pixels = ctx.getImageData(0, 0, textWidth, MB_HEIGHT).data;
-    // メッセージボードのWEBプレビュー描画色を白色(255, 255, 255)に変更
+    const pixels = ctx.getImageData(
+        0,
+        0,
+        textWidth,
+        MB_HEIGHT
+    ).data;
+
     out.fillStyle = "rgb(255, 255, 255)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < textWidth; x++) {
             const index = (y * textWidth + x) * 4;
+
             if (pixels[index + 3] < 128) continue;
 
             out.beginPath();
@@ -1960,17 +2671,46 @@ function createMessageBoardScrollCanvas() {
     mbScrollWidth = mbScrollCanvas.width;
 }
 
+function drawMessageBoardScrollTextFrame() {
+    const ctx = mbTextContext;
+    const hasClock = !!timeCheck?.checked;
+
+    const top = hasClock ? 16 : 6;
+    const height = hasClock ? 16 : 20;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.rect(0, top, MB_WIDTH, height);
+    ctx.clip();
+
+    ctx.drawImage(
+        mbScrollCanvas,
+        Math.floor(mbScrollPixelX),
+        0
+    );
+
+    ctx.restore();
+}
+
 function renderMessageBoardLEDs() {
     if (!mbOutputContext || !mbTextContext) return;
 
     mbOutputContext.drawImage(mbBackgroundCanvas, 0, 0);
 
-    const pixels = mbTextContext.getImageData(0, 0, MB_WIDTH, MB_HEIGHT).data;
+    const pixels = mbTextContext.getImageData(
+        0,
+        0,
+        MB_WIDTH,
+        MB_HEIGHT
+    ).data;
+
     mbOutputContext.fillStyle = "rgb(255, 255, 255)";
 
     for (let y = 0; y < MB_HEIGHT; y++) {
         for (let x = 0; x < MB_WIDTH; x++) {
             const index = (y * MB_WIDTH + x) * 4;
+
             if (pixels[index + 3] < 128) continue;
 
             mbOutputContext.beginPath();
@@ -1987,16 +2727,28 @@ function renderMessageBoardLEDs() {
 
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         const hasClock = !!timeCheck?.checked;
-        const top = (hasClock ? 16 : 0) * MB_PITCH;
-        const height = (hasClock ? 16 : 32) * MB_PITCH;
+        const top = (hasClock ? 16 : 6) * MB_PITCH;
+        const height = (hasClock ? 16 : 20) * MB_PITCH;
 
         mbOutputContext.save();
         mbOutputContext.beginPath();
-        mbOutputContext.rect(0, top, MB_CANVAS_WIDTH, height);
+        mbOutputContext.rect(
+            0,
+            top,
+            MB_CANVAS_WIDTH,
+            height
+        );
         mbOutputContext.clip();
 
-        const drawX = Math.round(mbScrollPixelX / MB_PITCH) * MB_PITCH;
-        mbOutputContext.drawImage(mbScrollCanvas, drawX, 0);
+        const drawX =
+            Math.round(mbScrollPixelX / MB_PITCH) * MB_PITCH;
+
+        mbOutputContext.drawImage(
+            mbScrollCanvas,
+            drawX,
+            0
+        );
+
         mbOutputContext.restore();
     }
 }
@@ -2004,7 +2756,12 @@ function renderMessageBoardLEDs() {
 function drawMessageBoardFrame() {
     if (!mbTextContext) return;
 
-    mbTextContext.clearRect(0, 0, MB_WIDTH, MB_HEIGHT);
+    mbTextContext.clearRect(
+        0,
+        0,
+        MB_WIDTH,
+        MB_HEIGHT
+    );
 
     if (mbScrollActive && messageBoardScrollCheck?.checked) {
         if (timeCheck?.checked) {
@@ -2033,6 +2790,7 @@ function stopMessageBoardScroll() {
     }
 
     drawMessageBoardFrame();
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 }
 
 function animateMessageBoardScroll(timestamp) {
@@ -2042,26 +2800,35 @@ function animateMessageBoardScroll(timestamp) {
     }
 
     if (mbPreviousFrameTime !== 0) {
-        const deltaTime = Math.min((timestamp - mbPreviousFrameTime) / 1000, 0.05);
+        const deltaTime = Math.min(
+            (timestamp - mbPreviousFrameTime) / 1000,
+            0.05
+        );
+
         mbScrollPixelX -= MB_SCROLL_SPEED * deltaTime;
     }
 
     mbPreviousFrameTime = timestamp;
 
     const gap = 32 * MB_PITCH;
+
     if (mbScrollPixelX + mbScrollWidth < -gap) {
         mbScrollPixelX = MB_CANVAS_WIDTH;
     }
 
     drawMessageBoardFrame();
-    mbAnimationFrame = requestAnimationFrame(animateMessageBoardScroll);
+
+    mbAnimationFrame = requestAnimationFrame(
+        animateMessageBoardScroll
+    );
 }
 
 async function startMessageBoardScroll() {
     if (!messageBoardScrollCheck?.checked) return;
     if (!messageBoardScrollText || !mbTextContext) return;
 
-    mbScrollText = messageBoardScrollText.value.replace(/\r?\n/g, " ");
+    mbScrollText = messageBoardScrollText.value
+        .replace(/\r?\n/g, " ");
 
     if (!mbScrollText.trim()) {
         stopMessageBoardScroll();
@@ -2077,6 +2844,7 @@ async function startMessageBoardScroll() {
 
     if (timeCheck?.checked) {
         const fontsLoaded = await mbClockFontsReady;
+
         if (!fontsLoaded) {
             console.error("時刻用JSONフォントを確認してください。");
             drawMessageBoardFrame();
@@ -2095,7 +2863,12 @@ async function startMessageBoardScroll() {
     }
 
     drawMessageBoardFrame();
-    mbAnimationFrame = requestAnimationFrame(animateMessageBoardScroll);
+
+    mbAnimationFrame = requestAnimationFrame(
+        animateMessageBoardScroll
+    );
+
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 }
 
 timeCheck?.addEventListener("change", () => {
@@ -2103,45 +2876,47 @@ timeCheck?.addEventListener("change", () => {
         startMessageBoardScroll();
     } else {
         drawMessageBoardFrame();
+        if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
     }
 });
 
 messageBoardScrollCheck?.addEventListener("change", () => {
     if (messageBoardScrollCheck.checked) {
-        if (messageBoardScrollText) messageBoardScrollText.hidden = false;
-        if (startMessageBoardScrollBtn) startMessageBoardScrollBtn.hidden = false;
+        messageBoardScrollText.hidden = false;
+        startMessageBoardScrollBtn.hidden = false;
+
         drawMessageBoardFrame();
     } else {
-        if (messageBoardScrollText) messageBoardScrollText.hidden = true;
-        if (startMessageBoardScrollBtn) startMessageBoardScrollBtn.hidden = true;
+        messageBoardScrollText.hidden = true;
+        startMessageBoardScrollBtn.hidden = true;
+
         stopMessageBoardScroll();
     }
+    if (typeof triggerAutoTransfer === "function") triggerAutoTransfer();
 });
 
-startMessageBoardScrollBtn?.addEventListener("click", () => {
-    startMessageBoardScroll();
-    if (typeof triggerAutoTransfer === "function") {
-        triggerAutoTransfer();
-    }
-});
+startMessageBoardScrollBtn?.addEventListener(
+    "click",
+    startMessageBoardScroll
+);
 
-let lastAutomatedTimeStr = "";
+/* 【追加機能】時刻（分）の切り替わりを記録する変数 */
+let lastMbTime = "";
 
+/* スクロールしていない間も時刻を定期的に更新 & 分変更時に自動再転送 */
 setInterval(() => {
-    const currentTimeStr = getMessageBoardTime();
-    const isMb = typeof isMessageBoard !== "undefined" && isMessageBoard;
+    const currentTime = getMessageBoardTime();
+    const timeChanged = currentTime !== lastMbTime;
 
     if (!mbScrollActive) {
         drawMessageBoardFrame();
     }
 
-    if (currentTimeStr !== lastAutomatedTimeStr) {
-        lastAutomatedTimeStr = currentTimeStr;
-        if (isMb && timeCheck?.checked) {
-            drawMessageBoardFrame();
-            if (typeof triggerAutoTransfer === "function") {
-                triggerAutoTransfer();
-            }
+    // 時計表示がオンで分が更新された場合に自動転送を発火
+    if (timeCheck?.checked && timeChanged) {
+        lastMbTime = currentTime;
+        if (typeof triggerAutoTransfer === "function") {
+            triggerAutoTransfer();
         }
     }
 }, 1000);
@@ -2162,14 +2937,35 @@ function resizeMessageBoardLED() {
     const rect = main.getBoundingClientRect();
     const style = getComputedStyle(main);
 
-    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-    const maxWidth = Math.max(1, main.clientWidth - paddingX - 24);
-    const maxHeight = Math.max(1, window.innerHeight - Math.max(0, rect.top) - 24);
+    const paddingX =
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight);
 
-    const scale = Math.min(1, maxWidth / canvas.width, maxHeight / canvas.height);
+    const maxWidth = Math.max(
+        1,
+        main.clientWidth - paddingX - 24
+    );
 
-    const displayWidth = Math.max(1, Math.floor(canvas.width * scale));
-    const displayHeight = Math.max(1, Math.floor(canvas.height * scale));
+    const maxHeight = Math.max(
+        1,
+        window.innerHeight - Math.max(0, rect.top) - 24
+    );
+
+    const scale = Math.min(
+        1,
+        maxWidth / canvas.width,
+        maxHeight / canvas.height
+    );
+
+    const displayWidth = Math.max(
+        1,
+        Math.floor(canvas.width * scale)
+    );
+
+    const displayHeight = Math.max(
+        1,
+        Math.floor(canvas.height * scale)
+    );
 
     canvas.style.width = `${displayWidth}px`;
     canvas.style.height = `${displayHeight}px`;
@@ -2180,7 +2976,8 @@ window.addEventListener("resize", resizeMessageBoardLED);
 let mbMessageBoardResizeObserver = null;
 let mbResizeFrameId = null;
 
-const mbPreviewMain = messageBoardLedPreview?.closest("#messageBoard main");
+const mbPreviewMain =
+    messageBoardLedPreview?.closest("#messageBoard main");
 
 if (mbPreviewMain && "ResizeObserver" in window) {
     mbMessageBoardResizeObserver = new ResizeObserver(() => {
