@@ -2653,9 +2653,9 @@ function drawMessageBoardClockSmall() {
 function createMessageBoardScrollCanvas() {
     const hasClock = !!timeCheck?.checked;
 
-    const fontSize = hasClock ? 16 : 24;
-    const top = hasClock ? 16 : 4;
-    const height = hasClock ? 16 : 24;
+    const fontSize = hasClock ? 16 : 20;
+    const top = hasClock ? 16 : 6;
+    const height = hasClock ? 16 : 20;
     const font = `${fontSize}px "MS PGothic", "ＭＳ Ｐゴシック", sans-serif`;
 
     let ctx = mbScrollSourceCanvas.getContext("2d", {
