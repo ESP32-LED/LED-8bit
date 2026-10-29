@@ -312,6 +312,13 @@ function getSlideMode() {
     if (typeof isVerticalSlideEnabled === "function" && !isVerticalSlideEnabled()) {
         return 0x56;
     }
+
+    // PC版 nextScene() と同じ条件にする。
+    // メイン表示のシーンが1件以下なら、種別側のシーン数などに関係なく縦スライドしない。
+    if (typeof sceneList === "undefined" || !Array.isArray(sceneList) || sceneList.length <= 1) {
+        return 0x56;
+    }
+
     const vCheck = document.getElementById("verticalSlideCheck");
     const vCheck2 = document.getElementById("verticalSlideCheck2");
     const choppyCheck = document.getElementById("choppyScrollCheck");
