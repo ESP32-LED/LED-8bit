@@ -897,6 +897,10 @@ button.tap {
     border-radius: 10px;
 }
 
+#vehicleSelectMethod option {
+    display: none!important;
+}
+
 #vehicleSelect {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
