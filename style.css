@@ -897,7 +897,7 @@ button.tap {
     border-radius: 10px;
 }
 
-#vehicleSelectMethod option {
+#vehicleSelectMethod option[hidden] {
     display: none!important;
 }
 
