@@ -401,6 +401,16 @@
         "description": "小海線"
     },
     {
+        "id": "E259",
+        "name": "E259系",
+        "config": "vehicles/E259/config.json",
+        "led": "vehicles/E259/led.json",
+        "icons": [
+            "vehicles/E259/icons/icon1.png"
+        ],
+        "site": "vehicles/E259/site.json"
+    },
+    {
         "id": "E26",
         "name": "E26系",
         "config": "vehicles/E26/config.json",
