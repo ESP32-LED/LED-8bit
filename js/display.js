@@ -4,10 +4,16 @@ function drawCarNumber(carNumber, matrix) {
 
     let usedNormal = true;
     let destinationWidth;
+    const type = getItem("type", typeId);
 
-    const view = isCarNumberFullScreen(carNumber)
+    let view = isCarNumberFullScreen(carNumber)
         ? "full"
         : "normal";
+    if (config.isE259) {
+        if (!isTypeFullScreen(type)) {
+            view = "small";
+        }
+    }
 
     const data =
         carNumber.view?.[view]?.[lang]
@@ -16,8 +22,6 @@ function drawCarNumber(carNumber, matrix) {
         ?? carNumber.view?.normal?.ja;
 
     if (!data) return;
-
-    const type = getItem("type", typeId);
     const dest = getItem("destination", destinationId);
 
     if (config.hasCarNumberFull) {
@@ -32,7 +36,17 @@ function drawCarNumber(carNumber, matrix) {
     if (config.hasCarNumberNormal) {
         destinationWidth = getTypeWidth(type, usedNormal);
     }
-    drawImage(data, destinationWidth, 0, matrix);
+    let yOffset = 0;
+    if (config.isE259) {
+        if (!isTypeFullScreen(type)) {
+            if (type) {
+                yOffset = 14;
+            } else {
+                yOffset = 14;
+            }
+        }
+    }
+    drawImage(data, destinationWidth, yOffset, matrix);
 }
 
 function drawType(type, matrix) {
@@ -42,6 +56,9 @@ function drawType(type, matrix) {
     let view = "normal";
     if (typeMode === "information") {
         typeLang = "information";
+    }
+    if (typeMode === "information2") {
+        typeLang = "information2";
     }
     const dest = getItem("destination", destinationId);
     const typeHasNormal = hasTypeNormal(type);
@@ -174,7 +191,15 @@ function drawType(type, matrix) {
     const carNumber = getItem("carNumber", carNumberId)
     
     if (config.hasCarNumberSmall) {
-        carNumberWidth = getCarNumberWidth(carNumber, usedNormal)
+        if (config.carNumber === "left" && (!config.isE259 || (config.isE259 && isTypeFullScreen(type)))) {
+            if (config.isE259 && type.view?.full?.ja?.width === 128) {
+                carNumberWidth = 0;
+            } else {
+                carNumberWidth = getCarNumberWidth(carNumber, usedNormal);
+            }
+        } else {
+            carNumberWidth = 0;
+        }
     } else {
         carNumberWidth = 0;
     }
@@ -216,13 +241,21 @@ function drawTypeSmall(type, matrix) {
     if (typeMode === "information") {
         typeLang = "information";
     }
+    if (typeMode === "information2") {
+        typeLang = "information2";
+    }
+    console.log("typeMode:", typeMode);
 
-    const view = isTypeFullScreen(type)
+    let view = isTypeFullScreen(type)
         ? "full"
         : "normal";
+    const hasFullSmallType = !!type.view?.full_small;
+    if (hasFullSmallType) {
+        view = "full_small";
+    }
 
     let data =
-        type.view?.[view]?.[lang]
+        type.view?.[view]?.[typeLang]
         ?? type.view?.[view]?.ja;
         if (view === "normal") {
             usedNormal = true;
@@ -230,7 +263,7 @@ function drawTypeSmall(type, matrix) {
 
     if (!data) {
         data =
-            type.view?.normal?.[lang]
+            type.view?.normal?.[typeLang]
             ?? type.view?.normal?.ja;
         usedNormal = true;
     }
@@ -241,6 +274,9 @@ function drawTypeSmall(type, matrix) {
     if (usedNormal) {
         carNumberWidth = getCarNumberWidth(carNumber, usedNormal);
     } else {
+        carNumberWidth = 0;
+    }
+    if (view === "full_small") {
         carNumberWidth = 0;
     }
 
@@ -329,12 +365,24 @@ function drawDestination(dest, matrix) {
         }
         if (config.destinationPosition === "next") {
             typewidth = getCarNumberWidth(carNumber, usedNormal);
+            if (!carNumber && config.isE259) {
+                typewidth = getItem("carNumber", "null_carNumber").view?.small?.ja?.width;
+            }
         }
     } else {
         typewidth = 0;
     }
     if (config.destinationPosition === "next") {
         yOffset = config.nextPosition;
+        if (config.isE259 && !isTypeFullScreen(type)) {
+            yOffset = type.view?.full_small?.[lang]?.height;
+            if (typeMode === "information") {
+                yOffset = type.view?.full_small?.information?.height;
+            }
+            if (typeMode === "information2") {
+                yOffset = type.view?.full_small?.information2?.height;
+            }
+        }
     } else {
         yOffset = 0;
     }
@@ -862,9 +910,19 @@ function getCarNumberWidth(carNumber, used) {
         }
     }
 
-    const view = isCarNumberFullScreen(carNumber)
+    let view = isCarNumberFullScreen(carNumber)
         ? "full"
         : "normal";
+    let type;
+    type = getItem("type", typeId);
+    if (!type) {
+        type = getItem("type", "null_type");
+    }
+    if (config.isE259) {
+        if (!isTypeFullScreen(type)) {
+            view = "small";
+        }
+    }
 
     const lang = getLangForPart();
 
@@ -912,11 +970,12 @@ function getInformationWidth(info, used) {
 function isTypeFullScreen(type) {
 
     if(!type) return false;
+    console.log (type);
 
     let hasNormal;
     let hasFull;
     if (typeScrollId === null) {
-        hasNormal = !!type.view.normal || !!type.view.normal2 || !!type.view.normal3;
+        hasNormal = !!type.view.normal || !!type.view.normal2 || !!type.view.normal3 || !!type.view.full_small;
         hasFull = !!type.view.full;
     } else {
         const typeScroll = getItem("type", typeScrollId);
@@ -1108,7 +1167,16 @@ function hasTypeInformation() {
     const type = getItem("type", typeId);
     if (!type) return;
     return !!type.view?.normal?.information
-        || !!type.view?.full?.information;
+        || !!type.view?.full?.information
+        || !!type.view?.full_small?.information;
+}
+
+function hasTypeInformation2() {
+    const type = getItem("type", typeId);
+    if (!type) return;
+    return !!type.view?.normal?.information2
+        || !!type.view?.full?.information2
+        || !!type.view?.full_small?.information2;
 }
 
 function hasTypeNormal() {
