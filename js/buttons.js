@@ -45,6 +45,8 @@ function createTypeButtons() {
                         item.view?.normal2?.en?.name ??
                         item.view?.normal3?.ja?.name ??
                         item.view?.normal3?.en?.name ??
+                        item.view?.full_small?.ja?.name ??
+                        item.view?.full_small?.en?.name ??
                         item.name ??
                         "no-name";
                     btn.textContent = label;
@@ -156,6 +158,8 @@ function createTypeButtons() {
                     item.view?.normal2?.en?.name ??
                     item.view?.normal3?.ja?.name ??
                     item.view?.normal3?.en?.name ??
+                    item.view?.full_small?.ja?.name ??
+                    item.view?.full_small?.en?.name ??
                     item.name ??
                     "no-name";
                 btn.textContent = label;
@@ -258,6 +262,8 @@ function createTypeButtons() {
                 item.view?.normal2?.en?.name ??
                 item.view?.normal3?.ja?.name ??
                 item.view?.normal3?.en?.name ??
+                item.view?.full_small?.ja?.name ??
+                item.view?.full_small?.en?.name ??
                 item.name ??
                 "no-name";
             btn.textContent = label;
@@ -1574,7 +1580,11 @@ function setTimeSetting() {
     if (carNumberId === null) {
         document.getElementById("carNumberTime").hidden = true;
     } else {
-        document.getElementById("carNumberTime").hidden = false;
+        if (config.hasCarNumberNormal || config.hasCarNumberFull) {
+            document.getElementById("carNumberTime").hidden = false;
+        } else {
+            document.getElementById("carNumberTime").hidden = true;
+        }
     }
 }
 startScrollBtn.addEventListener("click", () => {
