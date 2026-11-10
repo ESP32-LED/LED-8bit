@@ -542,6 +542,11 @@ async function startVehicle() {
             }
         }
 
+        // 車両ごとの設定に応じて、表示切替時間のUIを初期化する。
+        if (config.setSwitchingTime && typeof setTimeSetting === "function") {
+            setTimeSetting();
+        }
+
         resizeLed();
         setupVehicleUI();
         startRenderLoop();
@@ -915,9 +920,21 @@ function getSceneInterval() {
         if (currentScene.information === "information") {
             sceneInterval = infoTime * 1000;
         }
-        if (currentScene.information === "destination") {
+        if (currentScene.information === "destination" || currentScene.information === "destination_next") {
             if (currentScene.lang === "ja") sceneInterval = jaTime * 1000;
             if (currentScene.lang === "en") sceneInterval = enTime * 1000;
+
+            // E259系では種別案内の有無に合わせて日本語の表示時間を調整する。
+            if (config.isE259 && hasTypeInformation() &&
+                typeof hasTypeInformation2 === "function" && hasTypeInformation2()) {
+                if (currentScene.lang === "ja") {
+                    if (typeMode === null) {
+                        sceneInterval = 6000;
+                    } else {
+                        sceneInterval = 3000;
+                    }
+                }
+            }
         }
     } else {
         sceneInterval = config.sceneInterval;
@@ -1000,7 +1017,7 @@ function buildSceneList() {
                 }
             }
         }
-        
+
         if (informationId != null) {
             if (config.informationPosition === "next") {
                 if (config.informationAhead) {
@@ -1043,6 +1060,15 @@ function buildSceneList() {
                             information: "destination_next",
                             next: false,
                         });
+
+                        if (config.isE259 && hasTypeInformation() &&
+                            typeof hasTypeInformation2 === "function" && hasTypeInformation2()) {
+                            sceneList.push({
+                                lang: "ja",
+                                information: "destination_next",
+                                next: false,
+                            });
+                        }
                     }
                 } else {
                     sceneList.push({
@@ -1727,6 +1753,9 @@ function buildTypeSceneList() {
     if (hasTypeInformation()) {
         typeSceneList.push({ typeInfo: "information" });
     }
+    if (typeof hasTypeInformation2 === "function" && hasTypeInformation2()) {
+        typeSceneList.push({ typeInfo: "information2" });
+    }
 }
 
 function applyTypeScene() {
@@ -1753,7 +1782,7 @@ function initSimulator() {
     if (transferStatusEl) transferStatusEl.textContent = "";
 
     const elementsToClear = [
-        "typeButtons", "destinationButtons", "informationButtons", 
+        "typeButtons", "destinationButtons", "informationButtons",
         "information2Buttons", "lineButtons", "nextModeButtons", "carNumberButtons"
     ];
     elementsToClear.forEach(id => {
@@ -1892,7 +1921,6 @@ document.querySelectorAll(".numberInput").forEach((container) => {
 
 const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
-
 
 async function returnToVehicleSelector() {
     const returningFromMessageBoard = isMessageBoard;
@@ -2045,7 +2073,6 @@ async function returnToVehicleSelector() {
     }
 }
 
-
 function resetDestinationCycle() {
     if (destinationScrollTimer !== null) {
         clearTimeout(destinationScrollTimer);
@@ -2185,7 +2212,7 @@ ledAgingLebel.addEventListener("input", () => {
     ledAgingLebelValue.textContent = ledAgingLebel.value;
 });
 
-const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn") ;
+const displayVerticalSlideBtn = document.getElementById("displayVerticalSlideBtn");
 displayVerticalSlideBtn.addEventListener("click", () => {
     if (isDisplayVerticalSlide === false) {
         isDisplayVerticalSlide = true;
@@ -2874,7 +2901,6 @@ function stopMessageBoardScroll() {
     drawMessageBoardFrame();
 }
 
-/* スクロールアニメーション */
 /* スクロールアニメーション */
 function animateMessageBoardScroll(timestamp) {
     if (!mbScrollActive || !messageBoardScrollCheck?.checked) {
