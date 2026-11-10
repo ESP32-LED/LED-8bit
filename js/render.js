@@ -81,7 +81,9 @@ function createDisplayMatrix() {
 
     // 号車
     if (config.hasCarNumberSmall) {
-        drawCarNumber(carNumber, matrix);
+        if (!(config.isE259 && type?.view?.full?.ja?.width === 128)) {
+            drawCarNumber(carNumber, matrix);
+        }
     }
 
     if (!config.type_destination_changed) {
