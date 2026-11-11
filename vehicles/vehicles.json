@@ -408,7 +408,8 @@
         "icons": [
             "vehicles/E259/icons/icon1.png"
         ],
-        "site": "vehicles/E259/site.json"
+        "site": "vehicles/E259/site.json",
+        "description": "成田エクスプレス"
     },
     {
         "id": "E26",
