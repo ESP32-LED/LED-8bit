@@ -21,6 +21,7 @@
     "hasNextFullScreen": false,
     "hasScrollFullScreen": false,
     "information_ja_en": false,
+    "hasAnimation": true,
 
     "hasInformationCombined": false,
 
@@ -59,5 +60,9 @@
 
     "ledShape": "circle",
 
-    "isE259": true
+    "isE259": true,
+
+    "animationInterval": 100,
+    "firstAnimationInterval": 700,
+    "lastAnimationInterval": 1000
 }
