@@ -1621,6 +1621,14 @@ a,
 }
 
 #animation {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: var(--ui-font);
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
 }
 
