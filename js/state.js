@@ -72,4 +72,8 @@ let destinationCycleSmallMode = "destination";
 let isMessageBoard = false;
 let messageBoardScroll = false;
 
+let nexAnimation = false;
+let isStartNexAnimation = false;
+let gAnimationNumber = 0;
+
 const langs = ["ja", "en"];

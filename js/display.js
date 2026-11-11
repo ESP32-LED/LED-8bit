@@ -244,7 +244,6 @@ function drawTypeSmall(type, matrix) {
     if (typeMode === "information2") {
         typeLang = "information2";
     }
-    console.log("typeMode:", typeMode);
 
     let view = isTypeFullScreen(type)
         ? "full"
@@ -745,6 +744,11 @@ function drawNext(next, matrix) {
     drawImage(data, typewidth, nextPosition, matrix);
 }
 
+function drawAnimation(animationNumber, matrix) {
+    const data = getItem("animation", "animation").view?.normal?.[animationNumber];
+    drawImage(data, 0, 0, matrix);
+}
+
 function getTypeWidth(type, used, view) {
     if(!type) {
         if (config.hasType) {
@@ -970,7 +974,6 @@ function getInformationWidth(info, used) {
 function isTypeFullScreen(type) {
 
     if(!type) return false;
-    console.log (type);
 
     let hasNormal;
     let hasFull;
