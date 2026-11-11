@@ -1619,6 +1619,11 @@ a,
 #displayLog[hidden] {
     display:none;
 }
+
+#animation {
+    font-size: 14px;
+}
+
 #animation[hidden] {
     display:none;
 }
