@@ -1632,6 +1632,34 @@ a,
     font-size: 14px;
 }
 
+#scrollPreview {
+    width: 100%;
+    min-height: 30px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--ui-font);
+    font-size: 18px;
+}
+
+#scroll h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 20px;
+}
+
+#scroll h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 18px;
+}
+
+#scrollStatusLabel[hidden] {
+    display: none !important;
+}
+
+#scrollPreviewLabel[hidden] {
+    display: none !important;
+}
 #animation[hidden] {
     display:none;
 }
