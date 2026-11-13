@@ -2199,9 +2199,16 @@ scrollCheck.addEventListener("change", () => {
     if (scrollCheck.checked) {
         scrollText.hidden = false;
         startScrollBtn.hidden = false;
+        scrollStatusLabel.hidden = false;
+        scrollPreview.hidden = false;
+        scrollPreviewLabel.hidden = false;
+        setScrollTextColor();
     } else {
         scrollText.hidden = true;
         startScrollBtn.hidden = true;
+        scrollStatusLabel.hidden = true;
+        scrollPreview.hidden = true;
+        scrollPreviewLabel.hidden = true;
 
         stopScroll();
 
@@ -2227,6 +2234,7 @@ scrollCheck.addEventListener("change", () => {
         destinationCycleSmallMode = "destination";
 
         startRenderLoop();
+        setScrollTextColor();
     }
 });
 
