@@ -371,6 +371,7 @@ document.addEventListener("click", (e) => {
         e.target.closest?.("#scroll") ||
         e.target.id === "scrollText" ||
         e.target.id === "scrollCheck" ||
+        e.target.id === "animationCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
@@ -415,6 +416,7 @@ document.addEventListener("change", (e) => {
     if (!e.target) return;
     if (
         e.target.id === "scrollCheck" ||
+        e.target.id === "animationCheck" ||
         e.target.id === "verticalSlideCheck" ||
         e.target.id === "verticalSlideCheck2" ||
         e.target.id === "choppyScrollCheck" ||
@@ -1097,9 +1099,15 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
     header[1] = slideModeVal;
     header[2] = sceneCount & 0xff;
 
-    // NEXアニメーションフラグを速度指定バイトの上位ビットに仕込む
+    // NEXアニメーションフラグを速度指定バイトの上位ビットに仕込む（対応車両のみ有効）
     let speedVal = transferScrollSpeed & 0x7f;
-    if (typeof nexAnimation !== "undefined" && nexAnimation) {
+    if (
+        typeof config !== "undefined" &&
+        config &&
+        config.hasAnimation &&
+        typeof nexAnimation !== "undefined" &&
+        nexAnimation
+    ) {
         speedVal |= 0x80;
     }
     header[3] = speedVal;
@@ -1123,17 +1131,33 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
                 if (currentTypeScene.lang === "ja") interval = jaTime;
                 else if (currentTypeScene.lang === "en") interval = enTime;
             } else if (currentScene) {
+                const info = currentScene.information || "";
                 if (
-                    currentScene.information === "carNumber" ||
-                    currentScene.information === "carNumber_normal" ||
-                    currentScene.information === "carNumber_destination"
+                    info === "carNumber" ||
+                    info === "carNumber_normal" ||
+                    info === "carNumber_destination"
                 ) {
                     interval = carNumberTime;
-                } else if (currentScene.information === "information") {
+                } else if (
+                    info === "information" ||
+                    info === "information_next" ||
+                    info === "information2" ||
+                    info === "information2_next" ||
+                    info === "information_information2" ||
+                    info === "information_small1" ||
+                    info === "information_small2" ||
+                    info === "line"
+                ) {
                     interval = infoTime;
-                } else if (currentScene.information === "destination") {
+                } else if (
+                    info === "destination" ||
+                    info === "destination_next" ||
+                    info === "destination_information" ||
+                    info === "type"
+                ) {
                     if (currentScene.lang === "ja") interval = jaTime;
-                    if (currentScene.lang === "en") interval = enTime;
+                    else if (currentScene.lang === "en") interval = enTime;
+                    else if (currentScene.lang === "info") interval = infoTime;
                 }
             } else {
                 interval = (i % 2 === 1) ? enTime : jaTime;
