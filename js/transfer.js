@@ -555,7 +555,7 @@ function getESP32TypeDestinationScrollStates() {
         states.push({ state: typeEnScrollState, kind: 0, lang: 1, category: "type", langName: "en" });
     }
     if (typeof destinationJaScrollState !== "undefined") {
-        states.push({ state: destinationJaScrollState, kind: 1, lang: 0, category: "destination", langName: "ja" });
+        states.push({ state: destinationJaScrollState, kind: 1, lang: 0, category: "destination", langName: "en" });
     }
     if (typeof destinationEnScrollState !== "undefined") {
         states.push({ state: destinationEnScrollState, kind: 1, lang: 1, category: "destination", langName: "en" });
@@ -1096,7 +1096,14 @@ function createESP32Header(sceneCount, hw, margin, scrollWidth, transferScrollSp
 
     header[1] = slideModeVal;
     header[2] = sceneCount & 0xff;
-    header[3] = transferScrollSpeed & 0xff;
+
+    // NEXアニメーションフラグを速度指定バイトの上位ビットに仕込む
+    let speedVal = transferScrollSpeed & 0x7f;
+    if (typeof nexAnimation !== "undefined" && nexAnimation) {
+        speedVal |= 0x80;
+    }
+    header[3] = speedVal;
+    
     header[4] = scrollWidth & 0xff;
     header[5] = (scrollWidth >> 8) & 0xff;
     header[6] = xOff & 0xff;
