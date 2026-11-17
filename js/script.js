@@ -1,7 +1,8 @@
 // 下側の版で追加されたアニメーション機能用の初期値
 // 別ファイル側ですでに設定されている場合は、その値を維持する。
 if (typeof window !== "undefined") {
-    if (typeof window.nexAnimation === "undefined") window.nexAnimation = false;
+    // デフォルトでオンにする
+    if (typeof window.nexAnimation === "undefined") window.nexAnimation = true;
     if (typeof window.gAnimationNumber === "undefined") window.gAnimationNumber = 0;
 }
 
@@ -651,6 +652,10 @@ function setupVehicleUI() {
     const animationGroup = document.getElementById("animation");
     if (animationGroup) {
         animationGroup.hidden = !config.hasAnimation;
+        const animationCheck = document.getElementById("animationCheck");
+        if (animationCheck) {
+            animationCheck.checked = nexAnimation;
+        }
     }
 
     // ===== 縦スライド切り替えUI（チェックボックス）の動的表示制御 =====
