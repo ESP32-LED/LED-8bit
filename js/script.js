@@ -1760,11 +1760,14 @@ function buildSceneList() {
         }
     }
     if (config.hasAnimation && nexAnimation) {
-        sceneList.push({
-            lang: null,
-            information: "animation",
-            next: false
-        });
+        // BLE転送中はESP32側で自動的にGIFを挟むため、PC側のダミーシーンは除外する
+        if (typeof isBleTransferring === "undefined" || !isBleTransferring) {
+            sceneList.push({
+                lang: null,
+                information: "animation",
+                next: false
+            });
+        }
     }
 }
 
@@ -1786,7 +1789,10 @@ function buildTypeSceneList() {
         typeSceneList.push({ typeInfo: "information2" });
     }
     if (nexAnimation) {
-        typeSceneList.push({ typeInfo: "null" });
+        // BLE転送中はESP32側で自動再生するためダミーシーンを除外
+        if (typeof isBleTransferring === "undefined" || !isBleTransferring) {
+            typeSceneList.push({ typeInfo: "null" });
+        }
     }
 }
 
