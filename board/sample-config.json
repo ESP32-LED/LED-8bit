@@ -1,32 +1,26 @@
 {
  "format": "atos-board-config",
  "version": 2,
- "name": "サンプル（架空ダイヤ）",
+ "name": "発車標",
  "layout": {
-  "cols": 12,
+  "cols": 8,
   "rows": 2,
   "timeStyle": "3",
   "leadingZero": false,
   "columns": [
    {
     "field": "type",
-    "digits": 3
+    "digits": 2,
+    "align": "center"
    },
    {
     "field": "time",
-    "digits": 3
+    "digits": 3,
+    "align": "center"
    },
    {
     "field": "dest",
-    "digits": 3
-   },
-   {
-    "field": "cars",
-    "digits": 2
-   },
-   {
-    "field": "platform",
-    "digits": 1,
+    "digits": 3,
     "align": "center"
    }
   ]
@@ -53,154 +47,1623 @@
   "offMs": 600,
   "row": "last",
   "blinkTrain": false,
-  "text": "まもなく　電車が参ります",
-  "textEn": "The train is approaching."
+  "text": "電車が参ります",
+  "textEn": ""
  },
  "lang": {
   "enabled": true,
-  "jaSec": 3,
+  "jaSec": 6,
   "enSec": 3
  },
  "position": {
   "enabled": true,
   "holdSec": 15,
   "row": "last",
-  "digits": 12
+  "digits": 0
  },
  "scroll": {
   "lane": "last",
-  "speed": 50,
+  "speed": 30,
   "gapDots": 48,
   "color": "#ffa500",
   "guide": {
    "enabled": true,
-   "intervalSec": 90
+   "intervalSec": 120
   },
   "nextStops": {
    "enabled": true,
-   "dwellSec": 30,
+   "dwellSec": 20,
    "loop": true
   }
  },
  "messages": {
   "guide": [
-   "お知らせ：これは見本です。",
-   "白線の内側までお下がりください。"
+   "京浜東北線は車両点検の影響により遅れが出ています。"
   ],
   "ended": "本日の運転は終わりました",
   "endedEn": "No more trains today.",
-  "nextStopsFormat": "{type}　{dest}行き。次の停車駅は{next}です。停車駅は、{stops}です。"
+  "nextStopsFormat": "次は {next} に停まります。"
  },
  "timetable": [
   {
-   "time": "12:00",
+   "time": "00:13",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "05:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "05:26",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "05:43",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "05:55",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:03",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:12",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:22",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:34",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:40",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "06:56",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:04",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:10",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:16",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:22",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "町田",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:27",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:33",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:36",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "町田",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:42",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:54",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "07:59",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:03",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:08",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "町田",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:11",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:17",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:26",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:33",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:36",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:43",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "08:55",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:02",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:08",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:13",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:18",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:22",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:35",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:42",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:52",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "09:59",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "10:10",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "10:16",
    "type": "快速",
-   "typeEn": "Rapid",
-   "dest": "東京",
-   "destEn": "Tokyo",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "新宿",
-    "東京"
-   ]
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
-   "time": "12:04",
-   "type": "各駅停車",
-   "typeEn": "Local",
-   "dest": "三鷹",
-   "destEn": "Mitaka",
-   "cars": 10,
-   "platform": "2",
-   "stops": [
-    "吉祥寺",
-    "三鷹"
-   ]
+   "time": "10:22",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
-   "time": "12:08",
-   "type": "特別快速",
-   "typeEn": "Special Rapid",
-   "dest": "高尾",
-   "destEn": "Takao",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "立川",
-    "八王子",
-    "高尾"
-   ]
+   "time": "10:30",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
-   "time": "12:12",
+   "time": "10:36",
    "type": "快速",
-   "typeEn": "Rapid",
-   "dest": "東京",
-   "destEn": "Tokyo",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "新宿",
-    "東京"
-   ]
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "10:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "10:50",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "10:56",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:16",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:36",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:44",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:49",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "11:57",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
    "time": "12:16",
-   "type": "青梅特快",
-   "typeEn": "Ome Special Rapid",
-   "dest": "青梅",
-   "destEn": "Ome",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "立川",
-    "拝島",
-    "青梅"
-   ]
-  },
-  {
-   "time": "12:20",
    "type": "快速",
-   "typeEn": "Rapid",
-   "dest": "大月",
-   "destEn": "Otsuki",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "立川",
-    "八王子",
-    "高尾",
-    "大月"
-   ]
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
-   "time": "12:24",
-   "type": "各駅停車",
-   "typeEn": "Local",
-   "dest": "豊田",
-   "destEn": "Toyoda",
-   "cars": 10,
-   "platform": "2",
-   "stops": [
-    "国分寺",
-    "国立",
-    "立川",
-    "豊田"
-   ]
+   "time": "12:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   },
   {
-   "time": "12:28",
+   "time": "12:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:36",
    "type": "快速",
-   "typeEn": "Rapid",
-   "dest": "東京",
-   "destEn": "Tokyo",
-   "cars": 10,
-   "platform": "3",
-   "stops": [
-    "新宿",
-    "東京"
-   ]
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:49",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "12:57",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:16",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:36",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:49",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "13:57",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:16",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:36",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:49",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "14:57",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:01",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:17",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:36",
+   "type": "快速",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "15:59",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:18",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:25",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:31",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:40",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:49",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "16:57",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:05",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:14",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:30",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:35",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:42",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:50",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "17:57",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:04",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:10",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:17",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:22",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:28",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:34",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:40",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:53",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "18:58",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:04",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:11",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:17",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:23",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:30",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:34",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "19:56",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:02",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:10",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:18",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:24",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:34",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:38",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:47",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "20:56",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:06",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:13",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:21",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:28",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:37",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:48",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "21:53",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:00",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:09",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:19",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:29",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:35",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:46",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "22:56",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "町田",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "23:06",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "23:17",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "23:27",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "23:41",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "八王子",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
+  },
+  {
+   "time": "23:57",
+   "type": "普通",
+   "typeEn": "",
+   "dest": "橋本",
+   "destEn": "",
+   "cars": "10",
+   "platform": "1",
+   "info": ""
   }
  ]
 }
