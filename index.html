@@ -37,6 +37,7 @@
 			</div>
 
 			<button id="messageBoardBtn">電光掲示板を表示</button>
+			<button id="departureBoardBtn">発車標（ATOS風）を表示</button>
 			<label id="vehicleSelectMethodLabel" for="vehicleSelectMethod">車両の選択方法</label>
 			<select id="vehicleSelectMethod">
 				<option value="list">リストから選択</option>
@@ -297,6 +298,51 @@
 			</main>
 		</div>
 
+		<div id="departureBoard" hidden>
+			<aside id="departureBoardSidebar">
+				<h2>発車標モード</h2>
+				<label class="boardFileLabel">config.json（レイアウト・ダイヤ）
+					<input type="file" id="boardConfigFile" accept=".json,application/json">
+				</label>
+				<label class="boardFileLabel">led.json（種別・行先などの素材／省略可）
+					<input type="file" id="boardLedFile" accept=".json,application/json">
+				</label>
+				<button type="button" id="boardLoadSampleBtn">サンプルを読み込む</button>
+				<p id="boardLoadStatus" class="boardNote"></p>
+
+				<h3>時刻</h3>
+				<div class="boardRow">
+					<input type="time" step="1" id="boardClockInput">
+					<button type="button" id="boardClockSetBtn">この時刻にする</button>
+				</div>
+				<div class="boardRow">
+					<label>再生速度
+						<select id="boardSpeed">
+							<option value="1">×1</option><option value="2">×2</option><option value="5">×5</option>
+							<option value="10">×10</option><option value="30">×30</option>
+						</select>
+					</label>
+				</div>
+				<button type="button" id="boardClockJumpBtn">次の発車の20秒前へ（接近表示テスト）</button>
+				<button type="button" id="boardClockJump3Btn">次の発車の3分前へ（在線位置テスト）</button>
+				<button type="button" id="boardClockRealBtn">実際の時刻に戻す</button>
+
+				<h3>転送</h3>
+				<label><input type="checkbox" id="boardAutoTransfer" checked> 表示が変わったら自動転送する</label>
+				<button type="button" id="boardTransferBtn">今すぐ転送</button>
+				<p class="boardNote">LEDの物理幅・明るさ・ガンマ・位置は、ホーム画面の「LED設定」の値が使われます。</p>
+
+				<p id="boardStatusText" class="boardNote"></p>
+				<p class="boardNote"><a href="board-config.html" target="_blank">config.json 作成ツール</a> / <a href="board-led.html" target="_blank">led.json 作成ツール</a></p>
+				<button id="departureBoardBackButton" class="backVehicleSelector">車両選択に戻る</button>
+			</aside>
+			<main>
+				<div class="ledFrame">
+					<canvas id="boardLedPreview"></canvas>
+				</div>
+			</main>
+		</div>
+
         <footer id="status">
         </footer>
 		<div id="debugConsole" hidden>
@@ -314,6 +360,8 @@
 	<script src="js/render.js"></script>
 	<script src="js/vehicle.js"></script>
     <script src="js/script.js"></script>
+	<script src="js/boardlib.js"></script>
+	<script src="js/board.js"></script>
 	<script src="js/transfer.js"></script>
 	<script src="leaflet/leaflet.js"></script>
 	<script src="js/map.js"></script>

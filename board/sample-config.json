@@ -1,0 +1,206 @@
+{
+ "format": "atos-board-config",
+ "version": 2,
+ "name": "サンプル（架空ダイヤ）",
+ "layout": {
+  "cols": 12,
+  "rows": 2,
+  "timeStyle": "3",
+  "leadingZero": false,
+  "columns": [
+   {
+    "field": "type",
+    "digits": 3
+   },
+   {
+    "field": "time",
+    "digits": 3
+   },
+   {
+    "field": "dest",
+    "digits": 3
+   },
+   {
+    "field": "cars",
+    "digits": 2
+   },
+   {
+    "field": "platform",
+    "digits": 1,
+    "align": "center"
+   }
+  ]
+ },
+ "colors": {
+  "type": "#ffffff",
+  "time": "#ffa500",
+  "dest": "#ffa500",
+  "cars": "#ffa500",
+  "platform": "#ffa500",
+  "info": "#ffa500",
+  "approach": "#ff3030",
+  "scroll": "#ffa500",
+  "ended": "#ffa500"
+ },
+ "behavior": {
+  "advanceDelaySec": 6
+ },
+ "approach": {
+  "enabled": true,
+  "startSec": 15,
+  "blinkCount": 12,
+  "onMs": 900,
+  "offMs": 600,
+  "row": "last",
+  "blinkTrain": false,
+  "text": "まもなく　電車が参ります",
+  "textEn": "The train is approaching."
+ },
+ "lang": {
+  "enabled": true,
+  "jaSec": 3,
+  "enSec": 3
+ },
+ "position": {
+  "enabled": true,
+  "holdSec": 15,
+  "row": "last",
+  "digits": 12
+ },
+ "scroll": {
+  "lane": "last",
+  "speed": 50,
+  "gapDots": 48,
+  "color": "#ffa500",
+  "guide": {
+   "enabled": true,
+   "intervalSec": 90
+  },
+  "nextStops": {
+   "enabled": true,
+   "dwellSec": 30,
+   "loop": true
+  }
+ },
+ "messages": {
+  "guide": [
+   "お知らせ：これは見本です。",
+   "白線の内側までお下がりください。"
+  ],
+  "ended": "本日の運転は終わりました",
+  "endedEn": "No more trains today.",
+  "nextStopsFormat": "{type}　{dest}行き。次の停車駅は{next}です。停車駅は、{stops}です。"
+ },
+ "timetable": [
+  {
+   "time": "12:00",
+   "type": "快速",
+   "typeEn": "Rapid",
+   "dest": "東京",
+   "destEn": "Tokyo",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "新宿",
+    "東京"
+   ]
+  },
+  {
+   "time": "12:04",
+   "type": "各駅停車",
+   "typeEn": "Local",
+   "dest": "三鷹",
+   "destEn": "Mitaka",
+   "cars": 10,
+   "platform": "2",
+   "stops": [
+    "吉祥寺",
+    "三鷹"
+   ]
+  },
+  {
+   "time": "12:08",
+   "type": "特別快速",
+   "typeEn": "Special Rapid",
+   "dest": "高尾",
+   "destEn": "Takao",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "立川",
+    "八王子",
+    "高尾"
+   ]
+  },
+  {
+   "time": "12:12",
+   "type": "快速",
+   "typeEn": "Rapid",
+   "dest": "東京",
+   "destEn": "Tokyo",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "新宿",
+    "東京"
+   ]
+  },
+  {
+   "time": "12:16",
+   "type": "青梅特快",
+   "typeEn": "Ome Special Rapid",
+   "dest": "青梅",
+   "destEn": "Ome",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "立川",
+    "拝島",
+    "青梅"
+   ]
+  },
+  {
+   "time": "12:20",
+   "type": "快速",
+   "typeEn": "Rapid",
+   "dest": "大月",
+   "destEn": "Otsuki",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "立川",
+    "八王子",
+    "高尾",
+    "大月"
+   ]
+  },
+  {
+   "time": "12:24",
+   "type": "各駅停車",
+   "typeEn": "Local",
+   "dest": "豊田",
+   "destEn": "Toyoda",
+   "cars": 10,
+   "platform": "2",
+   "stops": [
+    "国分寺",
+    "国立",
+    "立川",
+    "豊田"
+   ]
+  },
+  {
+   "time": "12:28",
+   "type": "快速",
+   "typeEn": "Rapid",
+   "dest": "東京",
+   "destEn": "Tokyo",
+   "cars": 10,
+   "platform": "3",
+   "stops": [
+    "新宿",
+    "東京"
+   ]
+  }
+ ]
+}
