@@ -1961,6 +1961,11 @@ const tittle = document.getElementById("tittle");
 tittle.addEventListener("click", returnToVehicleSelector);
 
 async function returnToVehicleSelector() {
+    if (typeof isDepartureBoard !== "undefined" && isDepartureBoard) {
+        await returnFromDepartureBoard();
+        return;
+    }
+
     const returningFromMessageBoard = isMessageBoard;
 
     // 画面切り替え中の二重実行を防ぐ

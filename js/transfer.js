@@ -262,7 +262,9 @@ async function connectBluetooth() {
         updateBluetoothUIButtonState(true);
 
         setTimeout(() => {
-            if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
+            if (typeof isDepartureBoard !== "undefined" && isDepartureBoard) {
+                requestBoardTransfer(true);
+            } else if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
                 requestMessageBoardTransfer(true);
             } else {
                 transferToESP32();
@@ -279,6 +281,12 @@ async function connectBluetooth() {
 }
 
 function triggerAutoTransfer() {
+    // 発車標モードは専用パケットで転送する。
+    if (typeof isDepartureBoard !== "undefined" && isDepartureBoard) {
+        if (typeof requestBoardTransfer === "function") requestBoardTransfer(true);
+        return;
+    }
+
     // 電光掲示板モードのデータは専用パケットで転送する。
     if (typeof isMessageBoard !== "undefined" && isMessageBoard) {
         return;
@@ -1499,4 +1507,193 @@ function lcm(a, b) {
     if (a === 0) return b;
     if (b === 0) return a;
     return Math.abs((a / gcd(a, b)) * b);
+}
+
+// ===== 発車標モード専用転送 =====
+// board.js が作る「転送計画」(静止シーン群 + スクロール)を、既存ESP32形式(8bitプレーン)へ変換する。
+let pendingBoardTransfer = false;
+
+function isDepartureBoardTransferMode() {
+    return typeof isDepartureBoard !== "undefined" && isDepartureBoard;
+}
+
+function boardGammaByte(v, br, gam) {
+    return Math.min(255, Math.max(0, Math.round(Math.pow(v / 255, gam) * br * 255)));
+}
+
+// ビットマップ{w,h,d(RGB)} → 1シーン分のプレーンデータ(8*16*hw バイト)
+function boardBitmapToSceneBuffer(bm, hw, margin, br, gam) {
+    const buf = new Uint8Array(8 * 16 * hw);
+    const yOffset = bm.h < 32 ? Math.floor((32 - bm.h) / 2) : 0;
+
+    for (let y = 0; y < bm.h; y++) {
+        const ty = y + yOffset;
+        if (ty < 0 || ty >= 32) continue;
+        for (let x = 0; x < bm.w; x++) {
+            const tx = x + margin;
+            if (tx < 0 || tx >= hw) continue;
+            const i = (y * bm.w + x) * 3;
+            if (!(bm.d[i] | bm.d[i + 1] | bm.d[i + 2])) continue;
+
+            const r = boardGammaByte(bm.d[i], br, gam);
+            const g = boardGammaByte(bm.d[i + 1], br, gam);
+            const b = boardGammaByte(bm.d[i + 2], br, gam);
+            const upper = ty < 16;
+
+            for (let bit = 0; bit < 8; bit++) {
+                const offset = (bit * 16 + (ty % 16)) * hw + tx;
+                if ((r >> bit) & 1) buf[offset] |= upper ? 0x01 : 0x08;
+                if ((g >> bit) & 1) buf[offset] |= upper ? 0x02 : 0x10;
+                if ((b >> bit) & 1) buf[offset] |= upper ? 0x04 : 0x20;
+            }
+        }
+    }
+    return buf;
+}
+
+function createESP32BoardFramePacket(plan, hw, margin) {
+    const br = getNumberValue("softBrightness", 1.0);
+    const gam = getNumberValue("gammaCorrection", 2.5);
+    const sceneCount = Math.min(ESP32_MAX_SCENES, plan.scenes.length);
+    const sceneSize = 8 * 16 * hw;
+
+    const header = new Uint8Array(ESP32_HEADER_SIZE);
+    header[0] = 0xaa;
+    let mode = 0x56; // 縦スライドなし
+    if (hw > plan.width && margin === hw - plan.width) mode |= 0x20; // 右寄せフラグ
+    header[1] = mode;
+    header[2] = sceneCount;
+    header[3] = transferScrollSpeed & 0x7f;
+    header[4] = 0; // 通常スクロールは使わずTSCRスクロールを使う
+    header[5] = 0;
+    header[6] = 0;
+    for (let i = 0; i < 6; i++) {
+        const t = Math.max(0, Math.min(65535, Math.round(plan.intervals[i] ?? 3000)));
+        header[7 + i * 2] = t & 0xff;
+        header[8 + i * 2] = (t >> 8) & 0xff;
+    }
+    header[19] = Math.max(0, Math.min(255, Math.round(getNumberValue("hwBrightness", 20))));
+    header[20] = hw & 0xff;
+    header[21] = (hw >> 8) & 0xff;
+
+    const packet = new Uint8Array(header.length + sceneCount * sceneSize);
+    packet.set(header, 0);
+    for (let s = 0; s < sceneCount; s++) {
+        packet.set(boardBitmapToSceneBuffer(plan.scenes[s], hw, margin, br, gam), header.length + s * sceneSize);
+    }
+    return packet;
+}
+
+// 案内スクロール/次停車駅スクロール(TSCRパケット。電光掲示板と同じ kind=2 を使用)
+function createESP32BoardScrollPacket(plan, hw, margin) {
+    const count = ESP32_TYPE_DESTINATION_SCROLL_COUNT;
+    const headerLength = ESP32_TYPE_DESTINATION_SCROLL_HEADER_SIZE + count * ESP32_TYPE_DESTINATION_SCROLL_DESCRIPTOR_SIZE;
+    const bm = plan.scroll;
+    let bitmap = new Uint8Array(0);
+    let left = 0, right = 0, top = 0, bottom = 0, width = 0;
+
+    if (bm) {
+        if (bm.w > ESP32_MAX_SCROLL_WIDTH) {
+            throw new Error(`スクロール文字が長すぎます（最大${ESP32_MAX_SCROLL_WIDTH}px）`);
+        }
+        const br = getNumberValue("softBrightness", 1.0);
+        const gam = getNumberValue("gammaCorrection", 2.5);
+        const yOffset = plan.height < 32 ? Math.floor((32 - plan.height) / 2) : 0;
+        width = bm.w;
+        top = plan.laneRow * 16 + yOffset;
+        bottom = top + 16;
+        left = Math.min(hw, Math.max(0, margin));
+        right = Math.min(hw, margin + plan.width);
+
+        bitmap = new Uint8Array(bm.w * 16 * 2);
+        let p = 0;
+        for (let x = 0; x < bm.w; x++) {
+            for (let y = 0; y < 16; y++) {
+                const i = (y * bm.w + x) * 3;
+                const r = boardGammaByte(bm.d[i], br, gam);
+                const g = boardGammaByte(bm.d[i + 1], br, gam);
+                const b = boardGammaByte(bm.d[i + 2], br, gam);
+                const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                bitmap[p++] = rgb565 & 0xff;
+                bitmap[p++] = (rgb565 >> 8) & 0xff;
+            }
+        }
+    }
+
+    const packet = new Uint8Array(headerLength + bitmap.length);
+    let o = 0;
+    packet.set(ESP32_TYPE_DESTINATION_SCROLL_MAGIC, o); o += 4;
+    packet[o++] = ESP32_TYPE_DESTINATION_SCROLL_VERSION;
+    packet[o++] = count;
+    packet[o++] = transferTypeDestinationScrollSpeed & 0xff;
+    packet[o++] = 0;
+
+    for (let i = 0; i < count; i++) {
+        const use = !!bm && i === 0;
+        packet[o++] = use ? 1 : 0; // active
+        packet[o++] = 2;           // kind: メッセージボード系スクロール
+        packet[o++] = 0;           // lang
+        const w = use ? width : 0;
+        packet[o++] = w & 0xff; packet[o++] = (w >> 8) & 0xff;
+        packet[o++] = use ? 16 : 0;
+        const l = use ? left : 0, r = use ? right : 0;
+        packet[o++] = l & 0xff; packet[o++] = (l >> 8) & 0xff;
+        packet[o++] = r & 0xff; packet[o++] = (r >> 8) & 0xff;
+        packet[o++] = use ? top : 0;
+        packet[o++] = use ? bottom : 0;
+        const len = use ? bitmap.length : 0;
+        packet[o++] = len & 0xff; packet[o++] = (len >> 8) & 0xff;
+        packet[o++] = (len >> 16) & 0xff; packet[o++] = (len >> 24) & 0xff;
+    }
+    if (bitmap.length) packet.set(bitmap, headerLength);
+    return packet;
+}
+
+function flushPendingBoardTransfer() {
+    if (isBleTransferring || !pendingBoardTransfer) return;
+    pendingBoardTransfer = false;
+    setTimeout(() => transferBoardToESP32(), 30);
+}
+
+async function transferBoardToESP32() {
+    if (!isDepartureBoardTransferMode()) return;
+
+    if (!bleRxCharacteristic || !bleDevice || !bleDevice.gatt?.connected) {
+        updateTransferStatus("発車標の転送待ち：先にBluetooth接続してください");
+        return;
+    }
+    if (isBleTransferring) {
+        pendingBoardTransfer = true;
+        return;
+    }
+
+    isBleTransferring = true;
+    try {
+        updateTransferStatus("発車標データ作成中...");
+        const plan = buildBoardTransferPlan();
+        const hw = getHardwareWidth();
+        if (plan.width > hw) {
+            updateTransferStatus(`盤面(${plan.width}ドット)がLEDの物理幅(${hw})を超えています。右側が切れます`);
+        }
+        const margin = getDisplayMargin(hw, plan.width);
+
+        // LEDは高さ32ドット。スクロール段が範囲外(3段目以降)なら送らない
+        let scrollNote = "";
+        const yOff = plan.height < 32 ? Math.floor((32 - plan.height) / 2) : 0;
+        if (plan.scroll && plan.laneRow * 16 + yOff + 16 > 32) {
+            plan.scroll = null;
+            scrollNote = "（スクロール段がLEDの範囲外のため、スクロールは転送していません）";
+        }
+
+        await sendChunkedData(bleRxCharacteristic, compressLZ4(createESP32BoardFramePacket(plan, hw, margin)), "発車標表示(LZ4)");
+        await sendChunkedData(bleRxCharacteristic, compressTypeDestRLE(createESP32BoardScrollPacket(plan, hw, margin)), "発車標スクロール(RLE)");
+
+        updateTransferStatus((plan.height > 32 ? "転送完了(LEDは32ドット高のため上2段のみ)" : "発車標を転送しました") + scrollNote);
+    } catch (error) {
+        console.error("発車標転送エラー:", error);
+        updateTransferStatus("発車標転送失敗: " + (error?.message || error));
+    } finally {
+        isBleTransferring = false;
+        flushPendingBoardTransfer();
+    }
 }
