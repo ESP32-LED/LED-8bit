@@ -346,10 +346,13 @@
                     { field: "platform", digits: 1, align: "center" }
                 ]
             },
-            colors: { type: "#ffffff", time: "#ffa500", dest: "#ffa500", cars: "#ffa500", platform: "#ffa500", info: "#ffa500", approach: "#ff3030", scroll: "#ffa500", ended: "#ffa500" },
+            colors: { type: "#ffffff", time: "#ffa500", dest: "#ffa500", cars: "#ffa500", platform: "#ffa500", info: "#ffa500", doors: "#ffa500", green: "#00ff00", first: "#ffa500", line: "#ffffff", approach: "#ff3030", scroll: "#ffa500", ended: "#ffa500" },
             behavior: { advanceDelaySec: 6 },
             approach: { enabled: true, startSec: 15, blinkCount: 12, onMs: 900, offMs: 600, row: "last", blinkTrain: false, english: false, offShows: "blank", text: "まもなく　電車が参ります", textEn: "The train is approaching." },
             lang: { enabled: true, jaSec: 3, enSec: 3 },
+            // 路線名: 種別と同じ場所に出す。first="type"なら 種別→路線名、"line"なら 路線名→種別。
+            // 路線名の表示時間は日英別(jaSec/enSec)で、種別の時間は「全体の日英切り替え時間 − 路線名の時間」になる
+            lineName: { enabled: false, first: "type", jaSec: 1, enSec: 1 },
             // 在線位置表示: 路線・電車の絵と「発車の何秒前に出すか」は led.json の「在線位置」で決める。
             // 電車が動く時刻(各電車の secBefore)になったら holdSec 秒だけ優先表示し、その後は通常表示に戻る
             position: { enabled: false, holdSec: 15, row: "last", digits: 0 },
@@ -413,11 +416,17 @@
     BL.boardSize = cfg => ({ w: cfg.layout.cols * T, h: cfg.layout.rows * T });
 
     BL.parseTime = function (s) {
-        const m = /^\s*(\d{1,2})\s*[:：]\s*(\d{2})\s*$/.exec(String(s || ""));
+        const m = /^\s*(\d{1,2})\s*[:：]\s*(\d{2})(?:\s*[:：]\s*(\d{2}))?\s*$/.exec(String(s || ""));
         if (!m) return null;
-        const h = +m[1], mi = +m[2];
-        if (h > 29 || mi > 59) return null;
-        return h * 3600 + mi * 60;
+        const h = +m[1], mi = +m[2], se = m[3] ? +m[3] : 0;
+        if (h > 29 || mi > 59 || se > 59) return null;
+        return h * 3600 + mi * 60 + se;
+    };
+    // 秒数 → "HH:MM" または "HH:MM:SS"
+    BL.formatTime = function (sec) {
+        sec = Math.round(sec);
+        const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60, p2 = n => String(n).padStart(2, "0");
+        return x ? `${p2(h)}:${p2(m)}:${p2(x)}` : `${p2(h)}:${p2(m)}`;
     };
 
     /* ---------- 時刻・状態 ---------- */
@@ -501,7 +510,9 @@
         const wd = col.digits * T, lang = ctx.lang, align = col.align || "left";
         if (!train) return BL.createBitmap(wd, T);
         switch (col.field) {
-            case "type": return textField(cfg, assets, "type", train, "type", train.type, train.typeEn, lang, wd, align);
+            case "type":
+                if (ctx.typeShow === "line" && train.line) return textField(cfg, assets, "line", train, "line", train.line, train.lineEn, lang, wd, align);
+                return textField(cfg, assets, "type", train, "type", train.type, train.typeEn, lang, wd, align);
             case "dest": return textField(cfg, assets, "destination", train, "dest", train.dest, train.destEn, lang, wd, align);
             case "info": return textField(cfg, assets, "information", train, "info", lang === "en" && train.infoEn ? train.infoEn : (train.info || ""), train.infoEn, lang, wd, align);
             case "cars": {
@@ -519,6 +530,16 @@
                 const txt = col.digits <= 1 ? key : col.digits === 2 ? key + (lang === "en" ? "" : "番") : key + (lang === "en" ? "" : "番線");
                 return BL.textBitmap(txt, wd, assets.fonts, colorOf(cfg, "platform", train), { align });
             }
+            case "doors": {
+                const key = String(train.doors || "");
+                if (!key) return BL.createBitmap(wd, T);
+                const bm = numberItem(assets, "doors", key, lang);
+                if (bm) return fitWidth(bm, wd, align);
+                const txt = /^\d+$/.test(key) ? key + (lang === "en" ? " doors" : "ドア") : key;
+                return BL.textBitmap(txt, wd, assets.fonts, colorOf(cfg, "doors", train), { align });
+            }
+            case "green": return textField(cfg, assets, "green", train, "green", train.green || "", train.greenEn, lang, wd, align);
+            case "first": return textField(cfg, assets, "first", train, "first", train.first || "", train.firstEn, lang, wd, align);
             case "time": {
                 const h = Math.floor(train.sec / 3600), m = Math.floor((train.sec % 3600) / 60);
                 return fitWidth(BL.timeBitmapFor(cfg, assets, h, m, colorOf(cfg, "time", train)), wd, "left");
@@ -671,7 +692,7 @@
         const apIdx = pick(cfg.approach.row);
         const posIdx = pick(cfg.position.row);
         const apBm = apActive ? specialBitmap(cfg, assets, "approach", ctx.lang, cfg.approach.text, cfg.approach.textEn, "approach", w) : null;
-        const rctx = { lang: ctx.lang };
+        const rctx = { lang: ctx.lang, typeShow: ctx.typeShow || "type" };
         rows.forEach((r, i) => {
             let rowBm;
             if (apActive && i === apIdx) rowBm = apBm;
@@ -688,6 +709,33 @@
     BL.hasEnglish = function (cfg, assets, st) {
         const has = (cat, ja, en) => !!(pickBitmap(assets, cat, BL.enKey(ja, en), "en") || BL.itemBitmap(BL.findItem(assets.led, cat, ja), "en") || (en && !isPlaceholderEn(en)));
         return st.trains.slice(0, cfg.layout.rows).some(t => has("type", t.type, t.typeEn) || has("destination", t.dest, t.destEn));
+    };
+
+    // 通常表示の切り替え順を作る。例(種別が先): 日本語種別 → 日本語路線名 → 英語種別 → 英語路線名
+    // 路線名の時間は日英別。種別の時間は「全体の日英切り替え時間 − 路線名の時間」
+    BL.displaySchedule = function (cfg, assets, st) {
+        const L = cfg.lang, LN = cfg.lineName || {};
+        const useEn = !!L.enabled && BL.hasEnglish(cfg, assets, st);
+        const useLine = !!LN.enabled && st.trains.slice(0, cfg.layout.rows).some(t => t.line);
+        const per = lang => {
+            const total = Math.max(0.2, +(lang === "ja" ? L.jaSec : L.enSec) || 3) * 1000;
+            if (!useLine) return [{ lang, show: "type", ms: total }];
+            const lineMs = Math.min(total, Math.max(0, +(lang === "ja" ? LN.jaSec : LN.enSec) || 0) * 1000), typeMs = total - lineMs;
+            const seq = LN.first === "line" ? [["line", lineMs], ["type", typeMs]] : [["type", typeMs], ["line", lineMs]];
+            const out = seq.filter(x => x[1] > 0).map(([show, ms]) => ({ lang, show, ms }));
+            return out.length ? out : [{ lang, show: "type", ms: total }];
+        };
+        const out = per("ja");
+        if (useEn) out.push(...per("en"));
+        return out;
+    };
+
+    BL.schedulePick = function (schedule, ms) {
+        const total = schedule.reduce((a, p) => a + p.ms, 0);
+        if (schedule.length <= 1 || total <= 0) return schedule[0];
+        let t = ((ms % total) + total) % total;
+        for (const p of schedule) { if (t < p.ms) return p; t -= p.ms; }
+        return schedule[0];
     };
 
     // 接近表示中に出す言語(英語切り替えONなら点灯ごとに日本語/英語を交互に)
@@ -802,6 +850,10 @@
                 { id: "destination", name: "行先", items: [] },
                 { id: "cars", name: "両数", items: [] },
                 { id: "platform", name: "番線", items: [] },
+                { id: "doors", name: "ドア数", items: [] },
+                { id: "green", name: "グリーン", items: [] },
+                { id: "first", name: "始発", items: [] },
+                { id: "line", name: "路線名", items: [] },
                 { id: "information", name: "案内", items: [] },
                 { id: "time", name: "時刻(timeRole: hour=左2桁 / colon=: / minute=右2桁)", items: [] },
                 { id: "position", name: "在線位置(pos_base=線路 / secBefore=発車の何秒前から出すか)", items: [] },

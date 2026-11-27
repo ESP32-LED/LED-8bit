@@ -312,7 +312,8 @@ textarea {
 }
 
 #messageBoardBtn,
-#departureBoardBtn {
+#departureBoardBtn,
+#vehicleModeBtn {
     display: block;
     margin-left: auto;
     width: 200px;
@@ -321,7 +322,8 @@ textarea {
     height: 50px;
 }
 
-#vehicleSelect {
+#vehicleSelect,
+#boardSelectList {
     background: transparent;
     border: 2px solid var(--border);
 }
@@ -903,20 +905,23 @@ button.tap {
     display: none!important;
 }
 
-#vehicleSelect {
+#vehicleSelect,
+#boardSelectList {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 
-#vehicleSelect button {
+#vehicleSelect button,
+#boardSelectList button {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     text-align: left;
 }
 
-#vehicleSelect[hidden] {
+#vehicleSelect[hidden],
+#boardSelectList[hidden] {
     display: none !important;
 }
 
@@ -1334,6 +1339,10 @@ input[type="number"]::-webkit-outer-spin-button {
         padding: 10px;
     }
 
+    body {
+        font-size: 40px;
+    }
+
     #buttonGroup {
         grid-template-columns: repeat(1, 1fr);
     }
@@ -1347,7 +1356,8 @@ input[type="number"]::-webkit-outer-spin-button {
         min-height: 10px !important;
     }
 
-    #vehicleSelect {
+    #vehicleSelect,
+    #boardSelectList {
         display: grid;
         grid-template-columns: repeat(1, 1fr);
         gap: 8px;
@@ -1761,4 +1771,34 @@ a,
         opacity: 1;
         transform: none;
     }
+}
+
+/* 発車標の駅一覧(方向幕の一覧と同じカード表示)に切り替えている間は、車両用の選択UIを隠す */
+#vehicleModeBtn[hidden],
+#departureBoardBtn[hidden] {
+    display: none !important;
+}
+
+#vehicleSelector.boardListMode #vehicleSelectMethodLabel,
+#vehicleSelector.boardListMode #vehicleSelectMethod,
+#vehicleSelector.boardListMode #vehicleSelect,
+#vehicleSelector.boardListMode #vehicleSearchResults,
+#vehicleSelector.boardListMode #map {
+    display: none !important;
+}
+
+#boardSelectList .vehicleIcons {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+#boardSelectList .vehicleIcon {
+    width: 84px;
+    height: 28px;
+    object-fit: contain;
+}
+
+#boardSelectList .vehicleText {
+    flex: 1 1 auto;
+    min-width: 0;
 }

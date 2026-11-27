@@ -40,21 +40,58 @@ const BoardApp = (function () {
         requestTransfer(true);
     }
 
-    // board/board.json の一覧から駅を選ぶ(vehicles/vehicles.json と同じ考え方)
-    async function loadBoardList() {
-        const sel = $("boardSelect");
-        if (!sel) return;
+    // board/board.json の一覧(方向幕の一覧と同じカード表示)から駅を選ぶ
+    async function ensureBoardList() {
+        if (S.boards) return;
         try {
             const res = await fetch("board/board.json", { cache: "no-cache" });
             if (!res.ok) throw new Error("board/board.json がありません");
             S.boards = (await res.json()).boards || [];
-        } catch (e) { S.boards = []; setStatus("駅の一覧を読み込めませんでした: " + e.message); }
-        sel.innerHTML = "";
-        for (const b of S.boards) { const o = document.createElement("option"); o.value = b.id; o.textContent = b.name || b.id; sel.appendChild(o); }
-        let want = "";
-        try { want = localStorage.getItem("boardSelected") || ""; } catch (e) { /* 保存できなくても動く */ }
-        if (!S.boards.find(b => b.id === want) && S.boards.length) want = S.boards[0].id;
-        if (want) { sel.value = want; await selectBoard(want); }
+        } catch (e) { S.boards = []; console.error("駅の一覧を読み込めませんでした:", e); }
+        buildBoardCards();
+    }
+
+    // icon / icons は board/<dir>/ からの相対パス(「/」を含むときは board/ からの相対)で指定する
+    function boardIconUrls(b) {
+        const list = Array.isArray(b.icons) ? b.icons : b.icon ? [b.icon] : [];
+        return list.map(f => /^(https?:|data:|\/)/.test(f) ? f : "board/" + (f.includes("/") || !b.dir ? "" : b.dir.replace(/\/?$/, "/")) + f);
+    }
+
+    function buildBoardCards() {
+        const box = $("boardSelectList");
+        if (!box) return;
+        box.innerHTML = "";
+        for (const b of S.boards || []) {
+            const btn = document.createElement("button");
+            btn.dataset.search = `${b.name || ""} ${b.id || ""} ${b.description || ""}`.toLowerCase();
+            const icons = document.createElement("div"); icons.className = "vehicleIcons";
+            for (const url of boardIconUrls(b)) { const img = document.createElement("img"); img.src = url; img.className = "vehicleIcon"; img.alt = ""; icons.appendChild(img); }
+            const span = document.createElement("span"); span.textContent = b.name || b.id || "駅";
+            const small = document.createElement("small"); small.className = "vehicleDescription"; small.textContent = b.description || "";
+            const text = document.createElement("div"); text.className = "vehicleText"; text.append(span, small);
+            btn.append(icons, text);
+            btn.addEventListener("click", () => openBoard(b.id));
+            box.appendChild(btn);
+        }
+        if (!(S.boards || []).length) box.textContent = "駅の一覧がありません（board/board.json を確認してください）";
+    }
+
+    // 方向幕の一覧 ⇔ 発車標(駅)の一覧 を切り替える
+    function setListMode(on) {
+        $("vehicleSelector")?.classList.toggle("boardListMode", on);
+        if ($("boardSelectList")) $("boardSelectList").hidden = !on;
+        if ($("departureBoardBtn")) $("departureBoardBtn").hidden = on;
+        if ($("vehicleModeBtn")) $("vehicleModeBtn").hidden = !on;
+        const input = $("vehicleSearchInput");
+        if (input) { input.value = ""; input.placeholder = on ? "🔍駅名で検索" : "🔍車両名で検索"; }
+        filterBoardCards("");
+    }
+    async function showBoardList() { await ensureBoardList(); setListMode(true); }
+    function showVehicleList() { setListMode(false); }
+
+    function filterBoardCards(q) {
+        q = (q || "").trim().toLowerCase();
+        document.querySelectorAll("#boardSelectList button").forEach(b => { b.hidden = !!q && !(b.dataset.search || "").includes(q); });
     }
 
     async function selectBoard(id) {
@@ -67,7 +104,6 @@ const BoardApp = (function () {
             if (!c.ok) throw new Error(`${base}${b.config || "config.json"} が読み込めません`);
             S.led = l.ok ? await l.json() : null;
             applyConfig(await c.json());
-            try { localStorage.setItem("boardSelected", id); } catch (e) { /* 無視 */ }
         } catch (e) { setStatus("読み込み失敗: " + e.message); }
     }
 
@@ -91,11 +127,11 @@ const BoardApp = (function () {
     /* ---------- シーン ---------- */
     const assets = () => ({ led: S.led, fonts: S.fonts });
 
-    function langAt(st, ms) {
-        const L = S.cfg.lang;
-        if (!L.enabled || st.mode !== "normal" || !BL.hasEnglish(S.cfg, assets(), st)) return "ja";
-        const cycle = (L.jaSec + L.enSec) * 1000, t = ms % cycle;
-        return t < L.jaSec * 1000 ? "ja" : "en";
+    // いまの表示(言語と、種別/路線名のどちらを出すか)。通常表示以外は日本語の種別
+    function phaseAt(st, ms) {
+        if (st.mode === "approach") return { lang: BL.approachLang(S.cfg, st), show: "type" };
+        if (st.mode !== "normal") return { lang: "ja", show: "type" };
+        return BL.schedulePick(BL.displaySchedule(S.cfg, assets(), st), ms);
     }
 
     // 表示内容が変わったか(=ESP32へ再転送が必要か)を判定する識別子
@@ -113,7 +149,7 @@ const BoardApp = (function () {
         const sp = BL.scrollPlan(cfg, A, st, nowS);
         const size = BL.boardSize(cfg);
         const plan = { width: size.w, height: size.h, scenes: [], intervals: [], scroll: null, laneRow: -1 };
-        const mk = (lang, approachShown) => BL.buildScene(cfg, A, { lang, state: st, approachShown, scrollOn: !!sp });
+        const mk = (lang, approachShown, typeShow) => BL.buildScene(cfg, A, { lang, typeShow: typeShow || "type", state: st, approachShown, scrollOn: !!sp });
         if (st.mode === "approach") {
             plan.scenes = [mk("ja", true), mk("ja", false)];
             plan.intervals = [cfg.approach.onMs, cfg.approach.offMs];
@@ -127,12 +163,10 @@ const BoardApp = (function () {
             plan.scenes = [mk("ja", false)]; plan.intervals = [0xffff];
             if (cfg.lang.enabled) { plan.scenes.push(mk("en", false)); plan.intervals = [cfg.lang.jaSec * 1000, cfg.lang.enSec * 1000]; }
         } else {
-            plan.scenes = [mk("ja", false)];
-            plan.intervals = [0xffff];
-            if (cfg.lang.enabled && BL.hasEnglish(cfg, A, st)) {
-                plan.scenes.push(mk("en", false));
-                plan.intervals = [cfg.lang.jaSec * 1000, cfg.lang.enSec * 1000];
-            }
+            // 通常表示: 日本語種別 → 日本語路線名 → 英語種別 → 英語路線名 のように、順に切り替える
+            const sch = BL.displaySchedule(cfg, A, st);
+            plan.scenes = sch.map(p => mk(p.lang, false, p.show));
+            plan.intervals = sch.length > 1 ? sch.map(p => Math.round(p.ms)) : [0xffff];
             if (sp) { plan.scroll = sp.bm; plan.laneRow = BL.laneRow(cfg); plan.scrollSpeed = cfg.scroll.speed; }
         }
         return plan;
@@ -174,15 +208,15 @@ const BoardApp = (function () {
         if (sig !== S.lastSig) { S.lastSig = sig; requestTransfer(false); }
 
         const W = BL.boardSize(cfg).w, sx = sp ? BL.scrollX(sp, nowS, W, Math.max(1, +cfg.scroll.speed || 50)) : 0;
-        const lang = st.mode === "approach" ? BL.approachLang(cfg, st) : langAt(st, ms);
-        const key = `${sig}|${lang}|${st.approachOn}|${sx}`;
+        const ph = phaseAt(st, ms), lang = ph.lang;
+        const key = `${sig}|${lang}|${ph.show}|${st.approachOn}|${sx}`;
         if (key === S.lastKey) { updateStatusText(st, sp); return; }
         S.lastKey = key;
 
         ensureBackground();
         const cv = $("boardLedPreview"), ctx = cv.getContext("2d");
         ctx.drawImage(S.bg, 0, 0);
-        const scene = BL.buildScene(cfg, A, { lang, state: st, approachShown: st.approachOn, scrollOn: !!sp });
+        const scene = BL.buildScene(cfg, A, { lang, typeShow: ph.show, state: st, approachShown: st.approachOn, scrollOn: !!sp });
         drawDots(ctx, scene, 0, 0, scene.w, 0);
         if (sp) drawDots(ctx, sp.bm, BL.laneRow(cfg) * BL.UNIT, 0, scene.w, sx);
         updateStatusText(st, sp);
@@ -233,7 +267,7 @@ const BoardApp = (function () {
         }
     }
 
-    async function start() {
+    async function openBoard(id) {
         const vs = $("vehicleSelector"), db = $("departureBoard");
         if (!vs || !db || db.dataset.transitioning === "true") return;
         db.dataset.transitioning = "true";
@@ -242,8 +276,9 @@ const BoardApp = (function () {
             await showScreenSmoothly(db, vs);
             setVehicleSelectButton();
             ensureUI();
+            setStatus("読み込み中...");
             try { await loadFonts(); } catch (e) { setStatus(e.message); }
-            if (!S.boards) await loadBoardList(); else if (S.cfg) requestTransfer(true);
+            await selectBoard(id);
             requestAnimationFrame(resize);
             if (!S.raf) S.raf = requestAnimationFrame(frame);
         } finally { delete db.dataset.transitioning; }
@@ -262,8 +297,9 @@ const BoardApp = (function () {
     }
 
     function bind() {
-        $("departureBoardBtn")?.addEventListener("click", start);
-        $("boardSelect")?.addEventListener("change", e => selectBoard(e.target.value));
+        $("departureBoardBtn")?.addEventListener("click", showBoardList);
+        $("vehicleModeBtn")?.addEventListener("click", showVehicleList);
+        $("vehicleSearchInput")?.addEventListener("input", e => { if ($("vehicleSelector")?.classList.contains("boardListMode")) filterBoardCards(e.target.value); });
         // 時刻の操作(確認用)は ?boardDebug を付けて開いたときだけ表示する
         if (/[?&]boardDebug\b/.test(location.search)) $("boardDebug")?.removeAttribute("hidden");
         $("boardClockSetBtn")?.addEventListener("click", () => {
@@ -285,7 +321,7 @@ const BoardApp = (function () {
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind); else bind();
 
-    return { buildTransferPlan, requestTransfer, back, getConfig: () => S.cfg };
+    return { buildTransferPlan, requestTransfer, back, getConfig: () => S.cfg, showBoardList, showVehicleList };
 })();
 
 function returnFromDepartureBoard() { return BoardApp.back(); }

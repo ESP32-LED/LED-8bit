@@ -3,7 +3,9 @@
   {
    "id": "sample",
    "name": "新横浜　八王子方",
+   "description": "横浜線の新横浜駅",
    "dir": "sample",
+   "icon": "icon.png",
    "config": "config.json",
    "led": "led.json"
   }

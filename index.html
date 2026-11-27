@@ -38,6 +38,7 @@
 
 			<button id="messageBoardBtn">電光掲示板を表示</button>
 			<button id="departureBoardBtn">ATOS発車標を表示</button>
+			<button id="vehicleModeBtn" hidden>方向幕を表示</button>
 			<label id="vehicleSelectMethodLabel" for="vehicleSelectMethod">車両の選択方法</label>
 			<select id="vehicleSelectMethod">
 				<option value="list">リストから選択</option>
@@ -55,6 +56,7 @@
 				<div id="vehicleSearchResults"></div>
 			</div>
 			<div id="vehicleSelect" class="selectGroup"></div>
+			<div id="boardSelectList" class="selectGroup" hidden></div>
 			<div id="map" hidden>
 				<div id="linePanel" hidden>
 					<button id="closeLinePanel">×</button>
@@ -301,8 +303,6 @@
 		<div id="departureBoard" hidden>
 			<aside id="departureBoardSidebar">
 				<h2>発車標モード</h2>
-				<label class="boardFileLabel" for="boardSelect">駅（リストから選択）</label>
-				<select id="boardSelect"></select>
 				<p id="boardLoadStatus" class="boardNote"></p>
 				<p id="boardStatusText" class="boardNote"></p>
 
