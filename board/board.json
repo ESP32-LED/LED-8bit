@@ -1,0 +1,11 @@
+{
+ "boards": [
+  {
+   "id": "sample",
+   "name": "新横浜　八王子方",
+   "dir": "sample",
+   "config": "config.json",
+   "led": "led.json"
+  }
+ ]
+}

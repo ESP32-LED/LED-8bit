@@ -177,10 +177,13 @@
 
     // style "3": 22+4+22 / style "4": 30+5+29
     BL.TIME_STYLES = {
+        "2": { hh: [7, 7], colon: 4, mm: [7, 7] },
         "3": { hh: [11, 11], colon: 4, mm: [11, 11] },
         "4": { hh: [15, 15], colon: 5, mm: [15, 14] }
     };
-    BL.timeWidth = style => style === "4" ? 64 : 48;
+    BL.timeWidth = style => style === "4" ? 64 : style === "2" ? 32 : 48;
+    BL.timeDigits = style => style === "4" ? 4 : style === "2" ? 2 : 3;
+    const normStyle = v => (String(v) === "4" ? "4" : String(v) === "2" ? "2" : "3");
 
     BL.timeBitmap = function (h, m, style, rgb, leadingZero) {
         const st = BL.TIME_STYLES[style === "4" ? "4" : "3"];
@@ -200,6 +203,91 @@
         return bm;
     };
 
+    // 2桁(32ドット): fonts/clock16.json の字形を、字の部分だけ切り出して 7+7+4+7+7 ドットへ横圧縮して並べる
+    // 細い線(1ドット幅)が消えないよう、元の複数列のどれかが点灯なら点灯にして横圧縮する
+    function squeezeOr(g, tw) {
+        const out = new Uint8Array(tw * T);
+        for (let y = 0; y < T; y++) for (let tx = 0; tx < tw; tx++) {
+            const a = Math.floor(tx * g.w / tw), b = Math.max(a + 1, Math.ceil((tx + 1) * g.w / tw));
+            for (let sx = a; sx < b && sx < g.w; sx++) if (g.bits[y * g.w + sx]) { out[y * tw + tx] = 1; break; }
+        }
+        return out;
+    }
+    const clockCache = new Map();
+    function clockGlyph(font, ch) {
+        const key = ch + "|" + (font && font.width);
+        if (clockCache.has(key)) return clockCache.get(key);
+        let out = null;
+        const rows = font && font.glyphs && font.glyphs[ch];
+        if (rows) {
+            const W = font.width, H = font.height, bits = new Uint8Array(W * H);
+            for (let y = 0; y < H; y++) { const v = parseInt(String(rows[y]).padStart(W / 4, "0"), 16); for (let x = 0; x < W; x++) bits[y * W + x] = Math.floor(v / Math.pow(2, W - 1 - x)) % 2; }
+            let x0 = W, x1 = -1;
+            for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) if (bits[y * W + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+            if (x1 >= x0) {
+                const w = x1 - x0 + 1, g = { w, bits: new Uint8Array(w * T) };
+                for (let y = 0; y < Math.min(H, T); y++) for (let x = 0; x < w; x++) g.bits[y * w + x] = bits[y * W + x0 + x];
+                out = g;
+            }
+        }
+        clockCache.set(key, out);
+        return out;
+    }
+    BL.clockBitmap = function (h, m, rgb, fonts, leadingZero) {
+        const st = BL.TIME_STYLES["2"], font = fonts && fonts.clock16;
+        const hs = String(Math.max(0, Math.min(99, h | 0))).padStart(2, "0"), ms = String(Math.max(0, Math.min(59, m | 0))).padStart(2, "0");
+        const parts = [[hs[0] === "0" && !leadingZero ? " " : hs[0], st.hh[0]], [hs[1], st.hh[1]], [":", st.colon], [ms[0], st.mm[0]], [ms[1], st.mm[1]]];
+        const bm = BL.createBitmap(32, T);
+        let x = 0;
+        for (const [ch, w] of parts) {
+            if (ch !== " ") {
+                const g = clockGlyph(font, ch);
+                if (g) {
+                    const tw = ch === ":" ? Math.min(w, g.w) : w, cols = tw === g.w ? g.bits : squeezeOr(g, tw);
+                    const ox = ch === ":" ? Math.floor((w - tw) / 2) : 0;
+                    BL.blit(bm, bitsToBitmap(cols, tw, T, rgb), x + ox, 0);
+                } else BL.blit(bm, bitsToBitmap(ch === ":" ? BL.colonBits(w, T) : BL.digitBits(ch, w, T), w, T, rgb), x, 0);
+            }
+            x += w;
+        }
+        return bm;
+    };
+
+    // 時刻: led.json の「時刻」(左2桁=時 / コロン / 右2桁=分 のPNG)があればそれを使い、無い部分は標準の数字で補う
+    function genDigits(text, widths, rgb, blankFirst) {
+        const bm = BL.createBitmap(widths.reduce((a, b) => a + b, 0), T);
+        let x = 0;
+        [...text].forEach((ch, i) => {
+            if (!(blankFirst && i === 0)) BL.blit(bm, bitsToBitmap(BL.digitBits(ch, widths[i], T), widths[i], T, rgb), x, 0);
+            x += widths[i];
+        });
+        return bm;
+    }
+
+    BL.timeBitmapFor = function (cfg, assets, h, m, rgb) {
+        const style = normStyle(cfg.layout.timeStyle);
+        if (style === "2") return BL.clockBitmap(h, m, rgb, assets && assets.fonts, cfg.layout.leadingZero);
+        const st = BL.TIME_STYLES[style];
+        const cat = assets && assets.led && assets.led.categories && assets.led.categories.find(c => c.id === "time");
+        // timeStyle が付いた素材は同じ桁形式のときだけ使う(付いていない古い素材はどちらでも使う)
+        const items = (cat && cat.items ? cat.items : []).filter(i => !i.timeStyle || String(i.timeStyle) === style);
+        if (!items.length) return BL.timeBitmap(h, m, style, rgb, cfg.layout.leadingZero);
+        const byRole = (role, name) => items.find(i => i.timeRole === role && i.view && i.view.normal && i.view.normal.ja && i.view.normal.ja.name === name);
+        const hs = String(h).padStart(2, "0"), ms = String(m).padStart(2, "0"), noZero = !cfg.layout.leadingZero && h < 10;
+        // ゼロ埋めしない設定のときは「9」のような名前の画像を優先し、無ければ「09」を使う
+        const hi = (noZero && byRole("hour", String(h))) || byRole("hour", hs) || byRole("hour", String(h));
+        const co = items.find(i => i.timeRole === "colon"), mi = byRole("minute", ms) || byRole("minute", String(m));
+        const parts = [
+            (hi && BL.itemBitmap(hi, "ja")) || genDigits(hs, st.hh, rgb, noZero),
+            (co && BL.itemBitmap(co, "ja")) || bitsToBitmap(BL.colonBits(st.colon, T), st.colon, T, rgb),
+            (mi && BL.itemBitmap(mi, "ja")) || genDigits(ms, st.mm, rgb, false)
+        ];
+        const out = BL.createBitmap(parts.reduce((a, p) => a + p.w, 0), T);
+        let x = 0;
+        for (const p of parts) { BL.blit(out, p, x, Math.floor((T - p.h) / 2)); x += p.w; }
+        return out;
+    };
+
     /* ---------- led.json 素材 ---------- */
     BL.findItem = function (led, category, key) {
         if (!led || !led.categories || key == null || key === "") return null;
@@ -208,6 +296,17 @@
         const items = cat.items || (cat.groups || []).flatMap(g => g.items);
         const k = String(key);
         return items.find(it => it.id === k || it.view?.normal?.ja?.name === k || it.view?.normal?.en?.name === k) || null;
+    };
+
+    // 指定言語の画像で、その言語側の名前が key と一致するものを探す
+    // (日本語の画像は日本語名=ダイヤの「種別」「行先」など、英語の画像は英語名=「種別(英)」「行先(英)」と照合)
+    BL.findItemLang = function (led, category, key, lang) {
+        if (!led || !led.categories || key == null || key === "") return null;
+        const cat = led.categories.find(c => c.id === category);
+        if (!cat) return null;
+        const items = cat.items || (cat.groups || []).flatMap(g => g.items);
+        const k = String(key);
+        return items.find(it => it.view?.normal?.[lang]?.name === k) || null;
     };
 
     BL.itemBitmap = function (item, lang) {
@@ -249,7 +348,7 @@
             },
             colors: { type: "#ffffff", time: "#ffa500", dest: "#ffa500", cars: "#ffa500", platform: "#ffa500", info: "#ffa500", approach: "#ff3030", scroll: "#ffa500", ended: "#ffa500" },
             behavior: { advanceDelaySec: 6 },
-            approach: { enabled: true, startSec: 15, blinkCount: 12, onMs: 900, offMs: 600, row: "last", blinkTrain: false, text: "まもなく　電車が参ります", textEn: "The train is approaching." },
+            approach: { enabled: true, startSec: 15, blinkCount: 12, onMs: 900, offMs: 600, row: "last", blinkTrain: false, english: false, offShows: "blank", text: "まもなく　電車が参ります", textEn: "The train is approaching." },
             lang: { enabled: true, jaSec: 3, enSec: 3 },
             // 在線位置表示: 路線・電車の絵と「発車の何秒前に出すか」は led.json の「在線位置」で決める。
             // 電車が動く時刻(各電車の secBefore)になったら holdSec 秒だけ優先表示し、その後は通常表示に戻る
@@ -294,12 +393,12 @@
         const c = BL.withDefaults(cfg);
         c.layout.cols = Math.max(4, Math.min(16, c.layout.cols | 0));
         c.layout.rows = Math.max(1, Math.min(4, c.layout.rows | 0));
-        c.layout.timeStyle = c.layout.timeStyle === "4" || c.layout.timeStyle === 4 ? "4" : "3";
+        c.layout.timeStyle = normStyle(c.layout.timeStyle);
         c.position.digits = Math.max(0, Math.min(c.layout.cols, c.position.digits | 0)) || c.layout.cols;
         c.position.holdSec = Math.max(1, +c.position.holdSec || 15);
         c.layout.columns = (c.layout.columns || []).filter(col => col && col.field && col.enabled !== false && col.field !== "pos");
         for (const col of c.layout.columns) {
-            if (col.field === "time") col.digits = c.layout.timeStyle === "4" ? 4 : 3;
+            if (col.field === "time") col.digits = BL.timeDigits(c.layout.timeStyle);
             col.digits = Math.max(1, col.digits | 0);
         }
         c.timetable = (c.timetable || []).map(r => {
@@ -344,6 +443,7 @@
             if (el >= 0 && el < total) {
                 st.mode = "approach"; st.approachElapsedMs = el;
                 st.approachOn = (el % (ap.onMs + ap.offMs)) < ap.onMs;
+                st.approachCycle = Math.floor(el / (ap.onMs + ap.offMs));
             }
         }
         if (st.mode === "normal" && assets) {
@@ -359,13 +459,42 @@
         return BL.hexToRgb(own || cfg.colors[field], [255, 165, 0]);
     }
 
+    function pickBitmap(assets, category, name, lang) {
+        const it = BL.findItemLang(assets.led, category, name, lang);
+        return it ? BL.itemBitmap(it, lang) : null;
+    }
+
+    // 画像の探し方: 日本語表示=日本語名がダイヤの値と同じ画像 / 英語表示=英語名がダイヤの(英)の値と同じ画像。
+    // 無ければ文字から自動生成する
+    const EN_SUFFIX = "（英）";
+    BL.enKey = (jaText, enText) => enText || (jaText ? jaText + EN_SUFFIX : "");
+    const isPlaceholderEn = t => !t || String(t).endsWith(EN_SUFFIX);
     function textField(cfg, assets, category, train, field, jaText, enText, lang, widthDots, align) {
-        const item = BL.findItem(assets.led, category, lang === "en" ? (enText || jaText) : jaText);
-        let bm = lang === "en" ? BL.itemBitmap(BL.findItem(assets.led, category, jaText), "en") : null;
-        if (!bm) bm = BL.itemBitmap(lang === "en" && enText ? BL.findItem(assets.led, category, enText) : item, lang === "en" && enText ? "ja" : "ja");
+        let bm = null;
+        if (lang === "en") {
+            bm = pickBitmap(assets, category, BL.enKey(jaText, enText), "en");
+            if (!bm) { // 「日本語名の項目に英語画像が付いている」形(文字から作った素材)も使う
+                bm = BL.itemBitmap(BL.findItem(assets.led, category, jaText), "en");
+            }
+            if (!bm && !isPlaceholderEn(enText)) // 「Tokyo」のように実際の英字が書かれていれば文字から作る
+                return BL.textBitmap(enText, widthDots, assets.fonts, colorOf(cfg, field, train), { align });
+            if (!bm) lang = "ja"; // 英語の素材が無ければ日本語の表示を使う
+        }
+        if (lang !== "en") {
+            bm = pickBitmap(assets, category, jaText, "ja");
+            if (!bm) bm = BL.itemBitmap(BL.findItem(assets.led, category, jaText), "ja");
+        }
         if (bm) return fitWidth(bm, widthDots, align);
-        const text = lang === "en" && enText ? enText : jaText;
-        return BL.textBitmap(text, widthDots, assets.fonts, colorOf(cfg, field, train), { align });
+        return BL.textBitmap(jaText, widthDots, assets.fonts, colorOf(cfg, field, train), { align });
+    }
+    // 両数・番線: 言語の画像(英語は「名前（英）」)→無ければ日本語の画像
+    function numberItem(assets, category, key, lang) {
+        if (lang === "en") {
+            const en = pickBitmap(assets, category, key + EN_SUFFIX, "en") || pickBitmap(assets, category, key, "en")
+                || BL.itemBitmap(BL.findItem(assets.led, category, key), "en");
+            if (en) return en;
+        }
+        return pickBitmap(assets, category, key, "ja") || BL.itemBitmap(BL.findItem(assets.led, category, key), "ja");
     }
 
     BL.renderColumn = function (cfg, assets, col, train, ctx) {
@@ -378,23 +507,21 @@
             case "cars": {
                 const key = String(train.cars || "");
                 if (!key) return BL.createBitmap(wd, T);
-                const it = BL.findItem(assets.led, "cars", key);
-                const bm = BL.itemBitmap(it, lang === "en" ? "en" : "ja") || BL.itemBitmap(it, "ja");
+                const bm = numberItem(assets, "cars", key, lang);
                 if (bm) return fitWidth(bm, wd, align);
                 return BL.textBitmap(key + (lang === "en" ? "cars" : "両"), wd, assets.fonts, colorOf(cfg, "cars", train), { align });
             }
             case "platform": {
                 const key = String(train.platform || "");
                 if (!key) return BL.createBitmap(wd, T);
-                const it = BL.findItem(assets.led, "platform", key);
-                const bm = BL.itemBitmap(it, lang === "en" ? "en" : "ja") || BL.itemBitmap(it, "ja");
+                const bm = numberItem(assets, "platform", key, lang);
                 if (bm) return fitWidth(bm, wd, align);
                 const txt = col.digits <= 1 ? key : col.digits === 2 ? key + (lang === "en" ? "" : "番") : key + (lang === "en" ? "" : "番線");
                 return BL.textBitmap(txt, wd, assets.fonts, colorOf(cfg, "platform", train), { align });
             }
             case "time": {
                 const h = Math.floor(train.sec / 3600), m = Math.floor((train.sec % 3600) / 60);
-                return fitWidth(BL.timeBitmap(h, m, cfg.layout.timeStyle, colorOf(cfg, "time", train), cfg.layout.leadingZero), wd, "left");
+                return fitWidth(BL.timeBitmapFor(cfg, assets, h, m, colorOf(cfg, "time", train)), wd, "left");
             }
         }
         return BL.createBitmap(wd, T);
@@ -524,8 +651,9 @@
     };
 
     function specialBitmap(cfg, assets, key, lang, text, textEn, colorKey, W) {
-        const it = BL.findItem(assets.led, "special", key);
-        const bm = BL.itemBitmap(it, lang === "en" ? "en" : "ja") || BL.itemBitmap(it, "ja");
+        let bm = null;
+        if (lang === "en") bm = pickBitmap(assets, "special", key + EN_SUFFIX, "en") || BL.itemBitmap(BL.findItem(assets.led, "special", key), "en");
+        if (!bm) bm = pickBitmap(assets, "special", key, "ja") || BL.itemBitmap(BL.findItem(assets.led, "special", key), "ja");
         if (bm) return fitWidth(bm, W, "center");
         return BL.textBitmap(lang === "en" && textEn ? textEn : text, W, assets.fonts, BL.hexToRgb(cfg.colors[colorKey], [255, 48, 48]), { align: "center" });
     }
@@ -548,6 +676,7 @@
             let rowBm;
             if (apActive && i === apIdx) rowBm = apBm;
             else if (st.mode === "position" && i === posIdx) rowBm = BL.renderPositionBar(assets, cfg.position.digits * T, st.secToDep, st.posSprite);
+            else if (st.mode === "approach" && !ctx.approachShown && i === apIdx && cfg.approach.offShows !== "train") rowBm = BL.createBitmap(w, T); // 消灯中は黒
             else if (st.mode === "approach" && !ctx.approachShown && i === 0 && cfg.approach.blinkTrain) rowBm = BL.createBitmap(w, T);
             else rowBm = BL.renderRow(cfg, assets, st.trains[i], Object.assign({ rowIndex: i }, rctx));
             BL.blit(bm, rowBm, 0, r * T);
@@ -557,9 +686,12 @@
 
     /* 英語シーンを作る意味があるか(先頭2本のどれかに英語表記がある) */
     BL.hasEnglish = function (cfg, assets, st) {
-        return st.trains.slice(0, cfg.layout.rows).some(t => t.typeEn || t.destEn ||
-            BL.itemBitmap(BL.findItem(assets.led, "type", t.type), "en") || BL.itemBitmap(BL.findItem(assets.led, "destination", t.dest), "en"));
+        const has = (cat, ja, en) => !!(pickBitmap(assets, cat, BL.enKey(ja, en), "en") || BL.itemBitmap(BL.findItem(assets.led, cat, ja), "en") || (en && !isPlaceholderEn(en)));
+        return st.trains.slice(0, cfg.layout.rows).some(t => has("type", t.type, t.typeEn) || has("destination", t.dest, t.destEn));
     };
+
+    // 接近表示中に出す言語(英語切り替えONなら点灯ごとに日本語/英語を交互に)
+    BL.approachLang = (cfg, st) => cfg.approach.english && st.mode === "approach" && (st.approachCycle || 0) % 2 === 1 ? "en" : "ja";
 
     // ツール用: ある発車前秒数のとき出る電車(プレビュー確認用)
     BL.positionSpriteAt = function (cfg, assets, secToDep) {
@@ -579,11 +711,13 @@
 
     /* ---------- スクロール(案内 / 駅到着後の次停車駅) ---------- */
     const scrollCache = new Map();
+    // texts: 文字列、または {text, color} の配列(文字ごとに色を変えられる)
     function scrollBitmap(cfg, assets, texts) {
-        const key = texts.join("\n") + "|" + cfg.scroll.color + "|" + cfg.scroll.gapDots;
+        const list = texts.map(t => typeof t === "string" ? { text: t, color: "" } : { text: t.text || "", color: t.color || "" });
+        const key = list.map(t => t.text + "@" + t.color).join("\n") + "|" + cfg.scroll.color + "|" + cfg.scroll.gapDots;
         if (scrollCache.has(key)) return scrollCache.get(key);
-        const rgb = BL.hexToRgb(cfg.scroll.color, [255, 165, 0]), gap = cfg.scroll.gapDots;
-        const parts = texts.map(t => BL.textBitmap(t, null, assets.fonts, rgb));
+        const gap = cfg.scroll.gapDots;
+        const parts = list.map(t => BL.textBitmap(t.text, null, assets.fonts, BL.hexToRgb(t.color || cfg.scroll.color, [255, 165, 0])));
         const total = parts.reduce((sum, p) => sum + p.w + gap, 0);
         const bm = BL.createBitmap(Math.max(1, total), T);
         let x = 0;
@@ -612,10 +746,10 @@
                 if (sc.nextStops.loop || nowSec - arr < (bm.w + W) / speed) return { kind: "nextStops", bm, startSec: arr, loop: !!sc.nextStops.loop, key: "n|" + text };
             }
         }
-        const guides = (cfg.messages.guide || []).filter(Boolean);
+        const guides = (cfg.messages.guide || []).map(g => typeof g === "string" ? { text: g, color: "" } : g).filter(g => g && g.text);
         if (sc.guide.enabled && guides.length) {
             const bm = scrollBitmap(cfg, assets, guides), pass = (bm.w + W) / speed, P = Math.max(0, +sc.guide.intervalSec || 0);
-            const key = "g|" + guides.join("|");
+            const key = "g|" + guides.map(g => g.text + "@" + (g.color || "")).join("|");
             if (P <= 0 || P <= pass) return { kind: "guide", bm, startSec: 0, loop: true, key };
             const phase = nowSec % P;
             if (phase < pass) return { kind: "guide", bm, startSec: nowSec - phase, loop: false, key: key + "|" + Math.floor(nowSec / P) };
@@ -642,6 +776,24 @@
         return { id, view: { normal: view } };
     };
 
+    // 標準の数字で「時刻」素材一式(時00〜24・ゼロ埋め無し0〜9・コロン・分00〜59)を作る
+    BL.makeDefaultTimeSet = function (style, rgb) {
+        style = style === "4" ? "4" : "3";
+        const st = BL.TIME_STYLES[style], items = [], pre = "time" + style + "_";
+        const mk = (id, role, name, bm) => items.push({ id: pre + id, timeRole: role, timeStyle: style, view: { normal: { ja: toView(bm, name) } } });
+        for (let h = 0; h <= 24; h++) mk("h_" + String(h).padStart(2, "0"), "hour", String(h).padStart(2, "0"), genDigits(String(h).padStart(2, "0"), st.hh, rgb, false));
+        for (let h = 0; h < 10; h++) mk("h_" + h, "hour", String(h), genDigits("0" + h, st.hh, rgb, true));
+        mk("colon", "colon", ":", bitsToBitmap(BL.colonBits(st.colon, T), st.colon, T, rgb));
+        for (let m = 0; m < 60; m++) mk("m_" + String(m).padStart(2, "0"), "minute", String(m).padStart(2, "0"), genDigits(String(m).padStart(2, "0"), st.mm, rgb, false));
+        return items;
+    };
+
+    // 言語別の素材を1枚作る。lang="en" のときは英語ビューだけを持つ項目になる(名前は「日本語名（英）」)
+    BL.makeLangItem = function (fonts, id, lang, name, text, digits, rgb, align) {
+        const bm = BL.textBitmap(text == null || text === "" ? name : text, digits * T, fonts, rgb, { align: align || "left" });
+        return { id, view: { normal: { [lang]: toView(bm, name) } } };
+    };
+
     BL.emptyLed = function () {
         return {
             format: "atos-board-led", version: 1,
@@ -651,6 +803,7 @@
                 { id: "cars", name: "両数", items: [] },
                 { id: "platform", name: "番線", items: [] },
                 { id: "information", name: "案内", items: [] },
+                { id: "time", name: "時刻(timeRole: hour=左2桁 / colon=: / minute=右2桁)", items: [] },
                 { id: "position", name: "在線位置(pos_base=線路 / secBefore=発車の何秒前から出すか)", items: [] },
                 { id: "special", name: "特殊表示(approach=接近 / ended=終了)", items: [] }
             ]

@@ -17,42 +17,58 @@ const BoardApp = (function () {
 
     /* ---------- 読み込み ---------- */
     async function loadFonts() {
-        if (S.fonts.kanji && S.fonts.ascii) return;
-        const [k, a] = await Promise.all([fetch("fonts/font_E233.json"), fetch("fonts/ascii8x16.json")]);
-        if (!k.ok || !a.ok) throw new Error("フォントを読み込めませんでした");
+        if (S.fonts.kanji && S.fonts.ascii && S.fonts.clock16) return;
+        const [k, a, c] = await Promise.all([fetch("fonts/font_E233.json"), fetch("fonts/ascii8x16.json"), fetch("fonts/clock16.json")]);
+        if (!k.ok || !a.ok || !c.ok) throw new Error("フォントを読み込めませんでした");
         S.fonts.kanji = await k.json();
         S.fonts.ascii = await a.json();
+        S.fonts.clock16 = await c.json();
     }
 
     function setStatus(text) { const el = $("boardLoadStatus"); if (el) el.textContent = text; }
 
     function applyConfig(json) {
         S.cfg = BL.normalizeConfig(json);
+        BL.clearTimeCache && BL.clearTimeCache();
         const size = BL.boardSize(S.cfg);
         const cv = $("boardLedPreview");
         cv.width = Math.ceil((size.w - 1) * PITCH + DOT);
         cv.height = Math.ceil((size.h - 1) * PITCH + DOT);
         S.bg = null; S.lastKey = ""; S.lastSig = "";
         resize();
-        setStatus(`config: ${S.cfg.name || "(無題)"} / ${S.cfg.layout.cols}桁×${S.cfg.layout.rows}段 / ダイヤ${S.cfg.timetable.length}本`
-            + (S.led ? " / led.json 読込済" : " / led.json なし(文字から自動生成)"));
+        setStatus(`${S.cfg.name || "(無題)"}: ${S.cfg.layout.cols}桁×${S.cfg.layout.rows}段 / ダイヤ${S.cfg.timetable.length}本` + (S.led ? "" : " / 素材なし(文字から自動生成)"));
         requestTransfer(true);
     }
 
-    async function readFile(input) {
-        const f = input.files && input.files[0];
-        if (!f) return null;
-        try { return JSON.parse(await f.text()); } finally { input.value = ""; }
+    // board/board.json の一覧から駅を選ぶ(vehicles/vehicles.json と同じ考え方)
+    async function loadBoardList() {
+        const sel = $("boardSelect");
+        if (!sel) return;
+        try {
+            const res = await fetch("board/board.json", { cache: "no-cache" });
+            if (!res.ok) throw new Error("board/board.json がありません");
+            S.boards = (await res.json()).boards || [];
+        } catch (e) { S.boards = []; setStatus("駅の一覧を読み込めませんでした: " + e.message); }
+        sel.innerHTML = "";
+        for (const b of S.boards) { const o = document.createElement("option"); o.value = b.id; o.textContent = b.name || b.id; sel.appendChild(o); }
+        let want = "";
+        try { want = localStorage.getItem("boardSelected") || ""; } catch (e) { /* 保存できなくても動く */ }
+        if (!S.boards.find(b => b.id === want) && S.boards.length) want = S.boards[0].id;
+        if (want) { sel.value = want; await selectBoard(want); }
     }
 
-    async function loadSample() {
+    async function selectBoard(id) {
+        const b = (S.boards || []).find(x => x.id === id);
+        if (!b) return;
         try {
             await loadFonts();
-            const [c, l] = await Promise.all([fetch("board/sample-config.json"), fetch("board/sample-led.json")]);
-            if (!c.ok) throw new Error("board/sample-config.json がありません");
+            const base = "board/" + (b.dir ? b.dir.replace(/\/?$/, "/") : "");
+            const [c, l] = await Promise.all([fetch(base + (b.config || "config.json"), { cache: "no-cache" }), fetch(base + (b.led || "led.json"), { cache: "no-cache" })]);
+            if (!c.ok) throw new Error(`${base}${b.config || "config.json"} が読み込めません`);
             S.led = l.ok ? await l.json() : null;
             applyConfig(await c.json());
-        } catch (e) { setStatus("サンプル読込失敗: " + e.message); }
+            try { localStorage.setItem("boardSelected", id); } catch (e) { /* 無視 */ }
+        } catch (e) { setStatus("読み込み失敗: " + e.message); }
     }
 
     /* ---------- 時計 ---------- */
@@ -101,6 +117,10 @@ const BoardApp = (function () {
         if (st.mode === "approach") {
             plan.scenes = [mk("ja", true), mk("ja", false)];
             plan.intervals = [cfg.approach.onMs, cfg.approach.offMs];
+            if (cfg.approach.english) { // 日本語→英語を交互に点滅
+                plan.scenes.push(mk("en", true), mk("en", false));
+                plan.intervals.push(cfg.approach.onMs, cfg.approach.offMs);
+            }
         } else if (st.mode === "position") {
             plan.scenes = [mk("ja", false)]; plan.intervals = [0xffff]; // 優先表示中は日本語のみ
         } else if (st.mode === "ended") {
@@ -154,7 +174,7 @@ const BoardApp = (function () {
         if (sig !== S.lastSig) { S.lastSig = sig; requestTransfer(false); }
 
         const W = BL.boardSize(cfg).w, sx = sp ? BL.scrollX(sp, nowS, W, Math.max(1, +cfg.scroll.speed || 50)) : 0;
-        const lang = langAt(st, ms);
+        const lang = st.mode === "approach" ? BL.approachLang(cfg, st) : langAt(st, ms);
         const key = `${sig}|${lang}|${st.approachOn}|${sx}`;
         if (key === S.lastKey) { updateStatusText(st, sp); return; }
         S.lastKey = key;
@@ -223,8 +243,7 @@ const BoardApp = (function () {
             setVehicleSelectButton();
             ensureUI();
             try { await loadFonts(); } catch (e) { setStatus(e.message); }
-            if (!S.cfg) setStatus("config.json を読み込むか、サンプルを読み込んでください");
-            else requestTransfer(true);
+            if (!S.boards) await loadBoardList(); else if (S.cfg) requestTransfer(true);
             requestAnimationFrame(resize);
             if (!S.raf) S.raf = requestAnimationFrame(frame);
         } finally { delete db.dataset.transitioning; }
@@ -244,22 +263,17 @@ const BoardApp = (function () {
 
     function bind() {
         $("departureBoardBtn")?.addEventListener("click", start);
-        $("boardConfigFile")?.addEventListener("change", async e => {
-            try { await loadFonts(); applyConfig(await readFile(e.target)); } catch (err) { setStatus("config.json を読めません: " + err.message); }
-        });
-        $("boardLedFile")?.addEventListener("change", async e => {
-            try { S.led = await readFile(e.target); S.lastKey = ""; S.lastSig = ""; setStatus("led.json を読み込みました"); requestTransfer(true); }
-            catch (err) { setStatus("led.json を読めません: " + err.message); }
-        });
-        $("boardLoadSampleBtn")?.addEventListener("click", loadSample);
+        $("boardSelect")?.addEventListener("change", e => selectBoard(e.target.value));
+        // 時刻の操作(確認用)は ?boardDebug を付けて開いたときだけ表示する
+        if (/[?&]boardDebug\b/.test(location.search)) $("boardDebug")?.removeAttribute("hidden");
         $("boardClockSetBtn")?.addEventListener("click", () => {
             const v = $("boardClockInput").value; if (!v) return;
-            const [h, m, s] = v.split(":").map(Number);
-            const d = new Date(); d.setHours(h, m, s || 0, 0); setVirtual(d.getTime()); S.lastSig = "";
+            const [h, m, sec] = v.split(":").map(Number);
+            const d = new Date(); d.setHours(h, m, sec || 0, 0); setVirtual(d.getTime()); S.lastSig = "";
         });
         $("boardClockRealBtn")?.addEventListener("click", () => { S.speed = 1; $("boardSpeed").value = "1"; setVirtual(Date.now()); S.lastSig = ""; });
         $("boardClockJumpBtn")?.addEventListener("click", () => jumpBeforeNext(20));
-        $("boardClockJump3Btn")?.addEventListener("click", () => jumpBeforeNext(180));
+        $("boardClockJumpPosBtn")?.addEventListener("click", () => jumpBeforeNext(185));
         $("boardSpeed")?.addEventListener("change", e => { setVirtual(virtualMs()); S.speed = Number(e.target.value) || 1; });
         $("boardTransferBtn")?.addEventListener("click", () => requestTransfer(true));
         window.addEventListener("resize", resize);

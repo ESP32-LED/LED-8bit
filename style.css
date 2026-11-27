@@ -311,7 +311,8 @@ textarea {
     cursor: pointer;
 }
 
-#messageBoardBtn {
+#messageBoardBtn,
+#departureBoardBtn {
     display: block;
     margin-left: auto;
     width: 200px;
@@ -1665,9 +1666,6 @@ a,
 }
 
 /* ===== 発車標モード ===== */
-#departureBoardBtn {
-    margin-top: 8px;
-}
 
 #departureBoard {
     opacity: 1;
