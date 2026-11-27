@@ -1334,10 +1334,6 @@ input[type="number"]::-webkit-outer-spin-button {
         padding: 10px;
     }
 
-    body {
-        font-size: 40px;
-    }
-
     #buttonGroup {
         grid-template-columns: repeat(1, 1fr);
     }
