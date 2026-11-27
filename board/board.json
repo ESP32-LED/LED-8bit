@@ -2,7 +2,7 @@
  "boards": [
   {
    "id": "sample",
-   "name": "新横浜　八王子方",
+   "name": "新横浜　八王子方（平日）",
    "description": "横浜線",
    "dir": "sample",
    "icon": "icon.png",
@@ -11,7 +11,7 @@
   },
   {
    "id": "南武線武蔵小杉立川方",
-   "name": "武蔵小杉駅　立川方　平日",
+   "name": "武蔵小杉駅　立川方（平日）",
    "description": "南武線",
    "dir": "南武線武蔵小杉立川方",
    "icon": "icon.png",
