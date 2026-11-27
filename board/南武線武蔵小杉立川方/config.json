@@ -84,7 +84,7 @@
   },
   "nextStops": {
    "enabled": true,
-   "dwellSec": 30,
+   "dwellSec": 0,
    "loop": false
   }
  },
