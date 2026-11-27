@@ -58,8 +58,8 @@
  },
  "lang": {
   "enabled": true,
-  "jaSec": 6,
-  "enSec": 3
+  "jaSec": 12,
+  "enSec": 5
  },
  "lineName": {
   "enabled": false,
