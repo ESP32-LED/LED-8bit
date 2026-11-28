@@ -76,36 +76,46 @@
  "scroll": {
   "lane": "last",
   "speed": 50,
-  "gapDots": 48,
+  "gapDots": 64,
   "color": "#ffa500",
   "guide": {
    "enabled": true,
-   "intervalSec": 120
+   "intervalSec": 120,
+   "font": "gothic"
   },
   "nextStops": {
    "enabled": true,
+   "delaySec": 5,
    "dwellSec": 0,
-   "loop": false
+   "loop": true,
+   "font": "e233"
   }
  },
  "messages": {
   "guide": [
    {
-    "text": "本日は、",
-    "color": "#ffa500"
+    "text": "本日は、"
    },
    {
-    "text": "筑駒　2027年文化祭「」",
+    "text": "筑駒2027年文化祭「",
     "color": "#ff0000"
    },
    {
-    "text": "にお越しくださりありがとうございます",
-    "color": "#ffa500"
+    "text": "○○",
+    "color": "#26e600"
+   },
+   {
+    "text": "」",
+    "color": "#ff0000"
+   },
+   {
+    "text": "にお越しくださいまして、誠にありがとうございます。"
    }
   ],
   "ended": "",
   "endedEn": "",
-  "nextStopsFormat": "次は 武蔵中原 に停車致します。"
+  "nextStopsFormat": "次は 武蔵中原 に停車致します。",
+  "nextStopsRules": []
  },
  "timetable": [
   {
