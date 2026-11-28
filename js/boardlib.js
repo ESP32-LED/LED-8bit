@@ -358,14 +358,10 @@
             position: { enabled: false, holdSec: 15, row: "last", digits: 0 },
             scroll: {
                 lane: "last", speed: 50, gapDots: 48, color: "#ffa500",
-                // font: "e233" または "gothic"(MSゴシック。この端末にMSゴシックが無いと代わりのゴシック体を縮小して使う)
-                guide: { enabled: false, intervalSec: 120, font: "e233" },   // 案内スクロール(intervalSec=0なら流しっぱなし)
-                // 次停車駅: 到着(ダイヤの到着時刻。無ければ発車のdwellSec秒前)から delaySec 秒たったら流し始める。接近表示の開始までに終わる
-                nextStops: { enabled: false, delaySec: 5, dwellSec: 30, loop: true, font: "e233" }
+                guide: { enabled: false, intervalSec: 120 },            // 案内スクロール(intervalSec=0なら流しっぱなし)
+                nextStops: { enabled: false, dwellSec: 30, loop: true }   // 駅到着後(発車のdwellSec秒前〜)の次停車駅スクロール
             },
-            messages: { guide: [], ended: "本日の運転は終わりました", endedEn: "No more trains today.", nextStopsFormat: "{type}　{dest}行き。次の停車駅は{next}です。停車駅は、{stops}です。",
-                // 種別・行先ごとの次停車駅メッセージ: {type, dest, text}。空欄は「どれでも」。種別+行先 > 行先 > 種別 の順に優先。
-                nextStopsRules: [] },
+            messages: { guide: [], ended: "本日の運転は終わりました", endedEn: "No more trains today.", nextStopsFormat: "{type}　{dest}行き。次の停車駅は{next}です。停車駅は、{stops}です。" },
             timetable: []
         };
     };
@@ -445,23 +441,18 @@
     BL.computeState = function (cfg, nowSec, assets) {
         const delay = cfg.behavior.advanceDelaySec;
         const idx = cfg.timetable.findIndex(t => t.sec + delay > nowSec);
-        const st = { nowSec, idx, trains: [], secToDep: null, mode: "normal", approachElapsedMs: 0, approachOn: false, approachIdx: [], posSprite: null };
+        const st = { nowSec, idx, trains: [], secToDep: null, mode: "normal", approachElapsedMs: 0, approachOn: false, posSprite: null };
         if (idx < 0) { st.mode = "ended"; return st; }
         st.trains = cfg.timetable.slice(idx, idx + Math.max(cfg.layout.rows + 1, 3));
         st.secToDep = st.trains[0].sec - nowSec;
         const ap = cfg.approach;
         if (ap.enabled) {
-            // 表示される各段の列車について接近中かを調べる(発車間隔が短いと2本以上が同時に接近中になる)
-            const total = ap.blinkCount * (ap.onMs + ap.offMs), idxs = [];
-            let el0 = null;
-            st.trains.slice(0, cfg.layout.rows).forEach((t, i) => {
-                const el = (ap.startSec - (t.sec - nowSec)) * 1000;
-                if (el >= 0 && el < total) { idxs.push(i); if (el0 === null) el0 = el; }
-            });
-            if (idxs.length) {
-                st.mode = "approach"; st.approachIdx = idxs; st.approachElapsedMs = el0;
-                st.approachOn = (el0 % (ap.onMs + ap.offMs)) < ap.onMs;
-                st.approachCycle = Math.floor(el0 / (ap.onMs + ap.offMs));
+            const total = ap.blinkCount * (ap.onMs + ap.offMs);
+            const el = (ap.startSec - st.secToDep) * 1000;
+            if (el >= 0 && el < total) {
+                st.mode = "approach"; st.approachElapsedMs = el;
+                st.approachOn = (el % (ap.onMs + ap.offMs)) < ap.onMs;
+                st.approachCycle = Math.floor(el / (ap.onMs + ap.offMs));
             }
         }
         if (st.mode === "normal" && assets) {
@@ -697,21 +688,17 @@
             return bm;
         }
         const pick = v => (v === "last" || v < 0 || v == null) ? rows.length - 1 : Math.min(rows.length - 1, v | 0);
+        const apActive = st.mode === "approach" && ctx.approachShown;
         const apIdx = pick(cfg.approach.row);
         const posIdx = pick(cfg.position.row);
-        const apList = st.mode === "approach" ? (st.approachIdx && st.approachIdx.length ? st.approachIdx : [0]) : [];
-        // 接近メッセージを出す段に、接近中の列車がいるときはメッセージで隠さない(2本同時に接近中のとき)
-        const useMessage = st.mode === "approach" && !apList.includes(apIdx);
-        const apBm = useMessage && ctx.approachShown ? specialBitmap(cfg, assets, "approach", ctx.lang, cfg.approach.text, cfg.approach.textEn, "approach", w) : null;
+        const apBm = apActive ? specialBitmap(cfg, assets, "approach", ctx.lang, cfg.approach.text, cfg.approach.textEn, "approach", w) : null;
         const rctx = { lang: ctx.lang, typeShow: ctx.typeShow || "type" };
         rows.forEach((r, i) => {
             let rowBm;
-            if (useMessage && i === apIdx) {
-                if (apBm) rowBm = apBm;
-                else rowBm = cfg.approach.offShows !== "train" ? BL.createBitmap(w, T) : BL.renderRow(cfg, assets, st.trains[i], Object.assign({ rowIndex: i }, rctx)); // 消灯中は黒
-            }
+            if (apActive && i === apIdx) rowBm = apBm;
             else if (st.mode === "position" && i === posIdx) rowBm = BL.renderPositionBar(assets, cfg.position.digits * T, st.secToDep, st.posSprite);
-            else if (st.mode === "approach" && !ctx.approachShown && apList.includes(i) && (!useMessage || (i === 0 && cfg.approach.blinkTrain))) rowBm = BL.createBitmap(w, T); // 接近中の列車の段を点滅
+            else if (st.mode === "approach" && !ctx.approachShown && i === apIdx && cfg.approach.offShows !== "train") rowBm = BL.createBitmap(w, T); // 消灯中は黒
+            else if (st.mode === "approach" && !ctx.approachShown && i === 0 && cfg.approach.blinkTrain) rowBm = BL.createBitmap(w, T);
             else rowBm = BL.renderRow(cfg, assets, st.trains[i], Object.assign({ rowIndex: i }, rctx));
             BL.blit(bm, rowBm, 0, r * T);
         });
@@ -772,55 +759,13 @@
 
     /* ---------- スクロール(案内 / 駅到着後の次停車駅) ---------- */
     const scrollCache = new Map();
-
-    /* MSゴシック(16ドット)の字形。このPC/端末の "MS Gothic" をcanvasで描いてドット化する。
-       無い端末では代わりのゴシック体を4倍で描いて縮小する(細い線が残りやすい)。ブラウザ専用。 */
-    const gothicCache = new Map();
-    BL.gothicFonts = function (asciiFont) {
-        if (typeof document === "undefined") return null;
-        if (gothicCache.has(asciiFont)) return gothicCache.get(asciiFont);
-        const stack = '"MS Gothic","ＭＳ ゴシック","MS PGothic","ＭＳ Ｐゴシック",sans-serif';
-        const cv = document.createElement("canvas");
-        const probe = fam => { const c = document.createElement("canvas"); c.width = c.height = 32; const x = c.getContext("2d"); x.font = "32px " + fam; x.fillText("鬱", 0, 26); x.fillText("ABab", 0, 12); return c.toDataURL(); };
-        const real = probe('"MS Gothic","ＭＳ ゴシック",sans-serif') !== probe("sans-serif");
-        const k = real ? 1 : 4;
-        const raster = (ch, w) => {
-            cv.width = w * k; cv.height = 16 * k;
-            const c = cv.getContext("2d", { willReadFrequently: true });
-            c.clearRect(0, 0, cv.width, cv.height);
-            c.font = `${16 * k}px ${stack}`; c.textBaseline = "alphabetic"; c.fillStyle = "#000"; c.fillText(ch, 0, 14 * k);
-            const d = c.getImageData(0, 0, cv.width, cv.height).data, bits = new Array(w * 16);
-            let any = false;
-            for (let y = 0; y < 16; y++) for (let x = 0; x < w; x++) {
-                let on;
-                if (k === 1) on = d[(y * w + x) * 4 + 3] >= 110;
-                else { let sum = 0; for (let yy = 0; yy < k; yy++) for (let xx = 0; xx < k; xx++) sum += d[((y * k + yy) * w * k + x * k + xx) * 4 + 3]; on = sum / (255 * k * k) >= 0.34; }
-                bits[y * w + x] = on ? 1 : 0; if (on) any = true;
-            }
-            return any ? bits : null;
-        };
-        const kc = {}, ac = {};
-        const fonts = {
-            real,
-            kanji: new Proxy({}, { get: (t, ch) => typeof ch === "string" ? (ch in kc ? kc[ch] : (kc[ch] = raster(ch, 16))) : undefined }),
-            ascii: { width: 8, height: 16, glyphs: new Proxy({}, { get: (t, ch) => {
-                if (typeof ch !== "string" || ch.length !== 1) return undefined;
-                if (!(ch in ac)) ac[ch] = raster(ch, 8) || (ch === " " ? new Array(128).fill(0) : ((asciiFont && asciiFont.glyphs && asciiFont.glyphs[ch]) || new Array(128).fill(0)));
-                return ac[ch];
-            } }) }
-        };
-        gothicCache.set(asciiFont, fonts);
-        return fonts;
-    };
-
-    // texts: 文字列、または {text, color} の配列(文字ごとに色を変えられる)。fontKind: "e233" | "gothic"
-    function scrollBitmap(cfg, assets, texts, fontKind) {
+    // texts: 文字列、または {text, color} の配列(文字ごとに色を変えられる)
+    function scrollBitmap(cfg, assets, texts) {
         const list = texts.map(t => typeof t === "string" ? { text: t, color: "" } : { text: t.text || "", color: t.color || "" });
-        const key = fontKind + "|" + list.map(t => t.text + "@" + t.color).join("\n") + "|" + cfg.scroll.color + "|" + cfg.scroll.gapDots;
+        const key = list.map(t => t.text + "@" + t.color).join("\n") + "|" + cfg.scroll.color + "|" + cfg.scroll.gapDots;
         if (scrollCache.has(key)) return scrollCache.get(key);
         const gap = cfg.scroll.gapDots;
-        const fonts = fontKind === "gothic" ? (BL.gothicFonts(assets.fonts.ascii) || assets.fonts) : assets.fonts;
-        const parts = list.map(t => BL.textBitmap(t.text, null, fonts, BL.hexToRgb(t.color || cfg.scroll.color, [255, 165, 0])));
+        const parts = list.map(t => BL.textBitmap(t.text, null, assets.fonts, BL.hexToRgb(t.color || cfg.scroll.color, [255, 165, 0])));
         const total = parts.reduce((sum, p) => sum + p.w + gap, 0);
         const bm = BL.createBitmap(Math.max(1, total), T);
         let x = 0;
@@ -829,55 +774,30 @@
         scrollCache.set(key, bm);
         return bm;
     }
-    BL.scrollBitmapFor = scrollBitmap; // ツールのプレビュー用
 
-    // 次停車駅のメッセージ。種別+行先 > 行先 > 種別 の順に規則を探し、無ければ既定の文面(停車駅が無いときは流さない=null)
     BL.nextStopsText = function (cfg, t) {
         const stops = t.stops || [];
-        const fill = fmt => String(fmt || "").replace(/\{type\}/g, t.type || "").replace(/\{dest\}/g, t.dest || "")
-            .replace(/\{line\}/g, t.line || "").replace(/\{next\}/g, stops[0] || "").replace(/\{stops\}/g, stops.join("、"));
-        let best = null, bestScore = 0;
-        for (const r of cfg.messages.nextStopsRules || []) {
-            if (!r || !r.text) continue;
-            if (r.type && r.type !== t.type) continue;
-            if (r.dest && r.dest !== t.dest) continue;
-            const score = (r.type ? 1 : 0) + (r.dest ? 2 : 0) + 0.01; // 種別+行先(3) > 行先(2) > 種別(1) > どれでも
-            if (score > bestScore) { best = r; bestScore = score; }
-        }
-        if (best) return fill(best.text);
-        return stops.length ? fill(cfg.messages.nextStopsFormat) : null;
+        return String(cfg.messages.nextStopsFormat || "")
+            .replace(/\{type\}/g, t.type || "").replace(/\{dest\}/g, t.dest || "")
+            .replace(/\{next\}/g, stops[0] || "").replace(/\{stops\}/g, stops.join("、"));
     };
 
     // いま流すスクロール。優先: 次停車駅(駅到着後) > 案内(頻度に従う)。無ければ null
     // 戻り値 {kind, bm, startSec, loop, key}  位置は BL.scrollX で求める
-    // 次停車駅スクロールの時間帯(到着+delaySec 〜 発車+進段の遅れ)。接近表示が始まるとそちらが優先される
-    BL.nextStopsWindow = function (cfg, t) {
-        const ns = cfg.scroll.nextStops;
-        const arr = t.arrSec != null ? t.arrSec : t.sec - Math.max(0, +ns.dwellSec || 0);
-        const start = arr + Math.max(0, +ns.delaySec || 0);
-        let end = t.sec + cfg.behavior.advanceDelaySec;
-        if (cfg.approach.enabled) end = Math.min(end, t.sec - cfg.approach.startSec); // 接近表示の開始まで
-        return { arr, start, end };
-    };
-
     BL.scrollPlan = function (cfg, assets, st, nowSec) {
         if (!st || st.mode !== "normal" || !st.trains.length || !BL.scrollWanted(cfg)) return null;
         const sc = cfg.scroll, W = cfg.layout.cols * T, speed = Math.max(1, +sc.speed || 50), t0 = st.trains[0];
-        if (sc.nextStops.enabled) {
-            const w = BL.nextStopsWindow(cfg, t0);
-            if (nowSec >= w.start && nowSec < w.end) {
-                const text = BL.nextStopsText(cfg, t0);
-                if (text) {
-                    const bm = scrollBitmap(cfg, assets, [text], sc.nextStops.font || "e233");
-                    if (sc.nextStops.loop || nowSec - w.start < (bm.w + W) / speed) return { kind: "nextStops", bm, startSec: w.start, loop: !!sc.nextStops.loop, key: "n|" + (sc.nextStops.font || "e233") + "|" + text };
-                }
+        if (sc.nextStops.enabled && t0.stops && t0.stops.length) {
+            const arr = t0.arrSec != null ? t0.arrSec : t0.sec - Math.max(0, +sc.nextStops.dwellSec || 0);
+            if (nowSec >= arr && nowSec < t0.sec + cfg.behavior.advanceDelaySec) {
+                const text = BL.nextStopsText(cfg, t0), bm = scrollBitmap(cfg, assets, [text]);
+                if (sc.nextStops.loop || nowSec - arr < (bm.w + W) / speed) return { kind: "nextStops", bm, startSec: arr, loop: !!sc.nextStops.loop, key: "n|" + text };
             }
         }
         const guides = (cfg.messages.guide || []).map(g => typeof g === "string" ? { text: g, color: "" } : g).filter(g => g && g.text);
         if (sc.guide.enabled && guides.length) {
-            const gf = sc.guide.font || "e233";
-            const bm = scrollBitmap(cfg, assets, guides, gf), pass = (bm.w + W) / speed, P = Math.max(0, +sc.guide.intervalSec || 0);
-            const key = "g|" + gf + "|" + guides.map(g => g.text + "@" + (g.color || "")).join("|");
+            const bm = scrollBitmap(cfg, assets, guides), pass = (bm.w + W) / speed, P = Math.max(0, +sc.guide.intervalSec || 0);
+            const key = "g|" + guides.map(g => g.text + "@" + (g.color || "")).join("|");
             if (P <= 0 || P <= pass) return { kind: "guide", bm, startSec: 0, loop: true, key };
             const phase = nowSec % P;
             if (phase < pass) return { kind: "guide", bm, startSec: nowSec - phase, loop: false, key: key + "|" + Math.floor(nowSec / P) };
