@@ -138,8 +138,9 @@ const BoardApp = (function () {
     function signature(st, sp) {
         const rows = S.cfg.layout.rows;
         const ids = st.trains.slice(0, rows).map(t => `${t.sec}${t.type}${t.dest}${t.platform}${t.cars}`).join(",");
-        const pos = st.mode === "position" && st.posSprite ? st.posSprite.id : "";
-        return `${st.mode}#${ids}#${pos}#${sp ? sp.key : ""}`;
+        const pos = st.mode === "position" ? (st.posSprites || []).map(x => x.id).join("+") : "";
+        const ap = st.mode === "approach" ? (st.approachIdx || []).join("+") : "";
+        return `${st.mode}${ap}#${ids}#${pos}#${sp ? sp.key : ""}`;
     }
 
     /* 転送用: 静止シーン群 + スクロール */
